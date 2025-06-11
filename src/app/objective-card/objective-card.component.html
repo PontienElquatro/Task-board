@@ -1,0 +1,20 @@
+<div class="bg-gray-800 text-white rounded-xl p-4 shadow hover:shadow-lg transition">
+  <h2 class="text-xl font-bold mb-2">{{ objective.title }}</h2>
+  <p class="text-sm text-gray-300 mb-3">{{ objective.description }}</p>
+
+  <!-- Progression -->
+  <div class="w-full bg-gray-600 rounded-full h-3 mb-3">
+    <div
+      class="bg-green-500 h-3 rounded-full"
+      [style.width.%]="getProgress()"
+    ></div>
+  </div>
+  <p class="text-sm mb-4">
+    {{ getProgress() }}% complété • {{ objective.tasks.length }} tâches
+  </p>
+
+  <!-- Bouton -->
+  <button (click)="onOpen()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded">
+    Voir les tâches
+  </button>
+</div>

@@ -2,18 +2,13 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskCardComponent } from '../task-card/task-card.component';
+import { Objective } from '../models/objective.model';
+import { Task } from '../models/task.model'; // ✅ On importe la vraie interface
 
 type Status = 'todo' | 'in-progress' | 'done';
 
 interface Column {
   label: string;
-  status: Status;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
   status: Status;
 }
 
@@ -24,16 +19,46 @@ interface Task {
   templateUrl: './kanban-board.component.html',
 })
 export class KanbanBoardComponent {
+  objective: Objective = {
+    id: 'obj-001',
+    title: 'Construire une maison',
+    description: 'Projet de construction',
+    createdAt: new Date(),
+    tasks: [
+      {
+        id: '1',
+        title: 'Acheter un terrain',
+        description: 'Rechercher un terrain disponible',
+        status: 'todo',
+        estimatedTime: 120,
+        timeSpent: 0,
+        subTasks: []
+      },
+      {
+        id: '2',
+        title: 'Faire les plans',
+        description: 'Contacter un architecte',
+        status: 'in-progress',
+        estimatedTime: 60,
+        timeSpent: 15,
+        subTasks: []
+      },
+      {
+        id: '3',
+        title: 'Valider permis de construire',
+        description: 'Déposer le dossier à la mairie',
+        status: 'done',
+        estimatedTime: 30,
+        timeSpent: 30,
+        subTasks: []
+      }
+    ]
+  };
+
   columns: Column[] = [
     { label: 'à faire', status: 'todo' },
     { label: 'en cours', status: 'in-progress' },
     { label: 'terminé', status: 'done' },
-  ];
-
-  tasks: Task[] = [
-    { id: '1', title: 'Créer la tâche', description: 'À débuter', status: 'todo' },
-    { id: '2', title: 'Continuer à y travailler', description: 'Cette tâche est encore en cours', status: 'in-progress' },
-    { id: '3', title: 'Tâche terminée', description: 'Cette tâche est terminée', status: 'done' },
   ];
 
   selectedTask: Task | null = null;
@@ -49,7 +74,7 @@ export class KanbanBoardComponent {
   }
 
   getTasksByStatus(status: Status): Task[] {
-    return this.tasks.filter(task => task.status === status);
+    return this.objective.tasks.filter(task => task.status === status);
   }
 
   editTask(task: Task) {
@@ -57,9 +82,9 @@ export class KanbanBoardComponent {
   }
 
   updateTask(updatedTask: Task) {
-    const index = this.tasks.findIndex(t => t.id === updatedTask.id);
+    const index = this.objective.tasks.findIndex(t => t.id === updatedTask.id);
     if (index > -1) {
-      this.tasks[index] = updatedTask;
+      this.objective.tasks[index] = updatedTask;
     }
     this.taskToEdit = null;
   }
@@ -74,7 +99,7 @@ export class KanbanBoardComponent {
 
   deleteConfirmed() {
     if (this.taskToDelete) {
-      this.tasks = this.tasks.filter(t => t.id !== this.taskToDelete?.id);
+      this.objective.tasks = this.objective.tasks.filter(t => t.id !== this.taskToDelete?.id);
       this.taskToDelete = null;
     }
   }
