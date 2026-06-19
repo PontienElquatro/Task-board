@@ -1,59 +1,45 @@
-# MyTaskBoard
+# MyTaskBoard 🧠
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.11.
+MyTaskBoard est une application de gestion de tâches de type Kanban, moderne et performante, construite avec les dernières technologies du web.
 
-## Development server
+## 🚀 Fonctionnalités
 
-To start a local development server, run:
+- **Tableau Kanban Complet** : Visualisez vos tâches par colonnes (À faire, En cours, Terminé).
+- **Gestion Dynamique** : Créez, consultez, modifiez et supprimez des tâches facilement.
+- **Priorités Visuelles** : Attribuez des niveaux de priorité (Basse, Moyenne, Haute) avec des indicateurs colorés.
+- **Persistance des Données** : Vos tâches sont sauvegardées automatiquement dans le `LocalStorage` de votre navigateur.
+- **Routage Moderne** : Système de navigation entre la page de connexion et le tableau de bord.
+- **Interface Responsive** : Design épuré et adaptatif grâce à Tailwind CSS.
 
-```bash
-ng serve
-```
+## 🛠️ Stack Technique
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- **Framework** : [Angular 19.2+](https://angular.dev/)
+- **Gestion d'état** : Angular Signals (pour une réactivité optimale)
+- **Style** : [Tailwind CSS 4.0](https://tailwindcss.com/)
+- **Navigation** : Angular Router
+- **Rendu** : SSR (Server-Side Rendering) activé
 
-## Code scaffolding
+## 💻 Installation et Démarrage
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+1. **Installer les dépendances** :
+   ```bash
+   npm install
+   ```
 
-```bash
-ng generate component component-name
-```
+2. **Lancer le serveur de développement** :
+   ```bash
+   npm start
+   ```
+   L'application sera accessible sur `http://localhost:4200/`.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 📦 Déploiement sur Vercel
 
-```bash
-ng generate --help
-```
+Ce projet est prêt pour un déploiement sur Vercel.
 
-## Building
+1. Connectez votre dépôt GitHub/GitLab à Vercel.
+2. Vercel détectera automatiquement la configuration Angular.
+3. Le fichier `vercel.json` est déjà inclus pour gérer les redirections du routage.
 
-To build the project run:
+## 📝 Licence
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Projet réalisé dans le cadre d'un audit et d'une refactorisation technique.
