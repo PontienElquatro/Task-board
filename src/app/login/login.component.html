@@ -1,1 +1,24 @@
-<p>login works!</p>
+<div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">MyTaskBoard</h1>
+    <p class="text-gray-600 mb-8 text-center">Bienvenue ! Connectez-vous pour gérer vos tâches.</p>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-gray-700 mb-1">Email</label>
+        <input type="email" placeholder="demo@example.com" class="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700 mb-1">Mot de passe</label>
+        <input type="password" placeholder="••••••••" class="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <button (click)="login()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
+        Se connecter
+      </button>
+    </div>
+
+    <p class="mt-6 text-sm text-center text-gray-500">
+      Ceci est une version démo. Cliquez sur "Se connecter" pour accéder au tableau.
+    </p>
+  </div>
+</div>

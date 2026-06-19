@@ -1,14 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-type Status = 'todo' | 'in-progress' | 'done';
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: Status;
-}
+import { Task } from '../services/task.service';
 
 @Component({
   selector: 'app-task-card',
@@ -33,7 +25,7 @@ export class TaskCardComponent {
   }
 
   onDelete(event: MouseEvent) {
-  event.stopPropagation();
-  this.delete.emit(this.task); // Le parent gère la confirmation maintenant
-}
+    event.stopPropagation();
+    this.delete.emit(this.task);
+  }
 }
