@@ -1,5 +1,10 @@
 <div class="p-6 bg-gray-50 min-h-screen">
-  <h1 class="text-3xl font-bold mb-8 text-center text-gray-800">🧠 MyTaskBoard</h1>
+  <div class="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto mb-8 gap-4">
+    <h1 class="text-3xl font-bold text-gray-800">🧠 MyTaskBoard</h1>
+    <button (click)="addTask()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-semibold flex items-center">
+      <span class="mr-2 text-xl">+</span> Nouvelle Tâche
+    </button>
+  </div>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
     <app-task-column
@@ -16,7 +21,7 @@
 
 <app-task-modal
   [task]="selectedTask"
-  [mode]="modalMode"
+  [mode]="modalMode === 'create' ? 'edit' : modalMode"
   (close)="closeModal()"
   (save)="saveTask($event)"
   (confirmDelete)="deleteConfirmed()">

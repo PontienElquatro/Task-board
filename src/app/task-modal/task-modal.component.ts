@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Task } from '../services/task.service';
@@ -9,7 +9,7 @@ import { Task } from '../services/task.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './task-modal.component.html',
 })
-export class TaskModalComponent {
+export class TaskModalComponent implements OnChanges {
   @Input() task: Task | null = null;
   @Input() mode: 'view' | 'edit' | 'delete' = 'view';
 

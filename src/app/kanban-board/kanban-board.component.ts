@@ -20,7 +20,7 @@ export class KanbanBoardComponent {
   ];
 
   selectedTask: Task | null = null;
-  modalMode: 'view' | 'edit' | 'delete' = 'view';
+  modalMode: 'view' | 'edit' | 'delete' | 'create' = 'view';
 
   // Signaux réactifs via le service
   todoTasks = this.taskService.getTasksByStatus('todo');
@@ -33,6 +33,11 @@ export class KanbanBoardComponent {
       case 'in-progress': return this.inProgressTasks();
       case 'done': return this.doneTasks();
     }
+  }
+
+  addTask(status: Status = 'todo') {
+    this.selectedTask = { id: '', title: '', description: '', status };
+    this.modalMode = 'create';
   }
 
   handleTaskSelected(task: Task) {
@@ -55,7 +60,11 @@ export class KanbanBoardComponent {
   }
 
   saveTask(task: Task) {
-    this.taskService.updateTask(task);
+    if (this.modalMode === 'create') {
+      this.taskService.addTask(task);
+    } else {
+      this.taskService.updateTask(task);
+    }
     this.closeModal();
   }
 
