@@ -1,76 +1,28 @@
-<!-- Titre + colonnes -->
-<div class="p-6 bg-gray-100 min-h-screen">
-  <h1 class="text-3xl font-bold mb-6 text-center">🧠 MyTaskBoard</h1>
+<div class="p-6 bg-gray-50 min-h-screen">
+  <div class="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto mb-8 gap-4">
+    <h1 class="text-3xl font-bold text-gray-800">🧠 MyTaskBoard</h1>
+    <button (click)="addTask()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-semibold flex items-center">
+      <span class="mr-2 text-xl">+</span> Nouvelle Tâche
+    </button>
+  </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div *ngFor="let column of columns" class="bg-white rounded-xl shadow p-4">
-      <h2 class="text-xl font-semibold mb-4 capitalize">{{ column.label }}</h2>
-      <div class="space-y-4">
-        <app-task-card
-  *ngFor="let task of getTasksByStatus(column.status)"
-  [task]="task"
-  (selected)="openTask($event)"
-  (edit)="editTask($event)"
-  (delete)="confirmDelete($event)">
-</app-task-card>
-      </div>
-    </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+    <app-task-column
+      *ngFor="let column of columns"
+      [label]="column.label"
+      [status]="column.status"
+      [tasks]="getTasksByStatus(column.status)"
+      (taskSelected)="handleTaskSelected($event)"
+      (taskEdit)="handleTaskEdit($event)"
+      (taskDelete)="handleTaskDelete($event)">
+    </app-task-column>
   </div>
 </div>
 
-<!-- 🔍 Modale de consultation -->
-<div *ngIf="selectedTask" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-lg relative">
-    <button (click)="closeModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
-    <h2 class="text-xl font-bold mb-2">{{ selectedTask.title }}</h2>
-    <p class="text-gray-700">{{ selectedTask.description }}</p>
-    <div class="mt-4 text-sm text-gray-500">
-      Statut : <span class="font-semibold">{{ selectedTask.status }}</span>
-    </div>
-  </div>
-</div>
-
-<!-- ✏️ Modale d'édition -->
-<div *ngIf="taskToEdit" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-lg relative">
-    <button (click)="taskToEdit = null" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">✕</button>
-    <h2 class="text-xl font-bold mb-4">Modifier la tâche</h2>
-
-    <form (ngSubmit)="updateTask(taskToEdit)">
-      <label class="block mb-2">
-        <span class="text-gray-700">Titre</span>
-        <input [(ngModel)]="taskToEdit.title" name="title" class="mt-1 block w-full border rounded px-3 py-2" />
-      </label>
-
-      <label class="block mb-2">
-        <span class="text-gray-700">Description</span>
-        <textarea [(ngModel)]="taskToEdit.description" name="description" class="mt-1 block w-full border rounded px-3 py-2"></textarea>
-      </label>
-
-      <label class="block mb-4">
-        <span class="text-gray-700">Statut</span>
-        <select [(ngModel)]="taskToEdit.status" name="status" class="mt-1 block w-full border rounded px-3 py-2">
-          <option value="todo">À faire</option>
-          <option value="in-progress">En cours</option>
-          <option value="done">Terminé</option>
-        </select>
-      </label>
-
-      <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Enregistrer</button>
-    </form>
-  </div>
-</div>
-
-
-
-<!-- 🗑️ Modale de confirmation de suppression -->
-<div *ngIf="taskToDelete" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-  <div class="bg-white rounded-lg p-6 w-[90%] max-w-md shadow-lg relative">
-    <h2 class="text-xl font-bold mb-4">Confirmer la suppression</h2>
-    <p class="mb-6">Es-tu sûr de vouloir supprimer la tâche "<strong>{{ taskToDelete.title }}</strong>" ?</p>
-    <div class="flex justify-end space-x-4">
-      <button (click)="cancelDelete()" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Annuler</button>
-      <button (click)="deleteConfirmed()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">Supprimer</button>
-    </div>
-  </div>
-</div>
+<app-task-modal
+  [task]="selectedTask"
+  [mode]="modalMode === 'create' ? 'edit' : modalMode"
+  (close)="closeModal()"
+  (save)="saveTask($event)"
+  (confirmDelete)="deleteConfirmed()">
+</app-task-modal>

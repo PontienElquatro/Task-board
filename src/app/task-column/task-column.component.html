@@ -1,1 +1,15 @@
-<p>task-column works!</p>
+<div class="bg-white rounded-xl shadow p-4">
+  <h2 class="text-xl font-semibold mb-4 capitalize">{{ label }}</h2>
+  <div class="space-y-4">
+    <app-task-card
+      *ngFor="let task of tasks"
+      [task]="task"
+      (selected)="taskSelected.emit($event)"
+      (edit)="taskEdit.emit($event)"
+      (delete)="taskDelete.emit($event)">
+    </app-task-card>
+    <div *ngIf="tasks.length === 0" class="text-gray-400 text-center py-4 border-2 border-dashed border-gray-100 rounded-lg">
+      Aucune tâche
+    </div>
+  </div>
+</div>

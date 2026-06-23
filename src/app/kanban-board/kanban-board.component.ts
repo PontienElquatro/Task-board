@@ -1,81 +1,77 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TaskCardComponent } from '../task-card/task-card.component';
-
-type Status = 'todo' | 'in-progress' | 'done';
-
-interface Column {
-  label: string;
-  status: Status;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: Status;
-}
+import { TaskService, Task, Status } from '../services/task.service';
+import { TaskColumnComponent } from '../task-column/task-column.component';
+import { TaskModalComponent } from '../task-modal/task-modal.component';
 
 @Component({
   selector: 'app-kanban-board',
   standalone: true,
-  imports: [CommonModule, TaskCardComponent, FormsModule],
+  imports: [CommonModule, TaskColumnComponent, TaskModalComponent],
   templateUrl: './kanban-board.component.html',
 })
 export class KanbanBoardComponent {
-  columns: Column[] = [
+  private taskService = inject(TaskService);
+
+  columns: { label: string; status: Status }[] = [
     { label: 'à faire', status: 'todo' },
     { label: 'en cours', status: 'in-progress' },
     { label: 'terminé', status: 'done' },
   ];
 
-  tasks: Task[] = [
-    { id: '1', title: 'Créer la tâche', description: 'À débuter', status: 'todo' },
-    { id: '2', title: 'Continuer à y travailler', description: 'Cette tâche est encore en cours', status: 'in-progress' },
-    { id: '3', title: 'Tâche terminée', description: 'Cette tâche est terminée', status: 'done' },
-  ];
-
   selectedTask: Task | null = null;
-  taskToEdit: Task | null = null;
-  taskToDelete: Task | null = null;
+  modalMode: 'view' | 'edit' | 'delete' | 'create' = 'view';
 
-  openTask(task: Task) {
+  // Signaux réactifs via le service
+  todoTasks = this.taskService.getTasksByStatus('todo');
+  inProgressTasks = this.taskService.getTasksByStatus('in-progress');
+  doneTasks = this.taskService.getTasksByStatus('done');
+
+  getTasksByStatus(status: Status) {
+    switch (status) {
+      case 'todo': return this.todoTasks();
+      case 'in-progress': return this.inProgressTasks();
+      case 'done': return this.doneTasks();
+    }
+  }
+
+  addTask(status: Status = 'todo') {
+    this.selectedTask = { id: '', title: '', description: '', status };
+    this.modalMode = 'create';
+  }
+
+  handleTaskSelected(task: Task) {
     this.selectedTask = task;
+    this.modalMode = 'view';
+  }
+
+  handleTaskEdit(task: Task) {
+    this.selectedTask = task;
+    this.modalMode = 'edit';
+  }
+
+  handleTaskDelete(task: Task) {
+    this.selectedTask = task;
+    this.modalMode = 'delete';
   }
 
   closeModal() {
     this.selectedTask = null;
   }
 
-  getTasksByStatus(status: Status): Task[] {
-    return this.tasks.filter(task => task.status === status);
-  }
-
-  editTask(task: Task) {
-    this.taskToEdit = { ...task };
-  }
-
-  updateTask(updatedTask: Task) {
-    const index = this.tasks.findIndex(t => t.id === updatedTask.id);
-    if (index > -1) {
-      this.tasks[index] = updatedTask;
+  saveTask(task: Task) {
+    if (this.modalMode === 'create') {
+      this.taskService.addTask(task);
+    } else {
+      this.taskService.updateTask(task);
     }
-    this.taskToEdit = null;
-  }
-
-  confirmDelete(task: Task) {
-    this.taskToDelete = task;
-  }
-
-  cancelDelete() {
-    this.taskToDelete = null;
+    this.closeModal();
   }
 
   deleteConfirmed() {
-    if (this.taskToDelete) {
-      this.tasks = this.tasks.filter(t => t.id !== this.taskToDelete?.id);
-      this.taskToDelete = null;
+    if (this.selectedTask) {
+      this.taskService.deleteTask(this.selectedTask.id);
+      this.closeModal();
     }
   }
 }
