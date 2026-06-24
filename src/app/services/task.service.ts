@@ -1,61 +1,105 @@
-import { Injectable, signal, computed, effect, PLATFORM_ID, inject } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-
-export type Status = 'todo' | 'in-progress' | 'done';
-export type Priority = 'low' | 'medium' | 'high';
-
-export interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: Status;
-  priority?: Priority;
-}
+import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { STORAGE_PROVIDER } from '../providers/storage.provider';
+import { Task, Status, Priority } from '../models';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TaskService {
   private readonly STORAGE_KEY = 'mytaskboard_tasks';
-  private platformId = inject(PLATFORM_ID);
+  private storage = inject(STORAGE_PROVIDER);
 
   private tasksSignal = signal<Task[]>(this.loadTasks());
-
   readonly tasks = this.tasksSignal.asReadonly();
+
+  // Search and Filters
+  searchTerm = signal<string>('');
+  filterStatus = signal<Status | 'all'>('all');
+  filterPriority = signal<Priority | 'all'>('all');
+
+  filteredTasks = computed(() => {
+    let tasks = this.tasksSignal();
+    const search = this.searchTerm().toLowerCase();
+    const status = this.filterStatus();
+    const priority = this.filterPriority();
+
+    if (search) {
+      tasks = tasks.filter(t =>
+        t.title.toLowerCase().includes(search) ||
+        t.description.toLowerCase().includes(search)
+      );
+    }
+
+    if (status !== 'all') {
+      tasks = tasks.filter(t => t.status === status);
+    }
+
+    if (priority !== 'all') {
+      tasks = tasks.filter(t => t.priority === priority);
+    }
+
+    return tasks;
+  });
 
   constructor() {
     effect(() => {
-      const tasks = this.tasksSignal();
-      if (isPlatformBrowser(this.platformId)) {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(tasks));
-      }
+      this.storage.setItem(this.STORAGE_KEY, this.tasksSignal());
     });
   }
 
   private loadTasks(): Task[] {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem(this.STORAGE_KEY);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error('Erreur lors du chargement des tâches depuis LocalStorage', e);
-        }
-      }
+    const saved = this.storage.getItem<Task[]>(this.STORAGE_KEY);
+    if (saved) {
+      return saved.map(t => ({
+        ...t,
+        createdAt: new Date(t.createdAt),
+        startDate: t.startDate ? new Date(t.startDate) : undefined,
+        dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
+      }));
     }
 
     return [
-      { id: '1', title: 'Créer la tâche', description: 'À débuter', status: 'todo', priority: 'medium' },
-      { id: '2', title: 'Continuer à y travailler', description: 'Cette tâche est encore en cours', status: 'in-progress', priority: 'high' },
-      { id: '3', title: 'Tâche terminée', description: 'Cette tâche est terminée', status: 'done', priority: 'low' },
+      {
+        id: '1',
+        title: 'Créer la tâche',
+        description: 'À débuter',
+        status: 'todo',
+        priority: 'medium',
+        subTasks: [],
+        createdAt: new Date(),
+        userId: 'default'
+      },
+      {
+        id: '2',
+        title: 'Continuer à y travailler',
+        description: 'Cette tâche est encore en cours',
+        status: 'in-progress',
+        priority: 'high',
+        subTasks: [],
+        createdAt: new Date(),
+        userId: 'default'
+      },
+      {
+        id: '3',
+        title: 'Tâche terminée',
+        description: 'Cette tâche est terminée',
+        status: 'done',
+        priority: 'low',
+        subTasks: [],
+        createdAt: new Date(),
+        userId: 'default'
+      },
     ];
   }
 
-  addTask(task: Omit<Task, 'id'>) {
-    const newTask = {
+  addTask(task: Omit<Task, 'id' | 'createdAt' | 'userId'>) {
+    const newTask: Task = {
       ...task,
-      id: Math.random().toString(36).substring(2, 9),
-      priority: task.priority || 'medium'
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      userId: 'default', // To be updated with real user
+      priority: task.priority || 'medium',
+      subTasks: task.subTasks || []
     };
     this.tasksSignal.update(tasks => [...tasks, newTask]);
   }
@@ -71,6 +115,12 @@ export class TaskService {
   }
 
   getTasksByStatus(status: Status) {
-    return computed(() => this.tasksSignal().filter(t => t.status === status));
+    return computed(() => this.filteredTasks().filter(t => t.status === status));
+  }
+
+  updateTaskStatus(taskId: string, status: Status) {
+    this.tasksSignal.update(tasks =>
+      tasks.map(t => t.id === taskId ? { ...t, status } : t)
+    );
   }
 }

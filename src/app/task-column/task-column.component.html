@@ -1,8 +1,21 @@
-<div class="bg-white rounded-xl shadow p-4">
-  <h2 class="text-xl font-semibold mb-4 capitalize">{{ label }}</h2>
-  <div class="space-y-4">
+<div class="bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl p-4 min-h-[500px] flex flex-col border border-gray-200 dark:border-gray-700 transition-colors">
+  <div class="flex items-center justify-between mb-5 px-1">
+    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 capitalize flex items-center">
+      {{ label }}
+      <span class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs py-0.5 px-2 rounded-full">{{ tasks.length }}</span>
+    </h2>
+  </div>
+
+  <div
+    cdkDropList
+    [cdkDropListData]="tasks"
+    [id]="status"
+    (cdkDropListDropped)="drop($event)"
+    class="flex-1 space-y-4 min-h-[150px]">
     <app-task-card
-      *ngFor="let task of tasks"
+      *ngFor="let task of tasks; trackBy: trackById"
+      cdkDrag
+      [cdkDragData]="task"
       [task]="task"
       (selected)="taskSelected.emit($event)"
       (edit)="taskEdit.emit($event)"

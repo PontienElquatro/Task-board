@@ -1,21 +1,95 @@
-<div class="p-6 bg-gray-50 min-h-screen">
-  <div class="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto mb-8 gap-4">
-    <h1 class="text-3xl font-bold text-gray-800">🧠 MyTaskBoard</h1>
-    <button (click)="addTask()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-semibold flex items-center">
-      <span class="mr-2 text-xl">+</span> Nouvelle Tâche
+<div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+  <div class="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto mb-6 gap-4">
+    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">🧠 MyTaskBoard</h1>
+    <div class="flex items-center gap-3 w-full md:w-auto">
+    <button (click)="themeService.toggleDarkMode()" aria-label="Basculer le mode sombre" class="p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
+        {{ themeService.darkMode() ? '☀️' : '🌙' }}
+      </button>
+      <a routerLink="/dashboard" class="flex-1 md:flex-none bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 font-bold flex items-center justify-center shadow-sm">
+        📊 Stats
+      </a>
+      <button (click)="addTask()" class="flex-1 md:flex-none bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 font-bold flex items-center justify-center">
+        <span class="mr-2 text-xl">+</span> Nouvelle Tâche
+      </button>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="max-w-7xl mx-auto mb-8 bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row gap-4 items-center">
+    <div class="relative w-full md:w-96">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">🔍</span>
+      <input
+        type="text"
+        [value]="taskService.searchTerm()"
+        (input)="updateSearch($event)"
+        aria-label="Rechercher des tâches"
+        placeholder="Rechercher par titre ou description..."
+        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all dark:text-white"
+      />
+    </div>
+
+    <div class="flex gap-2 w-full md:w-auto">
+      <select
+        [value]="taskService.filterStatus()"
+        (change)="updateFilterStatus($event)"
+        aria-label="Filtrer par statut"
+        class="flex-1 md:w-40 px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium transition-all appearance-none dark:text-white"
+      >
+        <option value="all">Tous les statuts</option>
+        <option value="todo">À faire</option>
+        <option value="in-progress">En cours</option>
+        <option value="done">Terminé</option>
+      </select>
+
+      <select
+        [value]="taskService.filterPriority()"
+        (change)="updateFilterPriority($event)"
+        aria-label="Filtrer par priorité"
+        class="flex-1 md:w-40 px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium transition-all appearance-none dark:text-white"
+      >
+        <option value="all">Toutes priorités</option>
+        <option value="low">Basse</option>
+        <option value="medium">Moyenne</option>
+        <option value="high">Haute</option>
+      </select>
+    </div>
+
+    <button
+      *ngIf="hasActiveFilters()"
+      (click)="resetFilters()"
+      class="text-sm text-blue-600 font-semibold hover:text-blue-800 px-2"
+    >
+      Réinitialiser
     </button>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+  <!-- Desktop view -->
+  <div class="hidden md:grid md:grid-cols-3 gap-6 max-w-7xl mx-auto" cdkDropListGroup>
     <app-task-column
-      *ngFor="let column of columns"
+      *ngFor="let column of columns; trackBy: trackByStatus"
       [label]="column.label"
       [status]="column.status"
       [tasks]="getTasksByStatus(column.status)"
       (taskSelected)="handleTaskSelected($event)"
       (taskEdit)="handleTaskEdit($event)"
-      (taskDelete)="handleTaskDelete($event)">
+      (taskDelete)="handleTaskDelete($event)"
+      (taskDropped)="onTaskDropped($event)">
     </app-task-column>
+  </div>
+
+  <!-- Mobile view with horizontal scroll -->
+  <div class="md:hidden flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-1" cdkDropListGroup>
+    <div *ngFor="let column of columns; trackBy: trackByStatus" class="min-w-[85vw] snap-center">
+      <app-task-column
+        [label]="column.label"
+        [status]="column.status"
+        [tasks]="getTasksByStatus(column.status)"
+        (taskSelected)="handleTaskSelected($event)"
+        (taskEdit)="handleTaskEdit($event)"
+        (taskDelete)="handleTaskDelete($event)"
+        (taskDropped)="onTaskDropped($event)">
+      </app-task-column>
+    </div>
   </div>
 </div>
 
