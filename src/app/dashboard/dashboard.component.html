@@ -1,0 +1,64 @@
+<div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">📊 Dashboard</h1>
+      <a routerLink="/board" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 font-bold flex items-center shadow-sm">
+        <span class="mr-2">⬅️</span> Retour au Tableau
+      </a>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total des tâches</p>
+        <p class="text-3xl font-black text-gray-900 dark:text-white">{{ dashboardService.stats().total }}</p>
+      </div>
+      <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-green-900/30 transition-colors">
+        <p class="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Terminées</p>
+        <p class="text-3xl font-black text-green-900 dark:text-green-100">{{ dashboardService.stats().completed }}</p>
+      </div>
+      <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl shadow-sm border border-blue-100 dark:border-blue-900/30 transition-colors">
+        <p class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">En cours</p>
+        <p class="text-3xl font-black text-blue-900 dark:text-blue-100">{{ dashboardService.stats().inProgress }}</p>
+      </div>
+      <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl shadow-sm border border-red-100 dark:border-red-900/30 transition-colors">
+        <p class="text-sm font-medium text-red-600 dark:text-red-400 mb-1">En retard</p>
+        <p class="text-3xl font-black text-red-900 dark:text-red-100">{{ dashboardService.stats().late }}</p>
+      </div>
+    </div>
+
+    <!-- Global Progress -->
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-800 dark:text-white">Progression Globale</h2>
+        <span class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ dashboardService.stats().progressPercentage }}%</span>
+      </div>
+      <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+        <div class="bg-blue-600 h-full transition-all duration-500" [style.width.%]="dashboardService.stats().progressPercentage"></div>
+      </div>
+    </div>
+
+    <!-- Goals Progress -->
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Objectifs en cours</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="dashboardService.goalsProgress().length > 0; else noGoals">
+      <div *ngFor="let goal of dashboardService.goalsProgress()" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ goal.title }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ goal.description }}</p>
+          </div>
+          <span class="text-sm font-bold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-600 dark:text-gray-300">{{ goal.completedTasks }}/{{ goal.totalTasks }}</span>
+        </div>
+        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 mb-2">
+          <div class="bg-green-500 h-full rounded-full transition-all duration-500" [style.width.%]="goal.progress"></div>
+        </div>
+        <p class="text-right text-xs font-bold text-gray-400">{{ goal.progress }}% terminé</p>
+      </div>
+    </div>
+    <ng-template #noGoals>
+      <div class="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-sm border border-dashed border-gray-200 dark:border-gray-700 text-center transition-colors">
+        <p class="text-gray-400 dark:text-gray-500 font-medium">Aucun objectif défini. Associez des tâches à des objectifs pour voir leur progression ici.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>

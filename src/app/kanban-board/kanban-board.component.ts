@@ -1,17 +1,23 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TaskService, Task, Status } from '../services/task.service';
+import { TaskService } from '../services/task.service';
+import { ThemeService } from '../services/theme.service';
+import { Task, Status } from '../models';
 import { TaskColumnComponent } from '../task-column/task-column.component';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
+import { CdkDragDrop, moveItemInArray, transferArrayItem, DragDropModule } from '@angular/cdk/drag-drop';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-kanban-board',
   standalone: true,
-  imports: [CommonModule, TaskColumnComponent, TaskModalComponent],
+  imports: [CommonModule, TaskColumnComponent, TaskModalComponent, DragDropModule, RouterLink],
   templateUrl: './kanban-board.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent {
-  private taskService = inject(TaskService);
+  public taskService = inject(TaskService);
+  public themeService = inject(ThemeService);
 
   columns: { label: string; status: Status }[] = [
     { label: 'à faire', status: 'todo' },
@@ -36,7 +42,16 @@ export class KanbanBoardComponent {
   }
 
   addTask(status: Status = 'todo') {
-    this.selectedTask = { id: '', title: '', description: '', status };
+    this.selectedTask = {
+      id: '',
+      title: '',
+      description: '',
+      status,
+      priority: 'medium',
+      subTasks: [],
+      createdAt: new Date(),
+      userId: 'default'
+    };
     this.modalMode = 'create';
   }
 
@@ -73,5 +88,47 @@ export class KanbanBoardComponent {
       this.taskService.deleteTask(this.selectedTask.id);
       this.closeModal();
     }
+  }
+
+  onTaskDropped(event: CdkDragDrop<Task[]>) {
+    if (event.previousContainer === event.container) {
+      // Pour l'instant on ne gère pas l'ordre précis via le service car il n'y a pas de champ position
+      // Mais on pourrait implémenter moveItemInArray si nécessaire localement
+    } else {
+      const task = event.item.data as Task;
+      const newStatus = event.container.id as Status;
+      this.taskService.updateTaskStatus(task.id, newStatus);
+    }
+  }
+
+  updateSearch(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    this.taskService.searchTerm.set(value);
+  }
+
+  updateFilterStatus(event: Event) {
+    const value = (event.target as HTMLSelectElement).value as Status | 'all';
+    this.taskService.filterStatus.set(value);
+  }
+
+  updateFilterPriority(event: Event) {
+    const value = (event.target as HTMLSelectElement).value as any; // Priority | 'all'
+    this.taskService.filterPriority.set(value);
+  }
+
+  hasActiveFilters(): boolean {
+    return this.taskService.searchTerm() !== '' ||
+           this.taskService.filterStatus() !== 'all' ||
+           this.taskService.filterPriority() !== 'all';
+  }
+
+  resetFilters() {
+    this.taskService.searchTerm.set('');
+    this.taskService.filterStatus.set('all');
+    this.taskService.filterPriority.set('all');
+  }
+
+  trackByStatus(index: number, column: any) {
+    return column.status;
   }
 }
