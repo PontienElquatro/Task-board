@@ -1,28 +1,8 @@
-<div class="bg-gray-100/50 dark:bg-gray-800/50 rounded-2xl p-4 min-h-[500px] flex flex-col border border-gray-200 dark:border-gray-700 transition-colors">
-  <div class="flex items-center justify-between mb-5 px-1">
-    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 capitalize flex items-center">
-      {{ label }}
-      <span class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs py-0.5 px-2 rounded-full">{{ tasks.length }}</span>
-    </h2>
+<section class="kanban-column" [attr.data-status]="status" [attr.aria-label]="label">
+  <header class="column-header"><h3><i class="status-dot"></i>{{ label }} <span class="count">{{ tasks.length }}</span></h3><button class="icon-button" (click)="taskAdd.emit()" [attr.aria-label]="'Ajouter une tâche : ' + label">+</button></header>
+  <div cdkDropList [cdkDropListData]="tasks" [id]="status" [cdkDropListDisabled]="dragDisabled" (cdkDropListDropped)="taskDropped.emit($event)" class="column-body">
+    <app-task-card *ngFor="let task of tasks; trackBy: trackById" cdkDrag [cdkDragDisabled]="dragDisabled" [cdkDragData]="task" [cdkDragStartDelay]="{touch: 250, mouse: 0}" [task]="task" (selected)="taskSelected.emit($event)" (edit)="taskEdit.emit($event)" (archive)="taskArchive.emit($event)" (duplicate)="taskDuplicate.emit($event)" (statusChange)="taskStatus.emit({task: task, status: $event})"></app-task-card>
+    <div *ngIf="tasks.length === 0" class="column-empty"><span aria-hidden="true">＋</span><p>Un peu d’espace pour la suite.</p><button class="quiet" (click)="taskAdd.emit()">Ajouter une tâche</button></div>
   </div>
-
-  <div
-    cdkDropList
-    [cdkDropListData]="tasks"
-    [id]="status"
-    (cdkDropListDropped)="drop($event)"
-    class="flex-1 space-y-4 min-h-[150px]">
-    <app-task-card
-      *ngFor="let task of tasks; trackBy: trackById"
-      cdkDrag
-      [cdkDragData]="task"
-      [task]="task"
-      (selected)="taskSelected.emit($event)"
-      (edit)="taskEdit.emit($event)"
-      (delete)="taskDelete.emit($event)">
-    </app-task-card>
-    <div *ngIf="tasks.length === 0" class="text-gray-400 text-center py-4 border-2 border-dashed border-gray-100 rounded-lg">
-      Aucune tâche
-    </div>
-  </div>
-</div>
+  <button class="add-in-column" (click)="taskAdd.emit()">+ Ajouter une tâche</button>
+</section>

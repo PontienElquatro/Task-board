@@ -1,6 +1,6 @@
 {
-  "name": "my-task-board",
-  "short_name": "my-task-board",
+  "name": "MyTaskBoard",
+  "short_name": "MyTaskBoard",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",

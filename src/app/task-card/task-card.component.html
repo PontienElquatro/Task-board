@@ -1,48 +1,9 @@
-<div *ngIf="task" (click)="onClick()" class="p-4 bg-white dark:bg-gray-800 border-l-4 shadow rounded-xl hover:shadow-md transition-all cursor-pointer relative group border-transparent dark:border-gray-700"
-     [ngClass]="{
-       'border-l-blue-500': task.status === 'todo',
-       'border-l-yellow-500': task.status === 'in-progress',
-       'border-l-green-500': task.status === 'done'
-     }">
-
-  <div class="flex justify-between items-start mb-2">
-    <div class="flex flex-wrap gap-1">
-      <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded"
-            [ngClass]="{
-              'bg-red-100 text-red-700': task.priority === 'high',
-              'bg-yellow-100 text-yellow-700': task.priority === 'medium',
-              'bg-gray-100 text-gray-700': task.priority === 'low' || !task.priority
-            }">
-        {{ task.priority || 'medium' }}
-      </span>
-    </div>
-
-    <div *ngIf="task.subTasks && task.subTasks.length > 0" class="text-[10px] font-bold text-gray-400 flex items-center bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
-      <span class="mr-1">📋</span> {{ getCompletedSubTasksCount() }}/{{ task.subTasks.length }}
-    </div>
-  </div>
-
-  <div *ngIf="task.dueDate" class="mb-2">
-    <span class="text-[10px] font-bold px-2 py-0.5 rounded flex items-center w-fit"
-          [ngClass]="{
-            'bg-red-100 text-red-700': isLate(),
-            'bg-orange-100 text-orange-700': isToday() && !isLate(),
-            'bg-blue-100 text-blue-700': !isLate() && !isToday()
-          }">
-      <span class="mr-1">{{ isLate() ? '⏰' : (isToday() ? '🔥' : '📅') }}</span>
-      {{ isLate() ? 'En retard' : (isToday() ? 'Aujourd\'hui' : (task.dueDate | date:'dd/MM')) }}
-    </span>
-  </div>
-
-  <h3 class="font-bold text-lg text-gray-800 dark:text-white leading-tight transition-colors">{{ task.title }}</h3>
-  <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 transition-colors">{{ task.description }}</p>
-
-  <div class="mt-4 flex space-x-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-    <button (click)="onEdit($event)" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
-      <span class="mr-1">✏️</span> Modifier
-    </button>
-    <button (click)="onDelete($event)" class="text-red-600 hover:text-red-800 text-sm font-semibold flex items-center">
-      <span class="mr-1">🗑️</span> Supprimer
-    </button>
-  </div>
-</div>
+<article *ngIf="task" class="task-card" [class.finished]="task.status === 'done'">
+  <div class="card-meta"><span class="priority-badge" [attr.data-priority]="task.priority"><i></i>{{ priorities[task.priority] }}</span><span class="card-code">#{{ task.id.slice(0, 4) }}</span></div>
+  <button class="card-open" (click)="selected.emit(task)"><h4>{{ task.title }}</h4><p *ngIf="task.description">{{ task.description }}</p></button>
+  <div class="tag-list" *ngIf="task.tags?.length"><span *ngFor="let tag of task.tags" class="tag">{{ tag }}</span></div>
+  <select class="card-status" [attr.aria-label]="'Statut de ' + task.title" [ngModel]="task.status" (ngModelChange)="statusChange.emit($event)"><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select>
+  <div class="subtask-progress"><div class="progress-label"><span>☷ Progression</span><strong>{{ task.subTasks.length ? getCompletedSubTasksCount() + '/' + task.subTasks.length : task.status === 'done' ? '100%' : task.status === 'in-progress' ? 'En cours' : 'À démarrer' }}</strong></div><div class="progress-track"><span [style.width.%]="task.subTasks.length ? getCompletedSubTasksCount() / task.subTasks.length * 100 : task.status === 'done' ? 100 : 0"></span></div></div>
+  <div class="card-footer"><span class="due-badge" [class.overdue]="isLate()" *ngIf="task.dueDate; else noDate">◷ {{ isLate() ? 'En retard · ' : isToday() ? 'Aujourd’hui · ' : '' }}{{ task.dueDate | date:'dd/MM/yyyy' }}</span><ng-template #noDate><span class="muted">Sans échéance</span></ng-template>
+  <div class="card-actions"><button (click)="edit.emit(task)" [attr.aria-label]="'Modifier ' + task.title" title="Modifier">✎</button><button (click)="duplicate.emit(task)" [attr.aria-label]="'Dupliquer ' + task.title" title="Dupliquer">⧉</button><button (click)="archive.emit(task)" [attr.aria-label]="'Archiver ' + task.title" title="Archiver">▤</button></div></div>
+</article>

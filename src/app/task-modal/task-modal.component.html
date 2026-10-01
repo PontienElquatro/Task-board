@@ -1,140 +1,23 @@
-<!-- 🔍 Modale de consultation -->
-<div *ngIf="task && mode === 'view'" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col transition-colors">
-    <button (click)="close.emit()" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">✕</button>
-    <div class="mb-2">
-      <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded"
-            [ngClass]="{
-              'bg-red-100 text-red-700': task.priority === 'high',
-              'bg-yellow-100 text-yellow-700': task.priority === 'medium',
-              'bg-gray-100 text-gray-700': task.priority === 'low' || !task.priority
-            }">
-        {{ task.priority || 'medium' }}
-      </span>
-    </div>
-    <div class="overflow-y-auto pr-2">
-      <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">{{ task.title }}</h2>
-      <p class="text-gray-600 dark:text-gray-300 whitespace-pre-wrap leading-relaxed mb-6">{{ task.description }}</p>
-
-      <!-- Subtasks View -->
-      <div *ngIf="task.subTasks && task.subTasks.length > 0" class="mb-6">
-        <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Sous-tâches</h3>
-        <div class="space-y-2">
-          <div *ngFor="let st of task.subTasks" class="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
-            <span [class.line-through]="st.completed" [class.text-gray-400]="st.completed" class="text-gray-700 dark:text-gray-200 text-sm font-medium">
-              {{ st.completed ? '✅' : '⬜' }} {{ st.title }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6 flex flex-wrap gap-4 items-center text-sm text-gray-500 dark:text-gray-400">
-        <div>
-          Statut : <span class="ml-1 font-semibold px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md">{{ task.status }}</span>
-        </div>
-        <div *ngIf="task.goalId">
-          Objectif : <span class="ml-1 font-semibold text-gray-700 dark:text-gray-200">{{ goalService.getGoalById(task.goalId)?.title }}</span>
-        </div>
-        <div *ngIf="task.dueDate">
-          Échéance : <span class="ml-1 font-semibold text-red-600 dark:text-red-400">{{ task.dueDate | date:'dd/MM/yyyy' }}</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ✏️ Modale d'édition / Création -->
-<div *ngIf="tempTask && mode === 'edit'" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col transition-colors">
-    <button (click)="close.emit()" class="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">✕</button>
-    <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">{{ tempTask.id ? 'Modifier la tâche' : 'Nouvelle tâche' }}</h2>
-
-    <form (ngSubmit)="onSave()" #taskForm="ngForm" class="overflow-y-auto pr-2">
-      <div class="mb-5">
-        <label class="block text-gray-700 dark:text-gray-300 mb-1 font-semibold">Titre</label>
-        <input [(ngModel)]="tempTask.title" name="title" required #title="ngModel"
-               class="w-full border dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-700 dark:text-white transition-all"
-               [class.border-red-500]="title.invalid && title.touched"
-               placeholder="Ex: Finir le rapport" />
-      </div>
-
-      <div class="mb-5">
-        <label class="block text-gray-700 dark:text-gray-300 mb-1 font-semibold">Description</label>
-        <textarea [(ngModel)]="tempTask.description" name="description" rows="3"
-                  class="w-full border dark:border-gray-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-700 dark:text-white transition-all"
-                  placeholder="Détails de la tâche..."></textarea>
-      </div>
-
-      <div class="mb-5">
-        <label class="block text-gray-700 dark:text-gray-300 mb-1 font-semibold">Objectif</label>
-        <select [(ngModel)]="tempTask.goalId" name="goalId" class="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 dark:bg-gray-700 dark:text-white">
-          <option [ngValue]="undefined">Aucun objectif</option>
-          <option *ngFor="let goal of goalService.goals()" [value]="goal.id">{{ goal.title }}</option>
-        </select>
-      </div>
-
-      <div class="mb-5">
-        <label class="block text-gray-700 dark:text-gray-300 mb-2 font-semibold">Sous-tâches</label>
-        <div class="space-y-2 mb-3">
-          <div *ngFor="let st of tempTask.subTasks; let i = index" class="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg group">
-            <input type="checkbox" [checked]="st.completed" (change)="toggleSubTask(st)" class="w-4 h-4 text-blue-600 rounded">
-            <input [(ngModel)]="st.title" [name]="'st-' + i" class="flex-1 bg-transparent border-none p-0 text-sm focus:ring-0 dark:text-white" />
-            <button type="button" (click)="removeSubTask(st.id)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
-          </div>
-        </div>
-        <div class="flex gap-2">
-          <input [(ngModel)]="newSubTaskTitle" name="newSubTask" (keyup.enter)="addSubTask()" placeholder="Ajouter une sous-tâche..." class="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-600 dark:text-white" />
-          <button type="button" (click)="addSubTask()" class="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-500">Ajouter</button>
-        </div>
-      </div>
-
-      <div class="mb-5">
-        <label class="block text-gray-700 dark:text-gray-300 mb-1 font-semibold">Date d'échéance</label>
-        <input type="date" [ngModel]="tempTask.dueDate | date:'yyyy-MM-dd'" (ngModelChange)="onDueDateChange($event)" name="dueDate"
-               class="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 transition-all bg-gray-50 dark:bg-gray-700 dark:text-white" />
-      </div>
-
-      <div class="grid grid-cols-2 gap-4 mb-6">
-        <div>
-          <label class="block text-gray-700 dark:text-gray-300 mb-1 font-semibold">Statut</label>
-          <select [(ngModel)]="tempTask.status" name="status" class="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 outline-none bg-gray-50 dark:bg-gray-700 dark:text-white">
-            <option value="todo">À faire</option>
-            <option value="in-progress">En cours</option>
-            <option value="done">Terminé</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-gray-700 dark:text-gray-300 mb-1 font-semibold">Priorité</label>
-          <select [(ngModel)]="tempTask.priority" name="priority" class="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 outline-none bg-gray-50 dark:bg-gray-700 dark:text-white">
-            <option value="low">Basse</option>
-            <option value="medium">Moyenne</option>
-            <option value="high">Haute</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="flex justify-end space-x-3">
-        <button type="button" (click)="close.emit()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Annuler</button>
-        <button type="submit" [disabled]="taskForm.invalid"
-                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50">
-          {{ tempTask.id ? 'Enregistrer' : 'Créer' }}
-        </button>
-      </div>
+<div class="modal-overlay" (click)="requestClose()">
+<section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
+  <header class="modal-header"><p class="eyebrow">{{ mode === 'delete' ? 'ARCHIVES' : 'VOTRE ESPACE DE TRAVAIL' }}</p><button class="icon-button" (click)="requestClose()" aria-label="Fermer">×</button></header>
+  <p *ngIf="error" class="notice danger-text" role="alert">{{ error }} Votre saisie reste disponible.</p>
+  <ng-container *ngIf="mode === 'edit' && tempTask">
+    <h2 id="modal-title">{{ tempTask.id ? 'Un détail à ajuster ?' : 'Une nouvelle avancée.' }}</h2><p class="muted">Définissez l’essentiel. Le reste suivra.</p>
+    <form (ngSubmit)="onSave()" #taskForm="ngForm">
+      <label for="task-title">Titre <span class="muted">(obligatoire)</span></label><input id="task-title" cdkFocusInitial name="title" [(ngModel)]="tempTask.title" required maxlength="200" placeholder="Qu’avez-vous en tête ?">
+      <label for="task-description">Description</label><textarea id="task-description" name="description" [(ngModel)]="tempTask.description" maxlength="10000" rows="3" placeholder="Quelques détails pour vous aider…"></textarea>
+      <label for="task-project">Projet</label><select id="task-project" name="project" [(ngModel)]="tempTask.projectId"><option [ngValue]="undefined">Sans projet</option><option *ngFor="let project of projectService.projects()" [value]="project.id">{{ project.title }}{{ project.archived ? ' (archivé)' : '' }}</option></select>
+      <div class="form-grid"><div><label for="task-status">Statut</label><select id="task-status" name="status" [(ngModel)]="tempTask.status"><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select></div><div><label for="task-priority">Priorité</label><select id="task-priority" name="priority" [(ngModel)]="tempTask.priority"><option value="low">Basse</option><option value="medium">Moyenne</option><option value="high">Haute</option></select></div></div>
+      <div class="form-grid"><div><label for="task-due">Échéance</label><input id="task-due" type="date" name="due" [(ngModel)]="dueText"></div><div><label for="task-tags">Tags</label><input id="task-tags" name="tags" [(ngModel)]="tagsText" maxlength="310" placeholder="Design, Personnel…" aria-describedby="tags-help"></div></div><p id="tags-help" class="field-help">Séparez les tags par une virgule. 10 tags maximum.</p>
+      <ng-container *ngIf="goalService.goals().length"><label for="task-goal">Objectif</label><select id="task-goal" name="goal" [(ngModel)]="tempTask.goalId"><option [ngValue]="undefined">Aucun objectif</option><option *ngFor="let goal of goalService.goals()" [value]="goal.id">{{ goal.title }}</option></select></ng-container>
+      <label for="new-subtask">Sous-tâches</label>
+      <div class="subtask-row" *ngFor="let sub of tempTask.subTasks; let i = index"><input type="checkbox" [name]="'completed-' + i" [(ngModel)]="sub.completed" [attr.aria-label]="'Terminer ' + sub.title"><input [name]="'sub-' + i" [(ngModel)]="sub.title" maxlength="200" [attr.aria-label]="'Titre de la sous-tâche ' + (i + 1)"><button type="button" class="icon-button" (click)="removeSubTask(sub.id)" aria-label="Retirer la sous-tâche">×</button></div>
+      <div class="subtask-row"><input id="new-subtask" name="newSubTask" [(ngModel)]="newSubTaskTitle" maxlength="200" (keydown.enter)="$event.preventDefault(); addSubTask()" placeholder="Décomposer en petites étapes…"><button class="secondary" type="button" (click)="addSubTask()" [disabled]="!newSubTaskTitle.trim()">Ajouter</button></div>
+      <footer class="modal-actions"><button type="button" class="secondary" (click)="requestClose()">Annuler</button><button type="submit" class="primary" [disabled]="taskForm.invalid || !tempTask.title.trim()">{{ tempTask.id ? 'Enregistrer' : 'Créer la tâche' }}</button></footer>
     </form>
-  </div>
-</div>
-
-<!-- 🗑️ Modale de confirmation de suppression -->
-<div *ngIf="task && mode === 'delete'" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 w-full max-w-md shadow-2xl text-center transition-colors">
-    <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-      ⚠️
-    </div>
-    <h2 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Confirmer la suppression</h2>
-    <p class="mb-8 text-gray-600 dark:text-gray-400">Es-tu sûr de vouloir supprimer la tâche "<strong>{{ task.title }}</strong>" ? Cette action est irréversible.</p>
-    <div class="flex flex-col sm:flex-row justify-center gap-3">
-      <button (click)="close.emit()" class="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors order-2 sm:order-1">Annuler</button>
-      <button (click)="confirmDelete.emit()" class="px-6 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-200 order-1 sm:order-2">Supprimer</button>
-    </div>
-  </div>
-</div>
+  </ng-container>
+  <ng-container *ngIf="mode === 'view' && task"><h2 id="modal-title">{{ task.title }}</h2><div class="detail-badges"><span class="tag">{{ statuses[task.status] }}</span><span class="priority-badge" [attr.data-priority]="task.priority">{{ priorities[task.priority] }}</span><span *ngFor="let tag of task.tags" class="tag">{{ tag }}</span></div><p class="detail-description">{{ task.description || 'Aucune description.' }}</p><p *ngIf="task.dueDate">Échéance : {{ task.dueDate | date:'dd/MM/yyyy' }}</p><p *ngIf="task.goalId">Objectif : {{ goalService.getGoalById(task.goalId)?.title || 'Objectif non disponible' }}</p><ul class="detail-subtasks"><li *ngFor="let sub of task.subTasks" [class.completed]="sub.completed"><label><input type="checkbox" [checked]="sub.completed" (change)="subTaskToggle.emit(sub.id)">{{ sub.title }}</label></li></ul><footer class="modal-actions"><button class="quiet danger-text" (click)="remove.emit(task)">Supprimer la tâche</button><button cdkFocusInitial class="secondary" (click)="close.emit()">Fermer</button><button class="primary" (click)="edit.emit(task)">Modifier la tâche</button></footer></ng-container>
+  <ng-container *ngIf="mode === 'delete' && task"><h2 id="modal-title">Supprimer cette tâche ?</h2><p>« {{ task.title }} » sera supprimée. Vous pourrez annuler pendant cette session.</p><footer class="modal-actions"><button cdkFocusInitial class="secondary" (click)="close.emit()">Conserver</button><button class="danger-button" (click)="confirmDelete.emit()">Supprimer</button></footer></ng-container>
+  <div class="discard-panel" *ngIf="discardPrompt" role="alert"><p>Vos modifications ne sont pas enregistrées.</p><button class="secondary" (click)="discardPrompt = false">Continuer l’édition</button><button class="quiet danger-text" (click)="close.emit()">Abandonner les modifications</button></div>
+</section></div>

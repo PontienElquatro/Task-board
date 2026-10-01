@@ -1,24 +1,21 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-  <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">MyTaskBoard</h1>
-    <p class="text-gray-600 mb-8 text-center">Bienvenue ! Connectez-vous pour gérer vos tâches.</p>
-
-    <div class="space-y-4">
-      <div>
-        <label class="block text-gray-700 mb-1">Email</label>
-        <input type="email" placeholder="demo@example.com" class="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-      <div class="mb-6">
-        <label class="block text-gray-700 mb-1">Mot de passe</label>
-        <input type="password" placeholder="••••••••" class="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500" />
-      </div>
-      <button (click)="login()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
-        Se connecter
-      </button>
-    </div>
-
-    <p class="mt-6 text-sm text-center text-gray-500">
-      Ceci est une version démo. Cliquez sur "Se connecter" pour accéder au tableau.
-    </p>
-  </div>
-</div>
+<main class="auth-page">
+  <a routerLink="/board" class="quiet">← Retour au tableau</a>
+  <section class="chart-panel auth-panel">
+    <p class="eyebrow">MYTASKBOARD · VOTRE ESPACE</p>
+    <h1>{{ auth.user() && mode !== 'recovery' ? 'Mon compte' : mode === 'signup' ? 'Créer un compte' : mode === 'reset' ? 'Récupérer mon accès' : mode === 'recovery' ? 'Nouveau mot de passe' : 'Se connecter' }}</h1>
+    <p *ngIf="message()" class="notice" role="status">{{ message() }}</p><p *ngIf="error()" class="notice danger-text" role="alert">{{ error() }}</p>
+    <p *ngIf="auth.initializing()" class="muted">Vérification de la session…</p>
+    <ng-container *ngIf="auth.user() && mode !== 'recovery'; else form">
+      <p>{{ auth.user()?.email }}</p><p class="subtitle">{{ cloud.status() }}</p>
+      <div class="account-actions"><a routerLink="/board" class="primary">Ouvrir mon tableau</a><button class="secondary" [disabled]="busy()" (click)="signOut()">Se déconnecter</button></div>
+      <hr><h2>Importer mes tâches locales</h2><p class="subtitle">Ajoutez les tâches de cet appareil à ce compte. Cette action ne supprime pas la copie locale et ne remplace pas les tâches déjà présentes.</p><button class="secondary" [disabled]="!cloud.ready() || cloud.conflict()" (click)="importLocal()">Importer les tâches de cet appareil</button>
+    </ng-container>
+    <ng-template #form><form #accountForm="ngForm" (ngSubmit)="submit()" *ngIf="!auth.initializing()">
+      <ng-container *ngIf="mode !== 'recovery'"><label for="account-email">Adresse email</label><input id="account-email" type="email" name="email" [(ngModel)]="email" required email autocomplete="email" maxlength="254"></ng-container>
+      <ng-container *ngIf="mode !== 'reset'"><label for="account-password">Mot de passe</label><input id="account-password" name="password" type="password" [(ngModel)]="password" required [minlength]="mode === 'login' ? 1 : 12" maxlength="128" [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"><p class="field-help" *ngIf="mode !== 'login'">12 caractères minimum.</p></ng-container>
+      <ng-container *ngIf="mode === 'signup' || mode === 'recovery'"><label for="account-confirm">Confirmer le mot de passe</label><input id="account-confirm" name="confirmation" type="password" [(ngModel)]="confirmation" required autocomplete="new-password"></ng-container>
+      <button class="primary" type="submit" [disabled]="busy() || accountForm.invalid || (mode === 'recovery' && !auth.user())">{{ busy() ? 'Patientez…' : mode === 'signup' ? 'Créer mon compte' : mode === 'reset' ? 'Envoyer le lien' : mode === 'recovery' ? 'Enregistrer le mot de passe' : 'Se connecter' }}</button>
+      <div class="account-actions"><button class="quiet" type="button" (click)="setMode(mode === 'signup' ? 'login' : 'signup')">{{ mode === 'signup' ? 'J’ai déjà un compte' : 'Créer un compte' }}</button><button class="quiet" type="button" (click)="setMode(mode === 'reset' ? 'login' : 'reset')">{{ mode === 'reset' ? 'Retour à la connexion' : 'Mot de passe oublié ?' }}</button></div>
+    </form><p class="muted">Le mode local reste disponible sans compte. Les données cloud sont privées à votre compte.</p></ng-template>
+  </section>
+</main>

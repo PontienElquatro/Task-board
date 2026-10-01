@@ -1,102 +1,75 @@
-<div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
-  <div class="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto mb-6 gap-4">
-    <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">🧠 MyTaskBoard</h1>
-    <div class="flex items-center gap-3 w-full md:w-auto">
-    <button (click)="themeService.toggleDarkMode()" aria-label="Basculer le mode sombre" class="p-2.5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xl shadow-sm focus:ring-2 focus:ring-blue-500 outline-none">
-        {{ themeService.darkMode() ? '☀️' : '🌙' }}
-      </button>
-      <a routerLink="/dashboard" class="flex-1 md:flex-none bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 font-bold flex items-center justify-center shadow-sm">
-        📊 Stats
-      </a>
-      <button (click)="addTask()" class="flex-1 md:flex-none bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 font-bold flex items-center justify-center">
-        <span class="mr-2 text-xl">+</span> Nouvelle Tâche
-      </button>
-    </div>
-  </div>
-
-  <!-- Search & Filters -->
-  <div class="max-w-7xl mx-auto mb-8 bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col md:flex-row gap-4 items-center">
-    <div class="relative w-full md:w-96">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">🔍</span>
-      <input
-        type="text"
-        [value]="taskService.searchTerm()"
-        (input)="updateSearch($event)"
-        aria-label="Rechercher des tâches"
-        placeholder="Rechercher par titre ou description..."
-        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all dark:text-white"
-      />
-    </div>
-
-    <div class="flex gap-2 w-full md:w-auto">
-      <select
-        [value]="taskService.filterStatus()"
-        (change)="updateFilterStatus($event)"
-        aria-label="Filtrer par statut"
-        class="flex-1 md:w-40 px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium transition-all appearance-none dark:text-white"
-      >
-        <option value="all">Tous les statuts</option>
-        <option value="todo">À faire</option>
-        <option value="in-progress">En cours</option>
-        <option value="done">Terminé</option>
-      </select>
-
-      <select
-        [value]="taskService.filterPriority()"
-        (change)="updateFilterPriority($event)"
-        aria-label="Filtrer par priorité"
-        class="flex-1 md:w-40 px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border-none rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium transition-all appearance-none dark:text-white"
-      >
-        <option value="all">Toutes priorités</option>
-        <option value="low">Basse</option>
-        <option value="medium">Moyenne</option>
-        <option value="high">Haute</option>
-      </select>
-    </div>
-
-    <button
-      *ngIf="hasActiveFilters()"
-      (click)="resetFilters()"
-      class="text-sm text-blue-600 font-semibold hover:text-blue-800 px-2"
-    >
-      Réinitialiser
-    </button>
-  </div>
-
-  <!-- Desktop view -->
-  <div class="hidden md:grid md:grid-cols-3 gap-6 max-w-7xl mx-auto" cdkDropListGroup>
-    <app-task-column
-      *ngFor="let column of columns; trackBy: trackByStatus"
-      [label]="column.label"
-      [status]="column.status"
-      [tasks]="getTasksByStatus(column.status)"
-      (taskSelected)="handleTaskSelected($event)"
-      (taskEdit)="handleTaskEdit($event)"
-      (taskDelete)="handleTaskDelete($event)"
-      (taskDropped)="onTaskDropped($event)">
-    </app-task-column>
-  </div>
-
-  <!-- Mobile view with horizontal scroll -->
-  <div class="md:hidden flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-1" cdkDropListGroup>
-    <div *ngFor="let column of columns; trackBy: trackByStatus" class="min-w-[85vw] snap-center">
-      <app-task-column
-        [label]="column.label"
-        [status]="column.status"
-        [tasks]="getTasksByStatus(column.status)"
-        (taskSelected)="handleTaskSelected($event)"
-        (taskEdit)="handleTaskEdit($event)"
-        (taskDelete)="handleTaskDelete($event)"
-        (taskDropped)="onTaskDropped($event)">
-      </app-task-column>
-    </div>
-  </div>
+<div class="workspace">
+  <nav class="app-rail" aria-label="Accès rapides">
+    <a routerLink="/board" class="rail-logo" aria-label="MyTaskBoard">m.</a>
+    <button [class.rail-active]="!archiveOpen()" (click)="openBoard()" aria-label="Tableau de tâches">▦</button>
+    <a routerLink="/dashboard" aria-label="Statistiques">◔</a>
+    <button [class.rail-active]="archiveOpen()" (click)="archiveOpen.set(true)" aria-label="Archives">▤</button>
+    <button class="rail-theme" (click)="themeService.toggleDarkMode()" aria-label="Changer de thème">{{ themeService.darkMode() ? '☀' : '☾' }}</button>
+  </nav>
+  <aside class="sidebar">
+    <a routerLink="/board" class="brand"><span class="brand-mark" aria-hidden="true">m.</span> mytaskboard<span class="version">02</span></a>
+    <p class="eyebrow sidebar-label">ESPACE PERSONNEL</p>
+    <nav aria-label="Navigation principale">
+      <button [class.active]="!archiveOpen()" (click)="openBoard()"><span aria-hidden="true">▦</span> Mon tableau</button>
+      <a routerLink="/dashboard"><span aria-hidden="true">◔</span> Vue d’ensemble</a>
+      <button [class.active]="archiveOpen()" (click)="archiveOpen.set(true)"><span aria-hidden="true">▤</span> Archives <span class="nav-count">{{ taskService.archivedTasks().length }}</span></button>
+    </nav>
+    <section class="side-group projects-group" aria-label="Projets">
+      <h2>Projets <button class="quiet" aria-label="Nouveau projet" (click)="projectEditor=true; editingProjectId=undefined; projectDraft=''">+</button></h2>
+      <p *ngIf="projectService.error()" class="danger-text">{{ projectService.error() }}</p>
+      <form *ngIf="projectEditor" (ngSubmit)="saveProject()"><label for="project-name">Nom du projet</label><input id="project-name" name="projectName" [(ngModel)]="projectDraft" required maxlength="100"><button class="quiet" type="submit">Enregistrer le projet</button><button class="quiet" type="button" (click)="projectEditor=false">Annuler</button></form>
+      <div class="project-nav-row" *ngFor="let project of projectService.projects()"><button [class.selected]="!archiveOpen() && taskService.filterProject() === project.id" (click)="openBoard(); taskService.filterProject.set(project.id)">{{ project.title }}{{ project.archived ? ' · archivé' : '' }}</button><button class="quiet" [attr.aria-label]="'Renommer le projet ' + project.title" (click)="editProject(project.id)">✎</button><button class="quiet" [attr.aria-label]="(project.archived ? 'Restaurer le projet ' : 'Archiver le projet ') + project.title" (click)="archiveProject(project.id)">▤</button></div>
+    </section>
+    <section class="side-group" aria-label="Statuts des tâches">
+      <h2>Tâches <span>⌄</span></h2>
+      <button [class.selected]="!archiveOpen() && taskService.filterStatus() === 'all'" (click)="openBoard()">Toutes les tâches <span>{{ taskService.activeTasks().length }}</span></button>
+      <button [class.selected]="!archiveOpen() && taskService.filterStatus() === 'todo'" (click)="openBoard('todo')">À faire <span>{{ taskService.activeTasks().length - inProgressCount() - completed() }}</span></button>
+      <button [class.selected]="!archiveOpen() && taskService.filterStatus() === 'in-progress'" (click)="openBoard('in-progress')">En cours <span>{{ inProgressCount() }}</span></button>
+      <button [class.selected]="!archiveOpen() && taskService.filterStatus() === 'done'" (click)="openBoard('done')">Terminées <span>{{ completed() }}</span></button>
+    </section>
+    <div class="sidebar-bottom"><div class="local-indicator"><i></i> Espace local</div><p>Vos tâches restent sur cet appareil.<br>Exportez une copie pour les protéger.</p><button class="quiet" (click)="exportBackup()">Exporter une sauvegarde ↗</button></div>
+  </aside>
+  <main class="main-content" id="main-content">
+    <header class="topbar"><span>Mon espace <span class="muted">/ {{ archiveOpen() ? 'Archives' : 'Tableau' }}</span></span><div class="top-actions">
+      <button class="icon-button" (click)="themeService.toggleDarkMode()" [attr.aria-label]="themeService.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'">{{ themeService.darkMode() ? '☀' : '☾' }}</button>
+      <span class="avatar" aria-label="Espace personnel">MO</span>
+    </div></header>
+    <section class="page-heading">
+      <div><p class="eyebrow">MON ESPACE DE TRAVAIL</p><h1>{{ archiveOpen() ? 'Vos archives.' : 'Mon tableau de tâches' }}</h1><p class="subtitle">{{ archiveOpen() ? 'Gardez une trace. Reprenez quand vous voulez.' : 'Bienvenue ! Vos projets avancent ici.' }}</p></div>
+      <button *ngIf="!archiveOpen()" class="primary" (click)="addTask()"><span aria-hidden="true">+</span> Nouvelle tâche <kbd>N</kbd></button>
+    </section>
+    <div class="notice" role="status" *ngIf="taskService.notice()"><span>{{ taskService.notice() }}</span><button aria-label="Fermer le message" (click)="taskService.notice.set('')">×</button></div>
+    <ng-container *ngIf="!archiveOpen(); else archives">
+      <section class="stats-strip" aria-label="Résumé du tableau">
+        <div><span class="stat-label">Tâches actives</span><strong>{{ taskService.activeTasks().length }}</strong><span class="stat-caption">dans votre espace</span></div>
+        <div><span class="stat-label">En cours</span><strong>{{ inProgressCount() }}</strong><span class="stat-caption">un pas après l’autre</span></div>
+        <div><span class="stat-label">À rattraper</span><strong [class.danger-text]="late() > 0">{{ late() }}</strong><span class="stat-caption">échéances dépassées</span></div>
+        <div class="progress-stat"><span class="stat-label">Progression</span><strong>{{ progress() }}<small>%</small></strong><div class="progress-track" role="progressbar" aria-label="Tâches terminées" [attr.aria-valuenow]="progress()" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="progress()"></span></div></div>
+      </section>
+      <section class="board-toolbar" aria-label="Filtres du tableau">
+        <div class="toolbar-top"><h2>Votre tableau <span class="count">{{ taskService.filteredTasks().length }}</span></h2><div class="toolbar-actions"><button class="quiet" [disabled]="!taskService.canUndo()" (click)="taskService.undo()">↶ Annuler</button><button class="quiet" (click)="exportBackup()">Exporter</button><button class="quiet" [disabled]="importing()" (click)="backupInput.click()">{{ importing() ? 'Import…' : 'Importer' }}</button><input #backupInput type="file" accept=".json,application/json" hidden (change)="importBackup($event)"></div></div>
+        <div class="filters">
+          <label class="search-field"><span aria-hidden="true">⌕</span><input id="task-search" type="search" placeholder="Rechercher une tâche…" aria-label="Rechercher une tâche" [ngModel]="taskService.searchTerm()" (ngModelChange)="taskService.searchTerm.set($event)"><kbd>/</kbd></label>
+          <select aria-label="Filtrer par priorité" [ngModel]="taskService.filterPriority()" (ngModelChange)="taskService.filterPriority.set($event)"><option value="all">Toutes les priorités</option><option value="high">Haute</option><option value="medium">Moyenne</option><option value="low">Basse</option></select>
+          <select aria-label="Filtrer par statut" [ngModel]="taskService.filterStatus()" (ngModelChange)="taskService.filterStatus.set($event)"><option value="all">Tous les statuts</option><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select>
+          <select aria-label="Filtrer par tag" [ngModel]="taskService.filterTag()" (ngModelChange)="taskService.filterTag.set($event)"><option value="">Tous les tags</option><option *ngFor="let tag of taskService.tags()" [value]="tag">{{ tag }}</option></select>
+          <select aria-label="Filtrer par échéance" [ngModel]="taskService.filterDue()" (ngModelChange)="taskService.filterDue.set($event)"><option value="all">Toutes les échéances</option><option value="late">En retard</option><option value="none">Sans échéance</option></select>
+          <select aria-label="Trier les tâches" [ngModel]="taskService.sort()" (ngModelChange)="taskService.sort.set($event)"><option value="manual">Ordre manuel</option><option value="priority">Par priorité</option><option value="due">Par échéance</option><option value="newest">Plus récentes</option></select>
+          <button *ngIf="hasActiveFilters()" class="quiet" (click)="resetFilters()">Effacer</button>
+        </div>
+        <p class="filter-hint" *ngIf="dragDisabled()">Choisissez l’ordre manuel pour déplacer les cartes. Le statut reste modifiable depuis chaque carte.</p>
+      </section>
+      <div class="welcome" *ngIf="taskService.activeTasks().length === 0"><span class="welcome-symbol" aria-hidden="true">✳</span><h2>Tout commence par une première tâche.</h2><p>Une idée, un projet, une petite chose à faire : donnez-lui sa place.</p><button class="primary" (click)="addTask()">Créer ma première tâche</button><button class="quiet" (click)="examples()">Explorer un exemple</button></div>
+      <div class="board-grid" cdkDropListGroup>
+        <app-task-column *ngFor="let column of columns; trackBy: trackByStatus" [label]="column.label" [status]="column.status" [tasks]="getTasksByStatus(column.status)" [dragDisabled]="dragDisabled()" (taskSelected)="handleTaskSelected($event)" (taskEdit)="handleTaskEdit($event)" (taskArchive)="archive($event)" (taskDuplicate)="duplicate($event)" (taskStatus)="changeStatus($event.task, $event.status)" (taskDropped)="onTaskDropped($event)" (taskAdd)="addTask(column.status)"></app-task-column>
+      </div>
+      <footer class="board-footer"><span>De petites tâches. De grandes avancées.</span><span>{{ completed() }} tâche(s) terminée(s)</span></footer>
+    </ng-container>
+    <ng-template #archives>
+      <div class="toolbar-actions archive-tools"><button class="quiet" [disabled]="!taskService.canUndo()" (click)="taskService.undo()">↶ Annuler</button><button class="quiet" (click)="exportBackup()">Exporter les tâches</button></div>
+      <div class="welcome" *ngIf="!taskService.archivedTasks().length"><h2>Aucune tâche archivée.</h2><p>Les tâches archivées apparaîtront ici et pourront être restaurées.</p></div>
+      <article class="archive-row" *ngFor="let task of taskService.archivedTasks()"><div><h2>{{ task.title }}</h2><p>{{ task.description }}</p></div><div class="toolbar-actions"><button class="secondary" (click)="restore(task)">Restaurer</button><button class="quiet danger-text" (click)="handleTaskDelete(task)">Supprimer</button></div></article>
+    </ng-template>
+  </main>
 </div>
-
-<app-task-modal
-  [task]="selectedTask"
-  [mode]="modalMode === 'create' ? 'edit' : modalMode"
-  (close)="closeModal()"
-  (save)="saveTask($event)"
-  (confirmDelete)="deleteConfirmed()">
-</app-task-modal>
+<app-task-modal *ngIf="selectedTask" [task]="selectedTask" [error]="modalError()" [mode]="modalMode === 'create' ? 'edit' : modalMode" (close)="closeModal()" (save)="saveTask($event)" (edit)="handleTaskEdit($event)" (remove)="handleTaskDelete($event)" (subTaskToggle)="toggleSubTask($event)" (confirmDelete)="deleteConfirmed()"></app-task-modal>

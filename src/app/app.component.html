@@ -1,1 +1,3 @@
+<div class="update-banner" role="status" *ngIf="updateReady()">Une nouvelle version est prête. Vos tâches enregistrées seront conservées.<button class="primary" (click)="reload()">Actualiser l’application</button></div>
 <router-outlet />
+<app-account-bar />
