@@ -8,6 +8,8 @@ let currentUser={id:'admin-id',email:'admin@example.invalid',email_confirmed_at:
 let authError=null;
 let allow=true;
 let rate=0;
+let permissionFailure=false;
+let auditFailure=false;
 const selections=[];
 class Query {
   constructor(table){this.table=table;this.filters={};}
@@ -19,8 +21,8 @@ class Query {
   limit(){return this;}
   insert(){return this;}
   result(){
-    if(this.table==='taskboard_admin_allowlist')return {data:this.filters.email ? (allow ? {email:this.filters.email}:null) : [{email:'admin@example.invalid'}],error:null};
-    if(this.table==='taskboard_admin_audit')return {data:[],count:rate,error:null};
+    if(this.table==='taskboard_admin_allowlist')return {data:this.filters.email ? (allow ? {email:this.filters.email}:null) : [{email:'admin@example.invalid'}],error:permissionFailure ? {message:'lookup failed'}:null};
+    if(this.table==='taskboard_admin_audit')return {data:[],count:rate,error:auditFailure ? {message:'audit failed'}:null};
     return {data:[{user_id:'admin-id',updated_at:'2026-01-02'}],count:1,error:null};
   }
   maybeSingle(){return Promise.resolve(this.result());}
@@ -35,6 +37,13 @@ authError={message:'expired'};assert.equal((await handler(request())).status,401
 currentUser.email_confirmed_at=null;assert.equal((await handler(request())).status,403);currentUser.email_confirmed_at='2026-01-01';
 allow=false;assert.equal((await handler(request())).status,403);allow=true;
 assert.equal((await handler(request({page:0}))).status,400);
+for(const invalid of [null,[],true,'admin',{page:1,role:'admin'},{page:1.5},{page:10001}]) assert.equal((await handler(request(invalid))).status,400);
+assert.equal((await handler(request({padding:'x'.repeat(1100)}))).status,413);
+assert.equal((await handler(new Request('https://test.invalid',{method:'POST',headers:{Authorization:'Bearer valid'},body:'{broken'}))).status,400);
+permissionFailure=true;assert.equal((await handler(request())).status,503);permissionFailure=false;
+auditFailure=true;assert.equal((await handler(request())).status,503);auditFailure=false;
+currentUser.user_metadata={role:'admin',email:'admin@example.invalid'};allow=false;
+assert.equal((await handler(request({page:1}))).status,403);allow=true;
 assert.equal((await handler(new Request('https://test.invalid',{method:'GET'}))).status,405);
 assert.equal((await handler(new Request('https://test.invalid',{method:'OPTIONS'}))).status,200);
 rate=30;assert.equal((await handler(request())).status,429);rate=0;
@@ -44,4 +53,4 @@ assert.deepEqual(Object.keys(snapshot.users[0]).sort(),['admin','confirmed','cre
 assert.equal(snapshot.users[0].admin,true);
 assert.equal(snapshot.workspaces,1);
 assert.ok(!selections.some(([table,fields])=>table==='taskboard_workspaces' && /data|\*/.test(fields)));
-console.log('Admin Edge: 13 assertions passed (authentication, confirmation, permission, method, pagination, rate limit, private data).');
+console.log('Admin Edge: 25 assertions passed (authentication, confirmation, permissions, fail-closed errors, untrusted metadata, payload, pagination, rate limit, private data).');

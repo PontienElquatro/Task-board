@@ -33,6 +33,7 @@ Deno.serve(async (req:Request) => {
     if (raw.length>1024) return reply(413,{error:'Payload too large'});
     let body: {page?:number};
     try { body=raw ? JSON.parse(raw) : {}; } catch { return reply(400,{error:'Invalid JSON'}); }
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>key!=='page')) return reply(400,{error:'Invalid request'});
     const page=body?.page ?? 1;
     if (!Number.isSafeInteger(page) || page<1 || page>10000) return reply(400,{error:'Invalid page'});
     const [accounts, countResult, roles]=await Promise.all([

@@ -8,7 +8,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideRouter([]),{provide:CloudStorageProvider,useValue:{auth:{initializing:signal(false),user:signal(null)},status:signal('Mode local'),conflict:signal(false)}}],
+      providers: [provideRouter([]),{provide:CloudStorageProvider,useValue:{auth:{initializing:signal(false),user:signal(null)},status:signal('Mode local'),conflict:signal(false),localBackupStatus:signal('Copie confirmée')}}],
     }).compileComponents();
   });
 
@@ -21,7 +21,7 @@ describe('AppComponent', () => {
   it(`should have the application title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('MyTaskBoard');
+    expect(app.title).toEqual('Ma’at');
   });
 
   it('should render the router outlet', () => {

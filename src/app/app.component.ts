@@ -5,6 +5,7 @@ import { AccountBarComponent } from './account-bar/account-bar.component';
 import { RouterOutlet } from '@angular/router';
 import { inject } from '@angular/core';
 import { ThemeService } from './services/theme.service';
+import { BRAND } from './core/brand';
 
 @Component({
   selector: 'app-root',
@@ -25,5 +26,5 @@ export class AppComponent implements OnDestroy {
   }
   reload() { window.location.reload(); }
   ngOnDestroy() { this.subscription?.unsubscribe(); }
-  title = 'MyTaskBoard';
+  title = BRAND.name;
 }

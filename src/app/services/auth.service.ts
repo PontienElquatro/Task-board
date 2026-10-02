@@ -1,10 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { createClient, User } from '@supabase/supabase-js';
+import { PUBLIC_BACKEND } from '../core/config/app-config';
 
 @Injectable({providedIn:'root'})
 export class AuthService {
-  readonly client = createClient('https://nzdfuhozeiexvtrryndk.supabase.co', 'sb_publishable_Q0sTFsm0OJ3HRdKbhZd1gA_tuumvV3R');
+  readonly client = createClient(PUBLIC_BACKEND.url, PUBLIC_BACKEND.publishableKey);
   readonly user = signal<User | null>(null);
   readonly initializing = signal(true);
   readonly recovering = signal(false);

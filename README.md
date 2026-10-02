@@ -1,4 +1,10 @@
-# MyTaskBoard 2
+# Ma’at — L’équilibre de vos projets
+
+Anciennement MyTaskBoard. L'identité utilise les logos fournis par le propriétaire. Les anciennes clés de stockage et les sauvegardes MyTaskBoard restent compatibles : aucun changement de nom des données n'est nécessaire.
+
+La restructuration commence par le socle de fiabilité : marque partagée, sauvegarde de secours avant récupération cloud, reprise automatique après erreur réseau et contrôles GitHub Actions. Voir [l'architecture et les phases restantes](docs/ARCHITECTURE-MAAT.md).
+
+Les instructions historiques ci-dessous mentionnent parfois MyTaskBoard et ses archives. Le mode cloud est assuré par CloudStorageProvider ; le mode sans compte conserve les données dans le navigateur.
 
 Un tableau personnel de tâches, en français, construit avec Angular 20.3 et Tailwind CSS 4. La section « Version connectée et administration » ci-dessous décrit Supabase et les prérequis de mise en production.
 
@@ -94,7 +100,13 @@ npm run test:admin
 npm run preview
 ```
 
-## Administration
+## Tests cloud et sécurité — lot 5
+
+`npm run test:cloud-browser` exécute les scénarios multi-onglets sur un build servi localement. Ce test nécessite Playwright disponible dans l'environnement de test ; `MAAT_PLAYWRIGHT_PATH` permet d'indiquer son module installé et `CHROME_BIN` un navigateur existant. `MAAT_TEST_URL` vaut par défaut `http://127.0.0.1:4213`. Les destinations non locales sont interceptées : le backend Supabase est simulé, sans appel ni écriture réels. Ces tests ne prouvent pas les politiques RLS de production et ne sont pas encore intégrés à la CI.
+
+`database/security-audit.sql` audite en lecture seule les droits, RLS et fonctions. L'audit du 1 octobre confirme les protections par propriétaire et le refus d'accès client aux tables admin. Il révèle aussi des droits INSERT/UPDATE directs sur les espaces : ils permettent de contourner le protocole CAS, sans donner accès aux espaces des autres utilisateurs. Ne pas révoquer ces droits seuls : la fonction actuelle SECURITY INVOKER en dépend. Une solution contrôlée, testée sur une base isolée, est nécessaire avant publication. La limite admin demeure non atomique ; les rôles par identifiant et le MFA restent à réaliser.
+
+## Administration — fonctionnement
 
 Le dashboard présente les comptes paginés (50 par page), leur confirmation, leurs connexions, la dernière synchronisation et les 30 dernières consultations administratives. La recherche porte sur la page affichée. Il ne donne pas accès au contenu des tâches privées et ne permet pas de supprimer les comptes.
 

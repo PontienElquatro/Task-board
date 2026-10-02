@@ -1,7 +1,8 @@
 <main class="auth-page">
   <a routerLink="/board" class="quiet">← Retour au tableau</a>
   <section class="chart-panel auth-panel">
-    <p class="eyebrow">MYTASKBOARD · VOTRE ESPACE</p>
+    <app-brand />
+    <p class="eyebrow">MA’AT · L’ÉQUILIBRE DE VOS PROJETS</p>
     <h1>{{ auth.user() && mode !== 'recovery' ? 'Mon compte' : mode === 'signup' ? 'Créer un compte' : mode === 'reset' ? 'Récupérer mon accès' : mode === 'recovery' ? 'Nouveau mot de passe' : 'Se connecter' }}</h1>
     <p *ngIf="message()" class="notice" role="status">{{ message() }}</p><p *ngIf="error()" class="notice danger-text" role="alert">{{ error() }}</p>
     <p *ngIf="auth.initializing()" class="muted">Vérification de la session…</p>

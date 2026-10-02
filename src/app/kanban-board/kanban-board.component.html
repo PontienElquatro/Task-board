@@ -1,13 +1,13 @@
 <div class="workspace">
   <nav class="app-rail" aria-label="Accès rapides">
-    <a routerLink="/board" class="rail-logo" aria-label="MyTaskBoard">m.</a>
+    <a routerLink="/board" class="flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-white dark:bg-gray-800" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /></a>
     <button [class.rail-active]="!archiveOpen()" (click)="openBoard()" aria-label="Tableau de tâches">▦</button>
     <a routerLink="/dashboard" aria-label="Statistiques">◔</a>
     <button [class.rail-active]="archiveOpen()" (click)="archiveOpen.set(true)" aria-label="Archives">▤</button>
     <button class="rail-theme" (click)="themeService.toggleDarkMode()" aria-label="Changer de thème">{{ themeService.darkMode() ? '☀' : '☾' }}</button>
   </nav>
   <aside class="sidebar">
-    <a routerLink="/board" class="brand"><span class="brand-mark" aria-hidden="true">m.</span> mytaskboard<span class="version">02</span></a>
+    <a routerLink="/board" class="brand" aria-label="Ma’at — Tableau"><app-brand /></a>
     <p class="eyebrow sidebar-label">ESPACE PERSONNEL</p>
     <nav aria-label="Navigation principale">
       <button [class.active]="!archiveOpen()" (click)="openBoard()"><span aria-hidden="true">▦</span> Mon tableau</button>
@@ -48,19 +48,11 @@
       </section>
       <section class="board-toolbar" aria-label="Filtres du tableau">
         <div class="toolbar-top"><h2>Votre tableau <span class="count">{{ taskService.filteredTasks().length }}</span></h2><div class="toolbar-actions"><button class="quiet" [disabled]="!taskService.canUndo()" (click)="taskService.undo()">↶ Annuler</button><button class="quiet" (click)="exportBackup()">Exporter</button><button class="quiet" [disabled]="importing()" (click)="backupInput.click()">{{ importing() ? 'Import…' : 'Importer' }}</button><input #backupInput type="file" accept=".json,application/json" hidden (change)="importBackup($event)"></div></div>
-        <div class="filters">
-          <label class="search-field"><span aria-hidden="true">⌕</span><input id="task-search" type="search" placeholder="Rechercher une tâche…" aria-label="Rechercher une tâche" [ngModel]="taskService.searchTerm()" (ngModelChange)="taskService.searchTerm.set($event)"><kbd>/</kbd></label>
-          <select aria-label="Filtrer par priorité" [ngModel]="taskService.filterPriority()" (ngModelChange)="taskService.filterPriority.set($event)"><option value="all">Toutes les priorités</option><option value="high">Haute</option><option value="medium">Moyenne</option><option value="low">Basse</option></select>
-          <select aria-label="Filtrer par statut" [ngModel]="taskService.filterStatus()" (ngModelChange)="taskService.filterStatus.set($event)"><option value="all">Tous les statuts</option><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select>
-          <select aria-label="Filtrer par tag" [ngModel]="taskService.filterTag()" (ngModelChange)="taskService.filterTag.set($event)"><option value="">Tous les tags</option><option *ngFor="let tag of taskService.tags()" [value]="tag">{{ tag }}</option></select>
-          <select aria-label="Filtrer par échéance" [ngModel]="taskService.filterDue()" (ngModelChange)="taskService.filterDue.set($event)"><option value="all">Toutes les échéances</option><option value="late">En retard</option><option value="none">Sans échéance</option></select>
-          <select aria-label="Trier les tâches" [ngModel]="taskService.sort()" (ngModelChange)="taskService.sort.set($event)"><option value="manual">Ordre manuel</option><option value="priority">Par priorité</option><option value="due">Par échéance</option><option value="newest">Plus récentes</option></select>
-          <button *ngIf="hasActiveFilters()" class="quiet" (click)="resetFilters()">Effacer</button>
-        </div>
+        <app-filter-bar [hasActiveFilters]="hasActiveFilters()" (resetFilters)="resetFilters()" />
         <p class="filter-hint" *ngIf="dragDisabled()">Choisissez l’ordre manuel pour déplacer les cartes. Le statut reste modifiable depuis chaque carte.</p>
       </section>
       <div class="welcome" *ngIf="taskService.activeTasks().length === 0"><span class="welcome-symbol" aria-hidden="true">✳</span><h2>Tout commence par une première tâche.</h2><p>Une idée, un projet, une petite chose à faire : donnez-lui sa place.</p><button class="primary" (click)="addTask()">Créer ma première tâche</button><button class="quiet" (click)="examples()">Explorer un exemple</button></div>
-      <div class="board-grid" cdkDropListGroup>
+      <div class="board-grid gap-4" cdkDropListGroup>
         <app-task-column *ngFor="let column of columns; trackBy: trackByStatus" [label]="column.label" [status]="column.status" [tasks]="getTasksByStatus(column.status)" [dragDisabled]="dragDisabled()" (taskSelected)="handleTaskSelected($event)" (taskEdit)="handleTaskEdit($event)" (taskArchive)="archive($event)" (taskDuplicate)="duplicate($event)" (taskStatus)="changeStatus($event.task, $event.status)" (taskDropped)="onTaskDropped($event)" (taskAdd)="addTask(column.status)"></app-task-column>
       </div>
       <footer class="board-footer"><span>De petites tâches. De grandes avancées.</span><span>{{ completed() }} tâche(s) terminée(s)</span></footer>

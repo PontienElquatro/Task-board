@@ -5,7 +5,8 @@ import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { CloudStorageProvider } from '../providers/cloud-storage.provider';
 import { normalizeTasks } from '../models/task-utils';
-@Component({selector:'app-login',standalone:true,imports:[CommonModule,FormsModule,RouterLink],templateUrl:'./login.component.html'})
+import { BrandComponent } from '../shared/brand/brand.component';
+@Component({selector:'app-login',standalone:true,imports:[CommonModule,FormsModule,RouterLink,BrandComponent],templateUrl:'./login.component.html'})
 export class LoginComponent {
   readonly auth=inject(AuthService);
   readonly cloud=inject(CloudStorageProvider);

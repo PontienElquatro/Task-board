@@ -28,7 +28,7 @@ begin
     update public.taskboard_workspaces set data = workspace_data, revision = revision + 1, updated_at = now()
       where user_id = auth.uid() and revision = expected_revision returning revision into result;
   end if;
-  if result is null then raise exception 'Workspace changed on another device' using errcode = '40001'; end if;
+  if result is null then raise exception 'Workspace changed on another device' using errcode = 'PT409'; end if;
   return result;
 end;
 $$;
@@ -51,7 +51,7 @@ begin
     update public.taskboard_workspaces set data = workspace_data, revision = revision + 1, updated_at = now()
       where user_id = workspace_user and revision = expected_revision returning revision into result;
   end if;
-  if result is null then raise exception 'Workspace changed on another device' using errcode = '40001'; end if;
+  if result is null then raise exception 'Workspace changed on another device' using errcode = 'PT409'; end if;
   return result;
 end;
 $$;

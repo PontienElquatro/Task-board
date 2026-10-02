@@ -12,10 +12,13 @@ import { isOverdue } from '../models/task-utils';
 import { ProjectService } from '../services/project.service';
 import { STORAGE_PROVIDER } from '../providers/storage.provider';
 import { effect, untracked } from '@angular/core';
+import { BrandComponent } from '../shared/brand/brand.component';
+import { FilterBarComponent } from '../shared/filter-bar/filter-bar.component';
+import { createTaskBackup, readTaskBackup } from '../core/storage/task-backup';
 
 @Component({
   selector: 'app-kanban-board', standalone: true,
-  imports: [CommonModule, FormsModule, TaskColumnComponent, TaskModalComponent, DragDropModule, RouterLink],
+  imports: [CommonModule, FormsModule, TaskColumnComponent, TaskModalComponent, DragDropModule, RouterLink, BrandComponent, FilterBarComponent],
   templateUrl: './kanban-board.component.html', styleUrl: './kanban-board.component.css', changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent {
@@ -113,10 +116,10 @@ export class KanbanBoardComponent {
   exportBackup() {
     this.safely(() => {
       const data = this.taskService.loadFailed() ? localStorage.getItem('mytaskboard_tasks') ?? '' :
-        JSON.stringify({ app: 'MyTaskBoard', version: 2, exportedAt: new Date().toISOString(), tasks: this.taskService.tasks() }, null, 2);
+        JSON.stringify(createTaskBackup(this.taskService.tasks()), null, 2);
       const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
       const link = document.createElement('a'); link.href = url;
-      link.download = 'mytaskboard-' + new Date().toISOString().slice(0, 10) + '.json'; link.click();
+      link.download = 'maat-' + new Date().toISOString().slice(0, 10) + '.json'; link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       this.taskService.notice.set('Sauvegarde téléchargée : tâches actives et archivées.');
     });
@@ -129,8 +132,10 @@ export class KanbanBoardComponent {
     try {
       if (file.size > 5 * 1024 * 1024) throw new Error('Le fichier dépasse 5 Mo.');
       const data = JSON.parse(await file.text());
-      if (!Array.isArray(data) && (data?.app !== 'MyTaskBoard' || data?.version !== 2)) throw new Error('Format de sauvegarde non reconnu.');
-      this.taskService.importTasks(Array.isArray(data) ? data : data.tasks);
+      this.taskService.importTasks(readTaskBackup(data));
+      if (data?.app === 'Maat' && data?.version === 1) {
+        this.taskService.notice.set('Tâches de secours importées sans remplacer les tâches existantes. Les projets et objectifs ne sont pas restaurés par cet import.');
+      }
     } catch (error) { this.taskService.notice.set(error instanceof Error ? error.message : 'Import impossible.'); }
     finally { input.value = ''; this.importing.set(false); }
   }

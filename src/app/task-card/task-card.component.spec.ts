@@ -20,4 +20,27 @@ describe('TaskCardComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('hides progress when there are no subtasks, including completed tasks', () => {
+    fixture.componentRef.setInput('task', {id:'sample',title:'Exemple',description:'',status:'done',priority:'medium',tags:[],subTasks:[],createdAt:new Date(),userId:'local'});
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="progressbar"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('À démarrer');
+  });
+
+  it('shows the actual subtask progress', () => {
+    fixture.componentRef.setInput('task', {id:'sample',title:'Exemple',description:'',status:'todo',priority:'medium',tags:[],subTasks:[{id:'one',title:'Étape',completed:true}],createdAt:new Date(),userId:'local'});
+    fixture.detectChanges();
+    const progress = fixture.nativeElement.querySelector('[role="progressbar"]');
+    expect(progress.getAttribute('aria-valuenow')).toBe('1');
+    expect(progress.getAttribute('aria-valuemax')).toBe('1');
+  });
+
+  it('keeps action events unchanged', () => {
+    fixture.componentRef.setInput('task', {id:'sample',title:'Exemple',description:'',status:'todo',priority:'medium',tags:[],subTasks:[],createdAt:new Date(),userId:'local'});
+    fixture.detectChanges();
+    spyOn(component.edit, 'emit');
+    fixture.nativeElement.querySelector('[aria-label="Modifier Exemple"]').click();
+    expect(component.edit.emit).toHaveBeenCalledWith(component.task);
+  });
 });

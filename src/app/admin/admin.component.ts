@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { BrandComponent } from '../shared/brand/brand.component';
 
 interface AdminUser { id:string; email:string; createdAt:string; lastSignIn:string|null; confirmed:boolean; admin:boolean; updatedAt:string|null; }
 interface AuditEvent { id:number; action:string; created_at:string; actor_id:string; }
 interface AdminSnapshot { users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; }
 
-@Component({selector:'app-admin',standalone:true,imports:[CommonModule,FormsModule,RouterLink],templateUrl:'./admin.component.html',styleUrl:'./admin.component.css'})
+@Component({selector:'app-admin',standalone:true,imports:[CommonModule,FormsModule,RouterLink,BrandComponent],templateUrl:'./admin.component.html',styleUrl:'./admin.component.css'})
 export class AdminComponent {
   readonly auth=inject(AuthService);
   readonly snapshot=signal<AdminSnapshot|null>(null);
