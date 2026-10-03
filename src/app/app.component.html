@@ -2,6 +2,9 @@
 <div class="update-banner" role="status" *ngIf="updateReady()">Une nouvelle version est prête. Vos tâches enregistrées seront conservées.<button class="primary" (click)="reload()">Actualiser l’application</button></div>
 <app-maat-loader *ngIf="loading()" />
 <div [attr.aria-busy]="loading()" [attr.inert]="loading() ? '' : null">
-  <app-account-bar />
-  <router-outlet />
+  <app-account-bar *ngIf="!authLayout()" />
+  <div [class.application-workspace]="workspaceLayout()">
+    <app-workspace-nav *ngIf="workspaceLayout()" />
+    <div class="application-content"><router-outlet /></div>
+  </div>
 </div>

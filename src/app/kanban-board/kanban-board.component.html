@@ -6,7 +6,7 @@
     <button [class.rail-active]="archiveOpen()" (click)="archiveOpen.set(true)" aria-label="Archives">▤</button>
     <button class="rail-theme" (click)="themeService.toggleDarkMode()" aria-label="Changer de thème">{{ themeService.darkMode() ? '☀' : '☾' }}</button>
   </nav>
-  <aside class="sidebar static h-auto w-full gap-4 p-4 lg:sticky lg:top-16 lg:h-[calc(100dvh-4rem)] lg:w-60 lg:overflow-y-auto lg:p-6">
+  <aside class="hidden" aria-hidden="true">
     <p class="eyebrow sidebar-label m-0 hidden lg:block">ESPACE PERSONNEL</p>
     <nav class="flex w-full flex-wrap gap-2 lg:grid [&>button]:min-h-11 [&>a]:min-h-11" aria-label="Navigation principale">
       <button [class.active]="!archiveOpen()" (click)="openBoard()"><span aria-hidden="true">▦</span> Mon tableau</button>
@@ -34,6 +34,7 @@
   </aside>
   <main class="main-content w-full max-w-none p-4 sm:p-6 lg:p-8" id="main-content">
     <header class="topbar h-11 border-0"><span class="text-xs text-gray-600 dark:text-gray-300">Mon espace / {{archiveOpen() ? 'Archives' : 'Tableau'}}</span><div class="top-actions">
+      <button class="quiet min-h-11 text-sm" [attr.aria-pressed]="archiveOpen()" (click)="archiveOpen() ? openBoard() : archiveOpen.set(true)">{{archiveOpen() ? 'Retour aux tâches' : 'Archives (' + taskService.archivedTasks().length + ')'}}</button>
       <button class="icon-button" (click)="themeService.toggleDarkMode()" [attr.aria-label]="themeService.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'">{{ themeService.darkMode() ? '☀' : '☾' }}</button>
     </div></header>
     <section class="page-heading gap-4 py-4">
@@ -50,7 +51,7 @@
       </section></details>
       <section class="board-toolbar" aria-label="Filtres du tableau">
         <div class="toolbar-top"><h2>Vue tableau <span class="count">{{taskService.filteredTasks().length}}</span></h2><div class="toolbar-actions"><button class="quiet min-h-11" [disabled]="!taskService.canUndo()" (click)="taskService.undo()">↶ Annuler</button><details class="relative" #boardMenu (keydown.escape)="boardMenu.open=false"><summary class="secondary min-h-11 cursor-pointer text-sm">Outils du tableau</summary><div class="absolute right-0 z-30 mt-2 grid w-56 gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800"><button class="secondary" (click)="exportBackup(); boardMenu.open=false">Exporter les tâches</button><button class="secondary" [disabled]="importing()" (click)="backupInput.click(); boardMenu.open=false">{{importing() ? 'Import…' : 'Importer une sauvegarde'}}</button><button class="secondary lg:hidden" (click)="projectEditor=!projectEditor; boardMenu.open=false">Créer un projet</button></div></details><input #backupInput type="file" accept=".json,application/json" hidden (change)="importBackup($event)"></div></div>
-        <label class="mb-4 grid gap-2 text-xs text-gray-600 dark:text-gray-300 lg:hidden">Projet<select class="min-h-11" [ngModel]="taskService.filterProject()" (ngModelChange)="taskService.filterProject.set($event)"><option value="">Tous les projets</option><option *ngFor="let project of projectService.projects()" [value]="project.id">{{project.title}}</option></select></label>
+        <label class="mb-4 grid max-w-72 gap-2 text-xs text-gray-600 dark:text-gray-300">Projet<select class="min-h-11" [ngModel]="taskService.filterProject()" (ngModelChange)="taskService.filterProject.set($event)"><option value="">Tous les projets</option><option *ngFor="let project of projectService.projects()" [value]="project.id">{{project.title}}</option></select></label>
         <form *ngIf="projectEditor" class="mb-4 flex flex-wrap gap-2 lg:hidden" (ngSubmit)="saveProject()"><label for="mobile-project" class="sr-only">Nom du projet</label><input id="mobile-project" name="mobileProject" [(ngModel)]="projectDraft" required maxlength="100" placeholder="Nom du projet"><button class="primary" type="submit">Créer le projet</button><button class="secondary" type="button" (click)="projectEditor=false">Annuler</button></form>
         <app-filter-bar [hasActiveFilters]="hasActiveFilters()" (resetFilters)="resetFilters()" />
         <p class="filter-hint" *ngIf="dragDisabled()">Choisissez l’ordre manuel pour déplacer les cartes. Le statut reste modifiable depuis chaque carte.</p>

@@ -1,0 +1,68 @@
+/* Unified Ma’at workspace. Existing blue/gray tokens and system font are retained. */
+@layer components {
+ .application-workspace {display:grid;grid-template-columns:216px minmax(0,1fr);min-height:calc(100dvh - 64px);}
+ .application-content {min-width:0;}
+ .application-workspace app-workspace-nav {border-right:1px solid var(--line);background:var(--surface);}
+ .workspace-navigation {position:sticky;top:64px;padding:24px 12px;display:flex;flex-direction:column;gap:4px;height:calc(100dvh - 64px);}
+ .workspace-navigation-label {padding:8px 12px 16px;font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--muted);}
+ .workspace-navigation>a {display:flex;align-items:center;gap:12px;min-height:44px;padding:10px 12px;border-radius:8px;font-size:13px;font-weight:500;color:var(--muted);}
+ .workspace-navigation svg {width:18px;height:18px;flex-shrink:0;}
+ .workspace-navigation>a:hover {background:var(--soft);color:var(--ink);}
+ .workspace-navigation>a.workspace-link-active {background:var(--accent-soft);color:var(--accent);font-weight:600;}
+ .workspace-navigation-help {margin-top:auto;padding:16px 12px;border-top:1px solid var(--line);font-size:11px;color:var(--muted);}
+ .workspace-navigation-help a {display:flex;align-items:center;min-height:44px;color:var(--accent);font-size:12px;}
+ .application-content h1 {font-size:26px;line-height:1.25;font-weight:650;letter-spacing:-.025em;}
+ .application-content h2 {font-size:16px;font-weight:600;letter-spacing:-.01em;}
+ .application-content app-page-shell>main {max-width:1120px;min-height:0;padding:32px;}
+ .application-content app-page-shell>main>header {margin-bottom:24px;}
+ .application-content app-page-shell>main>header>p:first-child {display:none;}
+ .application-content app-page-shell>main>header>p:last-child {margin-top:8px;max-width:640px;}
+ .application-content app-page-shell footer {margin-top:32px;font-size:12px;}
+ .application-content .workspace {min-height:0;display:block;}
+ .application-content .main-content {padding:24px 32px;}
+ .application-content .topbar {height:auto;min-height:32px;}
+ .application-content .page-heading {padding:16px 0 24px;gap:16px;}
+ .application-content .eyebrow {display:none;}
+ .application-content .subtitle {font-size:13px;line-height:1.6;margin-top:8px;}
+ .application-content .board-toolbar {margin-top:16px;}
+ .application-content .toolbar-top {border-bottom:0;padding-bottom:16px;}
+ .application-content .toolbar-top h2 {border:0;padding:0;margin:0;}
+ .application-content .stats-strip {border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px;gap:16px;box-shadow:none;}
+ .application-content details>.stats-strip {border:0;border-top:1px solid var(--line);border-radius:0;}
+ .application-content .stat-label {font-size:12px;}
+ .application-content .stats-strip strong {font-size:24px;font-weight:600;}
+ .application-content .chart-panel {padding:24px;border-radius:12px;box-shadow:none;}
+ .application-content .dashboard-page {max-width:1120px;margin:0 auto;padding:32px;}
+ .application-content .dashboard-page>.topbar {display:none;}
+ .application-content .dashboard-grid {gap:16px;}
+ .application-content .welcome {padding:32px 24px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:none;}
+ .application-content .welcome h2 {font-size:20px;}
+ .application-content .primary,.application-content .secondary {min-height:44px;font-size:13px;border-radius:8px;}
+ .application-content .primary {box-shadow:none;}
+ .application-content .board-footer {font-size:11px;margin-top:24px;}
+ .application-content .admin-page {max-width:1120px;padding:32px;gap:16px;}
+ .application-content .admin-page header app-brand {display:none;}
+ .application-content .admin-page .panel {border-radius:12px;padding:24px;}
+ app-login main {max-width:1000px;min-height:100dvh;padding:32px;}
+ app-login main>section {border-radius:16px;box-shadow:0 16px 48px #1118270c;}
+ app-login main>section>aside {min-height:560px;padding:32px;}
+ app-login main>section>aside h2 {font-size:32px;}
+ app-login main>section>div {padding:40px;}
+ app-login h1 {font-size:26px;}
+ @media(max-width:1023px) {
+  .application-workspace {display:block;}
+  .application-workspace app-workspace-nav {display:block;border-right:0;border-bottom:1px solid var(--line);}
+  .workspace-navigation {height:auto;position:static;flex-direction:row;overflow-x:auto;padding:8px 16px;gap:4px;}
+  .workspace-navigation-label,.workspace-navigation-help {display:none;}
+  .workspace-navigation>a {flex-shrink:0;white-space:nowrap;gap:8px;padding:10px 12px;}
+  app-login main {max-width:520px;}
+ }
+ @media(max-width:639px) {
+  .application-content app-page-shell>main,.application-content .main-content,.application-content .dashboard-page {padding:20px 16px;}
+  .application-content h1 {font-size:24px;}
+  .application-content .page-heading {padding:8px 0 20px;}
+  .application-content .chart-panel {padding:16px;}
+  app-login main {padding:20px 16px;justify-content:flex-start;}
+  app-login main>section>div {padding:24px;}
+ }
+}

@@ -43,4 +43,12 @@ describe('TaskCardComponent', () => {
     fixture.nativeElement.querySelector('[aria-label="Modifier Exemple"]').click();
     expect(component.edit.emit).toHaveBeenCalledWith(component.task);
   });
+  it('regroupe les actions dans un menu nommé, fermé par défaut',()=>{
+    fixture.componentRef.setInput('task',{id:'sample',title:'Exemple',description:'',status:'todo',priority:'medium',tags:[],subTasks:[],createdAt:new Date(),userId:'local'});
+    fixture.detectChanges();
+    const menu=fixture.nativeElement.querySelector('details') as HTMLDetailsElement;
+    expect(menu.open).toBeFalse();
+    expect(menu.querySelector('summary')?.getAttribute('aria-label')).toBe('Actions pour Exemple');
+    expect(menu.querySelector('select')?.getAttribute('aria-label')).toBe('Statut de Exemple');
+  });
 });
