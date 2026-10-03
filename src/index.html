@@ -16,8 +16,18 @@
   <meta name="description" content="Votre espace personnel pour organiser les tâches, suivre les priorités et avancer sereinement.">
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div class="maat-loading-screen" role="status" aria-live="polite">
+      <div class="maat-loader">
+        <div class="maat-loader__icon" aria-hidden="true">
+          <svg class="maat-loader__feather" viewBox="0 0 30 40"><path d="M15 2 C22 12 23 24 15 32 C7 24 8 12 15 2 Z" /></svg>
+          <div class="maat-loader__columns"><span class="maat-loader__col"></span><span class="maat-loader__col"></span><span class="maat-loader__col"></span></div>
+        </div>
+        <p class="maat-loader__text">Chargement de Ma’at<span class="maat-loader__dots" aria-hidden="true"><span></span><span></span><span></span></span></p>
+      </div>
+    </div>
+  </app-root>
 
-  <noscript>Activez JavaScript pour utiliser Ma’at.</noscript>
+  <noscript><style>app-root { display: none; }</style>Activez JavaScript pour utiliser Ma’at.</noscript>
 </body>
 </html>
