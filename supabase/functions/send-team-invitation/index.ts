@@ -26,6 +26,6 @@ Deno.serve(async (request) => {
     const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Ma’at <onboarding@resend.dev>',to:[invitation.email],subject:`Invitation à rejoindre ${body.teamName||'une équipe Ma’at'}`,html})});
     if(!response.ok) { const details=await response.text(); console.error('Resend error',response.status,details); throw new Error(`Resend a refusé l’envoi (${response.status}). ${details.slice(0,240)}`); }
     return new Response(JSON.stringify({sent:true}),{headers:{...cors,'Content-Type':'application/json'}});
-  } catch(error) { return new Response(JSON.stringify({error:error instanceof Error?error.message:'Envoi impossible.'}),{status:400,headers:{...cors,'Content-Type':'application/json'}}); }
+  } catch(error) { return new Response(JSON.stringify({sent:false,error:error instanceof Error?error.message:'Envoi impossible.'}),{status:200,headers:{...cors,'Content-Type':'application/json'}}); }
 });
 function escapeHtml(value:string){return value.replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]??char));}
