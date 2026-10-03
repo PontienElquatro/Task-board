@@ -17,4 +17,16 @@ Les tests unitaires ajoutés couvrent les destinations de navigation et la struc
 
 ## Limites fonctionnelles inchangées
 
+## Corrections issues de la revue de fa2600a
+
+- Barre secondaire et ancienne navigation cachée supprimées du tableau.
+- Filtre projet déplacé dans les filtres avancés, avec compteur de filtres actifs.
+- Résumé du tableau déplacé sous les cartes ; filtres masqués lorsque le tableau est vide.
+- Import de sauvegarde et annulation conservés dans l’état vide.
+- Symbole emoji remplacé par le logo Ma’at fourni.
+- Navigation mobile repliable, avec nom de la destination actuelle et fermeture au clic / Échap.
+- Vue d’ensemble sans tâches : invitation à ouvrir le tableau plutôt que des graphiques à zéro.
+
+Ces corrections doivent être revérifiées après déploiement ; la revue précédente ne valide pas automatiquement ce nouveau rendu.
+
 Invitations non activées, édition de profil à terminer et textes juridiques provisoires. Aucun faux envoi ou accès partagé n’est ajouté par cette refonte.

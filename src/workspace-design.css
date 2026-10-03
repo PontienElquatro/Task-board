@@ -52,7 +52,7 @@
  @media(max-width:1023px) {
   .application-workspace {display:block;}
   .application-workspace app-workspace-nav {display:block;border-right:0;border-bottom:1px solid var(--line);}
-  .workspace-navigation {height:auto;position:static;flex-direction:row;overflow-x:auto;padding:8px 16px;gap:4px;}
+  .workspace-navigation {height:auto;position:static;padding:4px 16px;gap:4px;}
   .workspace-navigation-label,.workspace-navigation-help {display:none;}
   .workspace-navigation>a {flex-shrink:0;white-space:nowrap;gap:8px;padding:10px 12px;}
   app-login main {max-width:520px;}

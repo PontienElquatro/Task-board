@@ -9,5 +9,9 @@ describe('Navigation commune Ma’at',()=>{
   const nav=fixture.nativeElement as HTMLElement;
   for(const path of ['/board','/projects','/calendar','/dashboard','/team','/settings','/help'])expect(nav.querySelector('a[href="'+path+'"]')).toBeTruthy();
   expect(nav.querySelector('nav')?.getAttribute('aria-label')).toBe('Navigation principale');
+  const menu=nav.querySelector('details') as HTMLDetailsElement;
+  expect(menu.open).toBeFalse();
+  expect(menu.querySelector('summary')?.textContent).toContain('Navigation');
+  expect(menu.querySelectorAll('a').length).toBe(7);
  });
 });

@@ -1,14 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({selector:'app-workspace-nav',standalone:true,imports:[CommonModule,RouterLink,RouterLinkActive],template:`
 <nav aria-label="Navigation principale" class="workspace-navigation">
  <p class="workspace-navigation-label">ESPACE DE TRAVAIL</p>
- <a *ngFor="let item of items" [routerLink]="item.path" routerLinkActive="workspace-link-active" ariaCurrentWhenActive="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path [attr.d]="item.icon" stroke-linecap="round" stroke-linejoin="round" /></svg><span>{{item.label}}</span></a>
+ <a class="hidden lg:flex" *ngFor="let item of items" [routerLink]="item.path" routerLinkActive="workspace-link-active" ariaCurrentWhenActive="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path [attr.d]="item.icon" stroke-linecap="round" stroke-linejoin="round" /></svg><span>{{item.label}}</span></a>
+ <details class="w-full lg:hidden" #mobileNav (keydown.escape)="mobileNav.open=false"><summary class="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-lg px-2 text-sm font-semibold text-gray-900 dark:text-gray-100 [&::-webkit-details-marker]:hidden"><span>{{currentLabel()}}</span><span class="text-xs font-normal text-blue-700 dark:text-blue-300">Navigation ⌄</span></summary><div class="grid gap-2 border-t border-gray-200 pt-2 dark:border-gray-700"><a *ngFor="let item of items" class="flex min-h-11 items-center rounded-lg px-4 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" [routerLink]="item.path" routerLinkActive="workspace-link-active" ariaCurrentWhenActive="page" (click)="mobileNav.open=false">{{item.label}}</a><a routerLink="/help" class="flex min-h-11 items-center px-4 text-sm text-blue-700 dark:text-blue-300" (click)="mobileNav.open=false">Aide et démarrage</a></div></details>
  <div class="workspace-navigation-help"><p>Un projet. Une prochaine action.</p><a routerLink="/help" routerLinkActive="workspace-link-active" ariaCurrentWhenActive="page">Aide et démarrage ↗</a></div>
 </nav>`})
 export class WorkspaceNavComponent {
+ private readonly router=inject(Router);
+ currentLabel(){return this.items.find(item=>item.path===this.router.url.split(/[?#]/)[0])?.label ?? 'Mon espace';}
  readonly items=[
  {path:'/board',label:'Mon tableau',icon:'M3 4h18v16H3z M9 4v16 M15 4v16'},
  {path:'/projects',label:'Mes projets',icon:'M3 7V4h7l2 3h9v13H3z'},
