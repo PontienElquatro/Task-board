@@ -24,7 +24,7 @@ Deno.serve(async (request) => {
     const acceptUrl=`${appUrl}/team?invitation=${encodeURIComponent(invitation.id)}&token=${encodeURIComponent(body.token)}`;
     const html=`<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#172033"><div style="color:#2563eb;font-size:20px;font-weight:700">Ma’at</div><h1 style="font-size:24px">Vous êtes invité dans ${escapeHtml(body.teamName||'une équipe Ma’at')}</h1><p>Vous avez été invité avec le rôle <strong>${escapeHtml(invitation.role)}</strong>.</p><p><a href="${acceptUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Accepter l’invitation</a></p><p style="font-size:12px;color:#64748b">Ce lien expire dans 7 jours.</p></div>`;
     const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json'},body:JSON.stringify({from:'Ma’at <onboarding@resend.dev>',to:[invitation.email],subject:`Invitation à rejoindre ${body.teamName||'une équipe Ma’at'}`,html})});
-    if(!response.ok) throw new Error('Resend a refusé l’envoi.');
+    if(!response.ok) { const details=await response.text(); console.error('Resend error',response.status,details); throw new Error(`Resend a refusé l’envoi (${response.status}). ${details.slice(0,240)}`); }
     return new Response(JSON.stringify({sent:true}),{headers:{...cors,'Content-Type':'application/json'}});
   } catch(error) { return new Response(JSON.stringify({error:error instanceof Error?error.message:'Envoi impossible.'}),{status:400,headers:{...cors,'Content-Type':'application/json'}}); }
 });
