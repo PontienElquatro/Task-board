@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { createClient, User } from '@supabase/supabase-js';
 import { PUBLIC_BACKEND } from '../core/config/app-config';
@@ -9,15 +9,35 @@ export class AuthService {
   readonly user = signal<User | null>(null);
   readonly initializing = signal(true);
   readonly recovering = signal(false);
+  readonly sessionError = signal('');
+  readonly displayName = computed(() => {
+    const user = this.user();
+    const name = user?.user_metadata?.['full_name'] ?? user?.user_metadata?.['name'];
+    return typeof name === 'string' && name.trim() ? name.trim() : user?.email ?? 'Espace local';
+  });
+  readonly initials = computed(() => this.displayName().slice(0, 2).toLocaleUpperCase('fr'));
   private readonly router = inject(Router);
   constructor() {
+    let authEventReceived = false;
     this.client.auth.onAuthStateChange((event, session) => {
+      authEventReceived = true;
       this.user.set(session?.user ?? null);
+      this.sessionError.set('');
       this.initializing.set(false);
       if (event === 'PASSWORD_RECOVERY') {
         this.recovering.set(true);
         queueMicrotask(() => this.router.navigate(['/login'], {queryParams:{mode:'recovery'}}));
       }
+    });
+    // Explicitly restore the persisted session as well as listening for future events.
+    // A late initial read must never overwrite a newer sign-in/sign-out event.
+    void this.client.auth.getSession().then(({data, error}) => {
+      if (authEventReceived) return;
+      if (error) { this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.'); return; }
+      this.user.set(data.session?.user ?? null);
+      this.initializing.set(false);
+    }).catch(() => {
+      if (!authEventReceived) this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.');
     });
   }
   async signIn(email: string, password: string) {

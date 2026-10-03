@@ -15,6 +15,7 @@ import { effect, untracked } from '@angular/core';
 import { BrandComponent } from '../shared/brand/brand.component';
 import { FilterBarComponent } from '../shared/filter-bar/filter-bar.component';
 import { createTaskBackup, readTaskBackup } from '../core/storage/task-backup';
+import { CloudStorageProvider } from '../providers/cloud-storage.provider';
 
 @Component({
   selector: 'app-kanban-board', standalone: true,
@@ -22,6 +23,7 @@ import { createTaskBackup, readTaskBackup } from '../core/storage/task-backup';
   templateUrl: './kanban-board.component.html', styleUrl: './kanban-board.component.css', changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent {
+  readonly cloud = inject(CloudStorageProvider);
   readonly taskService = inject(TaskService);
   readonly projectService = inject(ProjectService);
   private readonly storage = inject(STORAGE_PROVIDER);

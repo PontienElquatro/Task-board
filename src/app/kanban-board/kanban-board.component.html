@@ -27,15 +27,15 @@
       <button [class.selected]="!archiveOpen() && taskService.filterStatus() === 'in-progress'" (click)="openBoard('in-progress')">En cours <span>{{ inProgressCount() }}</span></button>
       <button [class.selected]="!archiveOpen() && taskService.filterStatus() === 'done'" (click)="openBoard('done')">Terminées <span>{{ completed() }}</span></button>
     </section>
-    <div class="sidebar-bottom"><div class="local-indicator"><i></i> Espace local</div><p>Vos tâches restent sur cet appareil.<br>Exportez une copie pour les protéger.</p><button class="quiet" (click)="exportBackup()">Exporter une sauvegarde ↗</button></div>
+    <div class="sidebar-bottom"><div class="local-indicator"><i></i> {{cloud.auth.user() ? 'Compte connecté' : 'Espace local'}}</div><p>{{cloud.auth.user() ? 'Vos tâches sont liées à votre compte. Vérifiez l’état de synchronisation.' : 'Vos tâches restent sur cet appareil. Exportez une copie pour les protéger.'}}</p><button class="quiet" (click)="exportBackup()">Exporter une sauvegarde ↗</button></div>
   </aside>
   <main class="main-content" id="main-content">
     <header class="topbar"><span>Mon espace <span class="muted">/ {{ archiveOpen() ? 'Archives' : 'Tableau' }}</span></span><div class="top-actions">
       <button class="icon-button" (click)="themeService.toggleDarkMode()" [attr.aria-label]="themeService.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'">{{ themeService.darkMode() ? '☀' : '☾' }}</button>
-      <span class="avatar" aria-label="Espace personnel">MO</span>
+      <span class="avatar" [attr.aria-label]="cloud.auth.displayName()">{{cloud.auth.initials()}}</span>
     </div></header>
     <section class="page-heading">
-      <div><p class="eyebrow">MON ESPACE DE TRAVAIL</p><h1>{{ archiveOpen() ? 'Vos archives.' : 'Mon tableau de tâches' }}</h1><p class="subtitle">{{ archiveOpen() ? 'Gardez une trace. Reprenez quand vous voulez.' : 'Bienvenue ! Vos projets avancent ici.' }}</p></div>
+      <div><p class="eyebrow">MON ESPACE DE TRAVAIL</p><h1>{{ archiveOpen() ? 'Vos archives.' : 'Mon tableau de tâches' }}</h1><p class="subtitle">{{ archiveOpen() ? 'Gardez une trace. Reprenez quand vous voulez.' : 'Bienvenue, ' + cloud.auth.displayName() + ' !' }}</p><p class="text-sm text-gray-500 dark:text-gray-400" role="status" aria-live="polite">{{cloud.auth.initializing() ? 'Vérification de votre session…' : cloud.status()}}</p></div>
       <button *ngIf="!archiveOpen()" class="primary" (click)="addTask()"><span aria-hidden="true">+</span> Nouvelle tâche <kbd>N</kbd></button>
     </section>
     <div class="notice" role="status" *ngIf="taskService.notice()"><span>{{ taskService.notice() }}</span><button aria-label="Fermer le message" (click)="taskService.notice.set('')">×</button></div>
