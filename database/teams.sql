@@ -58,6 +58,19 @@ drop policy if exists members_manage_admin on public.taskboard_team_members;
 create policy members_manage_admin on public.taskboard_team_members for all to authenticated
 using (exists (select 1 from public.taskboard_teams t where t.id = team_id and t.owner_id = (select auth.uid())));
 
+create or replace function public.is_taskboard_team_member(team_uuid uuid)
+returns boolean language sql stable security definer set search_path = public, pg_catalog as $$
+ select exists(select 1 from public.taskboard_team_members where team_id=team_uuid and user_id=(select auth.uid()));
+$$;
+revoke all on function public.is_taskboard_team_member(uuid) from public, anon;
+grant execute on function public.is_taskboard_team_member(uuid) to authenticated;
+drop policy if exists teams_read_owner on public.taskboard_teams;
+create policy teams_read_owner on public.taskboard_teams for select to authenticated
+using (owner_id=(select auth.uid()) or public.is_taskboard_team_member(id));
+drop policy if exists members_read_self on public.taskboard_team_members;
+create policy members_read_self on public.taskboard_team_members for select to authenticated
+using (user_id=(select auth.uid()) or public.is_taskboard_team_member(team_id));
+
 drop policy if exists invitations_read_admin on public.taskboard_team_invitations;
 create policy invitations_read_admin on public.taskboard_team_invitations for select to authenticated
 using (invited_by = (select auth.uid()) or exists (select 1 from public.taskboard_teams t where t.id = team_id and t.owner_id = (select auth.uid())));
