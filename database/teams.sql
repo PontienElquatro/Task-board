@@ -65,3 +65,22 @@ with check (invited_by = (select auth.uid()) and exists (select 1 from public.ta
 drop policy if exists invitations_update_admin on public.taskboard_team_invitations;
 create policy invitations_update_admin on public.taskboard_team_invitations for update to authenticated
 using (invited_by = (select auth.uid())) with check (invited_by = (select auth.uid()));
+
+create or replace function public.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)
+returns uuid language plpgsql security definer set search_path = public, pg_catalog as $$
+declare invitation public.taskboard_team_invitations%rowtype;
+begin
+  if auth.uid() is null or auth.email() is null then raise exception 'Authentication required' using errcode = '42501'; end if;
+  select * into invitation from public.taskboard_team_invitations
+    where id = invitation_id and lower(email) = lower(auth.email()) and token_hash = invitation_token
+      and accepted_at is null and expires_at > now();
+  if not found then raise exception 'Invitation invalid or expired' using errcode = '22023'; end if;
+  insert into public.taskboard_team_members(team_id,user_id,role)
+    values (invitation.team_id,auth.uid(),invitation.role)
+    on conflict (team_id,user_id) do update set role = excluded.role;
+  update public.taskboard_team_invitations set accepted_at = now() where id = invitation.id;
+  return invitation.team_id;
+end;
+$$;
+revoke all on function public.accept_taskboard_team_invitation(uuid,text) from public, anon;
+grant execute on function public.accept_taskboard_team_invitation(uuid,text) to authenticated;
