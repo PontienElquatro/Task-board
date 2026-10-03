@@ -1,5 +1,6 @@
-/* Reference-inspired workspace, using the original global palette and font. */
+/* Shared styles stay in the Tailwind components layer to preserve utility precedence. */
 :host { display:block; }
+@layer components {
 .app-rail { width:72px; flex-shrink:0; background:var(--color-gray-900); color:var(--color-gray-400); display:flex; flex-direction:column; align-items:center; gap:22px; padding:30px 10px; height:100vh; position:sticky; top:0; }
 .app-rail a,.app-rail button { width:44px; height:44px; display:grid; place-items:center; border:0; border-radius:13px; background:transparent; color:inherit; font-size:24px; }
 .app-rail .rail-logo { color:var(--color-white); background:var(--action); font-weight:800; margin-bottom:28px; }
@@ -29,4 +30,5 @@
 @media(max-width:1150px) { .sidebar { width:195px; padding:25px 14px; } .main-content { padding:0 22px 24px; } .app-rail { width:60px; } }
 @media(max-width:850px) { .app-rail { display:none; } .sidebar { width:100%; padding:14px 20px; } .side-group { display:none; } }
 @media(max-width:560px) { .sidebar { padding:15px 18px 8px; } .main-content { padding:0 18px 22px; } .page-heading { padding:24px 0; } }
-@media(max-width:850px) { .sidebar { flex-wrap:wrap; } .projects-group { display:block; width:100%; margin-top:8px; max-height:170px; } }
+@media(max-width:850px) { .sidebar { flex-wrap:wrap; } }
+}

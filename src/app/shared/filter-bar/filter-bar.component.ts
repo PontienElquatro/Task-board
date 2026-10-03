@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../../services/task.service';
@@ -10,6 +10,7 @@ import { TaskService } from '../../services/task.service';
 })
 export class FilterBarComponent {
   readonly taskService = inject(TaskService);
+  readonly advancedCount = computed(() => Number(this.taskService.filterPriority() !== 'all') + Number(!!this.taskService.filterTag()) + Number(this.taskService.filterDue() !== 'all') + Number(this.taskService.sort() !== 'manual'));
   @Input() hasActiveFilters = false;
   @Output() resetFilters = new EventEmitter<void>();
 }

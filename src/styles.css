@@ -100,7 +100,7 @@ kbd { border:1px solid currentColor; border-radius:4px; font-family:inherit; fon
 .detail-subtasks input { accent-color:var(--action); }
 .update-banner { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:12px; padding:12px; background:var(--accent-soft); color:var(--ink); }
 .account-bar { position:fixed; bottom:0; left:0; right:0; z-index:50; background:var(--surface); border-top:1px solid var(--line); padding:8px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; }
-body { padding-bottom:72px; }
+body { padding-bottom:0; }
 .auth-page { max-width:620px; margin:35px auto; padding:20px; }
 .auth-panel { margin-top:20px; }
 .auth-panel form label { display:block; margin:18px 0 7px; font-size:14px; }
