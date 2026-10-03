@@ -22,6 +22,7 @@
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
     "test:admin": "node tools/test-admin-edge.mjs",
     "test:cloud-browser": "node tools/test-cloud-browser.mjs",
+    "test:ux": "node tools/test-ux-browser.mjs",
     "test:cloud-http": "node tools/test-cloud-http.mjs",
     "serve:ssr:my-task-board": "node dist/my-task-board/server/server.mjs"
   },

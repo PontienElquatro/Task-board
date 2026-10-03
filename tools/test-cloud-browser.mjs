@@ -46,7 +46,7 @@ try {
   await Promise.all([first.goto(origin.href),second.goto(origin.href)]);
   for(const page of [first,second]){
     await page.getByLabel('Statut de A',{exact:true}).waitFor();
-    await page.getByText('Synchronisé avec votre compte',{exact:false}).waitFor();
+    await page.getByText('✓ Sauvegardé',{exact:true}).waitFor();
     assert.equal(await page.evaluate(()=>!!navigator.locks),true);
   }
   await Promise.all([first.getByLabel('Statut de A',{exact:true}).selectOption('in-progress'),second.getByLabel('Statut de B',{exact:true}).selectOption('done')]);
@@ -58,7 +58,7 @@ try {
   await second.getByRole('button',{name:'Modifier A',exact:true}).click();
   await second.getByLabel('Titre',{exact:false}).fill('Draft preserved');
   await first.getByLabel('Statut de B',{exact:true}).selectOption('todo');
-  await first.getByText('Synchronisé avec votre compte',{exact:false}).waitFor();
+  await first.getByText('✓ Sauvegardé',{exact:true}).waitFor();
   assert.equal(await second.getByLabel('Titre',{exact:false}).inputValue(),'Draft preserved');
   await second.getByRole('button',{name:'Fermer',exact:true}).click();
   await second.getByRole('button',{name:'Abandonner les modifications',exact:true}).click();
@@ -73,7 +73,7 @@ try {
   await first.getByRole('button',{name:'Choisir cette version cloud'}).click();
   await first.getByRole('button',{name:'Appliquer mes choix'}).click();
   await first.getByLabel('Statut de Remote A',{exact:true}).waitFor();
-  await first.getByText('Synchronisé avec votre compte',{exact:false}).waitFor();
+  await first.getByText('✓ Sauvegardé',{exact:true}).waitFor();
   assert.ok(await first.evaluate(id=>!!localStorage.getItem('maat_recovery_'+id),user.id));
   console.log('PASS: same-task conflict blocks writes until explicit choice; recovery backup retained');
   await first.goto(new URL('/admin',origin).href);

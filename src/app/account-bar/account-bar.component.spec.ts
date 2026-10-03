@@ -34,6 +34,18 @@ describe('AccountBarComponent account controls', () => {
     expect(cloud.sync).toHaveBeenCalled(); expect(cloud.auth.signOut).toHaveBeenCalled();
     expect(component.signingOut()).toBeFalse();
   });
+  it('keeps recovery actions behind the account menu', () => {
+    const {fixture}=setup();
+    const menu=fixture.nativeElement.querySelector('details');
+    expect(menu.open).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.account-bar')).toBeNull();
+  });
+  it('closes the account menu with Escape', () => {
+    const {fixture}=setup();
+    const menu=fixture.nativeElement.querySelector('details'); menu.open=true;
+    menu.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    expect(menu.open).toBeFalse();
+  });
   it('does not silently sign out with unconfirmed cloud writes', async () => {
     const {cloud,component}=setup(); cloud.status.set('Cloud indisponible · réessayer');
     await component.signOut();
