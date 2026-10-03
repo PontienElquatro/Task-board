@@ -1,22 +1,48 @@
-<main class="auth-page" id="main-content">
-  <a routerLink="/board" class="quiet">← Retour au tableau</a>
-  <section class="chart-panel auth-panel">
-    <app-brand />
-    <p class="eyebrow">MA’AT · L’ÉQUILIBRE DE VOS PROJETS</p>
-    <h1>{{ auth.user() && mode !== 'recovery' ? 'Mon compte' : mode === 'signup' ? 'Créer un compte' : mode === 'reset' ? 'Récupérer mon accès' : mode === 'recovery' ? 'Nouveau mot de passe' : 'Se connecter' }}</h1>
-    <p *ngIf="message()" class="notice" role="status">{{ message() }}</p><p *ngIf="error()" class="notice danger-text" role="alert">{{ error() }}</p>
-    <p *ngIf="auth.initializing()" class="muted">Vérification de la session…</p>
-    <ng-container *ngIf="auth.user() && mode !== 'recovery'; else form">
-      <p>{{ auth.user()?.email }}</p><p class="subtitle">{{ cloud.status() }}</p>
-      <div class="account-actions"><a routerLink="/board" class="primary">Ouvrir mon tableau</a><button class="secondary" [disabled]="busy()" (click)="signOut()">Se déconnecter</button></div>
-      <hr><h2>Importer mes tâches locales</h2><p class="subtitle">Ajoutez les tâches de cet appareil à ce compte. Cette action ne supprime pas la copie locale et ne remplace pas les tâches déjà présentes.</p><button class="secondary" [disabled]="!cloud.ready() || cloud.conflict()" (click)="importLocal()">Importer les tâches de cet appareil</button>
-    </ng-container>
-    <ng-template #form><form #accountForm="ngForm" (ngSubmit)="submit()" *ngIf="!auth.initializing()">
-      <ng-container *ngIf="mode !== 'recovery'"><label for="account-email">Adresse email</label><input id="account-email" type="email" name="email" [(ngModel)]="email" required email autocomplete="email" maxlength="254"></ng-container>
-      <ng-container *ngIf="mode !== 'reset'"><label for="account-password">Mot de passe</label><input id="account-password" name="password" type="password" [(ngModel)]="password" required [minlength]="mode === 'login' ? 1 : 12" maxlength="128" [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"><p class="field-help" *ngIf="mode !== 'login'">12 caractères minimum.</p></ng-container>
-      <ng-container *ngIf="mode === 'signup' || mode === 'recovery'"><label for="account-confirm">Confirmer le mot de passe</label><input id="account-confirm" name="confirmation" type="password" [(ngModel)]="confirmation" required autocomplete="new-password"></ng-container>
-      <button class="primary" type="submit" [disabled]="busy() || accountForm.invalid || (mode === 'recovery' && !auth.user())">{{ busy() ? 'Patientez…' : mode === 'signup' ? 'Créer mon compte' : mode === 'reset' ? 'Envoyer le lien' : mode === 'recovery' ? 'Enregistrer le mot de passe' : 'Se connecter' }}</button>
-      <div class="account-actions"><button class="quiet" type="button" (click)="setMode(mode === 'signup' ? 'login' : 'signup')">{{ mode === 'signup' ? 'J’ai déjà un compte' : 'Créer un compte' }}</button><button class="quiet" type="button" (click)="setMode(mode === 'reset' ? 'login' : 'reset')">{{ mode === 'reset' ? 'Retour à la connexion' : 'Mot de passe oublié ?' }}</button></div>
-    </form><p class="muted">Le mode local reste disponible sans compte. Les données cloud sont privées à votre compte.</p></ng-template>
+<main id="main-content" class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl flex-col justify-center p-4 text-gray-900 dark:text-gray-100 sm:p-8">
+  <a routerLink="/board" class="mb-4 inline-flex min-h-11 w-fit items-center rounded-lg px-2 text-sm text-gray-600 hover:text-blue-700 dark:text-gray-300 dark:hover:text-blue-300">← Retour au tableau</a>
+  <section class="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:grid-cols-2" aria-labelledby="auth-heading">
+    <aside class="relative hidden min-h-[640px] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 p-8 text-white lg:flex">
+      <svg class="pointer-events-none absolute inset-0 h-full w-full opacity-30" viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <defs><pattern id="auth-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="white" stroke-opacity=".25" /></pattern></defs>
+        <rect width="500" height="700" fill="url(#auth-grid)" />
+        <path d="M0 90Q90 170 170 80T350 100T500 60V0H0Z" fill="white" fill-opacity=".3" />
+        <path d="M0 560Q100 460 220 570T500 540V700H0Z" fill="#1e40af" />
+        <path d="M0 630Q160 520 290 620T500 580V700H0Z" fill="#3b82f6" />
+        <g fill="none" stroke="white"><path d="M60 190L240 10M310 240L470 80M20 590L150 460M340 680L480 540" stroke-opacity=".5" /><circle cx="390" cy="80" r="22" /><circle cx="390" cy="80" r="15" stroke-width="6" stroke-opacity=".4" /><circle cx="90" cy="520" r="15" /></g>
+        <g fill="white"><circle cx="60" cy="190" r="4" /><circle cx="310" cy="240" r="4" /><circle cx="150" cy="460" r="4" /></g>
+      </svg>
+      <a routerLink="/presentation" class="relative z-10 flex min-h-11 w-fit items-center gap-2 rounded-lg text-lg font-semibold"><app-brand [compact]="true" /> Ma’at</a>
+      <div class="relative z-10 max-w-sm py-8"><p class="mb-4 text-sm text-blue-100">L’équilibre de vos projets</p><h2 class="text-4xl font-semibold leading-tight tracking-tight">{{mode === 'signup' ? 'Vos idées méritent un espace.' : mode === 'reset' || mode === 'recovery' ? 'Retrouvons votre équilibre.' : 'Heureux de vous retrouver.'}}</h2><p class="mt-6 text-sm leading-7 text-blue-100">Un tableau clair, des priorités visibles et une tâche après l’autre. Retrouvez le fil de vos projets, à votre rythme.</p><div class="mt-8 h-1 w-12 rounded-full bg-blue-200" aria-hidden="true"></div></div>
+      <p class="relative z-10 text-xs text-blue-100">Moins de dispersion. Plus d’équilibre.</p>
+    </aside>
+    <div class="flex min-w-0 flex-col justify-center p-6 sm:p-10 lg:p-12">
+      <div class="mb-6 lg:hidden"><app-brand /></div>
+      <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-300">{{auth.user() && mode !== 'recovery' ? 'Votre espace personnel' : 'Bienvenue sur Ma’at'}}</p>
+      <h1 id="auth-heading" class="m-0 text-2xl font-semibold tracking-tight">{{auth.user() && mode !== 'recovery' ? 'Mon compte' : mode === 'signup' ? 'Créer un compte' : mode === 'reset' ? 'Mot de passe oublié ?' : mode === 'recovery' ? 'Nouveau mot de passe' : 'Se connecter'}}</h1>
+      <p class="mb-6 mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">{{auth.user() && mode !== 'recovery' ? 'Retrouvez votre tableau et vérifiez la sauvegarde de vos tâches.' : mode === 'signup' ? 'Créez votre espace personnel pour retrouver vos tâches avec votre compte.' : mode === 'reset' ? 'Renseignez votre adresse email pour recevoir un lien de récupération.' : mode === 'recovery' ? 'Choisissez un nouveau mot de passe pour sécuriser votre compte.' : 'Connectez-vous pour retrouver votre espace et vos projets.'}}</p>
+      <p *ngIf="message()" role="status" class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">{{message()}}</p>
+      <p *ngIf="error()" role="alert" class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">{{error()}}</p>
+      <p *ngIf="auth.initializing()" role="status" class="py-8 text-sm text-gray-600 dark:text-gray-300">Vérification de la session…</p>
+      <ng-container *ngIf="!auth.initializing() && auth.user() && mode !== 'recovery'; else form">
+        <div class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"><p class="break-words text-sm font-semibold">{{auth.user()?.email}}</p><p class="mt-2 text-xs text-gray-600 dark:text-gray-300">{{cloud.status()}}</p></div>
+        <div class="flex flex-wrap gap-2"><a routerLink="/board" class="primary min-h-11">Ouvrir mon tableau</a><button class="secondary min-h-11" [disabled]="busy()" (click)="signOut()">Se déconnecter</button></div>
+        <details class="mt-8 border-t border-gray-200 pt-4 dark:border-gray-700"><summary class="min-h-11 cursor-pointer py-2 text-sm font-semibold">Importer mes tâches locales</summary><p class="my-4 text-sm leading-6 text-gray-600 dark:text-gray-300">Ajoutez les tâches de cet appareil à ce compte. La copie locale est conservée et les tâches existantes ne sont pas remplacées.</p><button class="secondary min-h-11" [disabled]="!cloud.ready() || cloud.conflict()" (click)="importLocal()">Importer les tâches de cet appareil</button></details>
+      </ng-container>
+      <ng-template #form>
+        <form #accountForm="ngForm" (ngSubmit)="submit()" *ngIf="!auth.initializing()" class="grid gap-4" [attr.aria-busy]="busy()">
+          <div *ngIf="mode !== 'recovery'" class="grid gap-2"><label for="account-email" class="text-sm font-medium">Adresse email</label><input id="account-email" class="min-h-12 w-full rounded-lg border-gray-300 bg-gray-50 p-3 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-900" type="email" name="email" [(ngModel)]="email" required email autocomplete="email" inputmode="email" maxlength="254" placeholder="vous@exemple.com" [readOnly]="busy()"></div>
+          <div *ngIf="mode !== 'reset'" class="grid gap-2"><label for="account-password" class="text-sm font-medium">{{mode === 'recovery' ? 'Nouveau mot de passe' : 'Mot de passe'}}</label><input id="account-password" class="min-h-12 w-full rounded-lg border-gray-300 bg-gray-50 p-3 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-900" name="password" type="password" [(ngModel)]="password" required [minlength]="mode === 'login' ? 1 : 12" maxlength="128" [attr.autocomplete]="mode === 'login' ? 'current-password' : 'new-password'" [attr.aria-describedby]="mode !== 'login' ? 'password-help' : null" [readOnly]="busy()"><p id="password-help" class="text-xs text-gray-600 dark:text-gray-300" *ngIf="mode !== 'login'">12 caractères minimum.</p></div>
+          <div *ngIf="mode === 'signup' || mode === 'recovery'" class="grid gap-2"><label for="account-confirm" class="text-sm font-medium">Confirmer le mot de passe</label><input id="account-confirm" class="min-h-12 w-full rounded-lg border-gray-300 bg-gray-50 p-3 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-900" name="confirmation" type="password" [(ngModel)]="confirmation" required maxlength="128" autocomplete="new-password" [readOnly]="busy()"></div>
+          <button *ngIf="mode === 'login'" class="min-h-11 justify-self-end rounded-lg px-2 text-sm text-blue-700 hover:underline dark:text-blue-300" type="button" [disabled]="busy()" (click)="setMode('reset')">Mot de passe oublié ?</button>
+          <button class="primary min-h-12 w-full justify-center rounded-lg" type="submit" [disabled]="busy() || accountForm.invalid || (mode === 'recovery' && !auth.user())">{{busy() ? 'Patientez…' : mode === 'signup' ? 'Créer mon compte' : mode === 'reset' ? 'Envoyer le lien' : mode === 'recovery' ? 'Enregistrer le mot de passe' : 'Se connecter'}}</button>
+          <div class="border-t border-gray-200 pt-4 text-center text-sm dark:border-gray-700">
+            <ng-container *ngIf="mode === 'login' || mode === 'signup'; else backToLogin"><span class="text-gray-600 dark:text-gray-300">{{mode === 'signup' ? 'Vous avez déjà un compte ?' : 'Vous découvrez Ma’at ?'}}</span><button class="min-h-11 rounded-lg px-2 font-semibold text-blue-700 hover:underline dark:text-blue-300" type="button" [disabled]="busy()" (click)="setMode(mode === 'signup' ? 'login' : 'signup')">{{mode === 'signup' ? 'Se connecter' : 'Créer un compte'}}</button></ng-container>
+            <ng-template #backToLogin><button class="min-h-11 rounded-lg px-2 text-blue-700 hover:underline dark:text-blue-300" type="button" [disabled]="busy()" (click)="setMode('login')">← Retour à la connexion</button></ng-template>
+          </div>
+        </form>
+        <p *ngIf="!auth.initializing()" class="mt-6 text-center text-xs leading-6 text-gray-600 dark:text-gray-300">Vous préférez commencer simplement ? <a routerLink="/board" class="text-blue-700 underline dark:text-blue-300">Continuer sans compte</a>. Vos données restent sur cet appareil.</p>
+      </ng-template>
+      <nav aria-label="Informations" class="mt-8 flex flex-wrap justify-center gap-4 text-xs text-gray-600 dark:text-gray-300"><a routerLink="/help" class="flex min-h-11 items-center hover:underline">Besoin d’aide ?</a><a routerLink="/privacy" class="flex min-h-11 items-center hover:underline">Confidentialité</a><a routerLink="/terms" class="flex min-h-11 items-center hover:underline">Conditions</a></nav>
+    </div>
   </section>
 </main>
