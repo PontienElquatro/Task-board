@@ -37,8 +37,9 @@ revoke all on public.taskboard_teams, public.taskboard_team_members, public.task
 grant select, insert, update, delete on public.taskboard_teams, public.taskboard_team_members, public.taskboard_team_invitations to authenticated;
 
 drop policy if exists teams_read_member on public.taskboard_teams;
-create policy teams_read_member on public.taskboard_teams for select to authenticated
-using (owner_id = (select auth.uid()) or exists (select 1 from public.taskboard_team_members m where m.team_id = id and m.user_id = (select auth.uid())));
+drop policy if exists teams_read_owner on public.taskboard_teams;
+create policy teams_read_owner on public.taskboard_teams for select to authenticated
+using (owner_id = (select auth.uid()));
 drop policy if exists teams_create_owner on public.taskboard_teams;
 create policy teams_create_owner on public.taskboard_teams for insert to authenticated
 with check (owner_id = (select auth.uid()));
@@ -50,8 +51,9 @@ create policy teams_delete_owner on public.taskboard_teams for delete to authent
 using (owner_id = (select auth.uid()));
 
 drop policy if exists members_read_member on public.taskboard_team_members;
-create policy members_read_member on public.taskboard_team_members for select to authenticated
-using (user_id = (select auth.uid()) or exists (select 1 from public.taskboard_teams t where t.id = team_id and t.owner_id = (select auth.uid())));
+drop policy if exists members_read_self on public.taskboard_team_members;
+create policy members_read_self on public.taskboard_team_members for select to authenticated
+using (user_id = (select auth.uid()));
 drop policy if exists members_manage_admin on public.taskboard_team_members;
 create policy members_manage_admin on public.taskboard_team_members for all to authenticated
 using (exists (select 1 from public.taskboard_teams t where t.id = team_id and t.owner_id = (select auth.uid())));
