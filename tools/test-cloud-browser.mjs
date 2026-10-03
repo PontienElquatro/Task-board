@@ -1,13 +1,12 @@
 // Browser integration test with a simulated backend. Never calls the live Supabase project.
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { readFile } from 'node:fs/promises';
+import { selectBackend } from './backend-config.mjs';
 const require=createRequire(import.meta.url);
 const {chromium}=require(process.env.MAAT_PLAYWRIGHT_PATH || 'playwright');
 const origin=new URL(process.env.MAAT_TEST_URL || 'http://127.0.0.1:4213');
 assert.ok(['127.0.0.1','localhost','[::1]'].includes(origin.hostname),'Only a local preview may be tested');
-const config=await readFile(new URL('../src/app/core/config/app-config.ts',import.meta.url),'utf8');
-const backend=config.match(/url:\s*'([^']+)'/)[1];
+const backend=selectBackend({}).url;
 const user={id:'00000000-0000-4000-8000-000000000051',email:'cloud-test@example.invalid',aud:'authenticated',role:'authenticated',email_confirmed_at:'2026-01-01T00:00:00Z',app_metadata:{provider:'email'},user_metadata:{}};
 const task=(id,title)=>({id,title,description:'',status:'todo',priority:'medium',subTasks:[],createdAt:'2026-10-01T00:00:00.000Z',userId:'default',order:0,tags:[],archived:false});
 const ledger={revision:1,data:{mytaskboard_tasks:[task('a','A'),task('b','B')]},writes:[],active:0,maxActive:0};
