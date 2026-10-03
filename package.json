@@ -6,6 +6,13 @@
     "node": "^22.12.0 || ^24.0.0"
   },
   "scripts": {
+    "config:backend": "node tools/generate-backend-config.mjs",
+    "prestart": "npm run config:backend",
+    "prebuild": "npm run config:backend",
+    "prewatch": "npm run config:backend",
+    "pretest": "npm run config:backend",
+    "pretest:ci": "npm run config:backend",
+    "test:config": "node --test tools/backend-config.test.mjs",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",

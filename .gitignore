@@ -34,6 +34,7 @@ yarn-error.log
 /connect.lock
 /coverage
 /outputs/
+/src/app/core/config/app-config.generated.ts
 /libpeerconnection.log
 testem.log
 /typings
