@@ -14,9 +14,15 @@ import { BrandComponent } from '../shared/brand/brand.component';
       <span class="max-w-56 truncate text-xs text-gray-600 dark:text-gray-300" role="status" aria-live="polite" [title]="cloud.status()">{{cloud.auth.initializing() ? 'Vérification de votre session…' : cloud.status() === 'Synchronisé avec votre compte' ? '✓ Sauvegardé' : cloud.status()}}</span>
       <details class="relative" #accountMenu (keydown.escape)="accountMenu.open=false">
         <summary class="flex min-h-11 max-w-48 cursor-pointer list-none items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-gray-600 dark:hover:bg-gray-700 [&::-webkit-details-marker]:hidden"><span class="truncate">{{cloud.auth.displayName()}}</span><span aria-hidden="true">⌄</span></summary>
-        <div class="absolute right-0 z-50 mt-2 grid w-72 max-w-[calc(100vw-2rem)] gap-2 rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-600 dark:bg-gray-800">
+        <div class="absolute right-0 z-50 mt-2 grid max-h-[70dvh] w-72 max-w-[calc(100vw-2rem)] gap-2 overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-600 dark:bg-gray-800">
           <p class="break-words text-sm font-semibold">{{cloud.auth.displayName()}}</p>
           <a class="secondary" routerLink="/login" (click)="accountMenu.open=false">{{cloud.auth.user() ? 'Mon compte' : 'Connexion / Inscription'}}</a>
+          <a class="quiet min-h-11" routerLink="/settings" (click)="accountMenu.open=false">Profil et paramètres</a>
+          <a class="quiet min-h-11" routerLink="/projects" (click)="accountMenu.open=false">Mes projets</a>
+          <a class="quiet min-h-11" routerLink="/calendar" (click)="accountMenu.open=false">Calendrier</a>
+          <a class="quiet min-h-11" routerLink="/team" (click)="accountMenu.open=false">Équipe</a>
+          <a class="quiet min-h-11" routerLink="/help" (click)="accountMenu.open=false">Aide et démarrage</a>
+          <a class="quiet min-h-11" routerLink="/presentation" (click)="accountMenu.open=false">Découvrir Ma’at</a>
           <a *ngIf="cloud.auth.user()" class="quiet min-h-11" routerLink="/admin" (click)="accountMenu.open=false">Administration</a>
           <details><summary class="min-h-11 cursor-pointer rounded-lg p-2 text-sm">Sauvegarde et récupération</summary><div class="grid gap-2 pt-2">
             <p class="text-xs text-gray-600 dark:text-gray-300">{{cloud.localBackupStatus()}}</p>

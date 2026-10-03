@@ -11,6 +11,10 @@
     <nav class="flex w-full flex-wrap gap-2 lg:grid [&>button]:min-h-11 [&>a]:min-h-11" aria-label="Navigation principale">
       <button [class.active]="!archiveOpen()" (click)="openBoard()"><span aria-hidden="true">▦</span> Mon tableau</button>
       <a routerLink="/dashboard"><span aria-hidden="true">◔</span> Vue d’ensemble</a>
+      <a routerLink="/projects">Mes projets</a>
+      <a routerLink="/calendar">Calendrier</a>
+      <a routerLink="/team">Équipe</a>
+      <a routerLink="/help">Aide</a>
       <button [class.active]="archiveOpen()" (click)="archiveOpen.set(true)"><span aria-hidden="true">▤</span> Archives <span class="nav-count">{{ taskService.archivedTasks().length }}</span></button>
     </nav>
     <section class="side-group projects-group hidden lg:block" aria-label="Projets">

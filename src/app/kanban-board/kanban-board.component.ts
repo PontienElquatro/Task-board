@@ -7,7 +7,8 @@ import { Task, Status } from '../models';
 import { TaskColumnComponent } from '../task-column/task-column.component';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { isOverdue } from '../models/task-utils';
 import { ProjectService } from '../services/project.service';
 import { STORAGE_PROVIDER } from '../providers/storage.provider';
@@ -27,8 +28,17 @@ export class KanbanBoardComponent {
   readonly taskService = inject(TaskService);
   readonly projectService = inject(ProjectService);
   private readonly storage = inject(STORAGE_PROVIDER);
+  private readonly route = inject(ActivatedRoute);
   projectDraft=''; projectEditor=false; editingProjectId?:string;
-  constructor() { if(this.storage.contextVersion) effect(()=>{this.storage.contextVersion!(); untracked(()=>{this.closeModal(); this.projectEditor=false;});}); }
+  constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params=>{
+      this.openBoard(); this.taskService.filterProject.set(params.get('project') ?? '');
+    });
+    if(this.storage.contextVersion) effect(()=>{this.storage.contextVersion!(); untracked(()=>{
+      this.closeModal(); this.projectEditor=false;
+      this.taskService.filterProject.set(this.route.snapshot.queryParamMap.get('project') ?? '');
+    });});
+  }
   saveProject() { this.safely(()=>{const id=this.projectService.save(this.projectDraft,this.editingProjectId); this.openBoard(); this.taskService.filterProject.set(id); this.projectEditor=false; this.projectDraft=''; this.editingProjectId=undefined;}); }
   editProject(id:string) {this.editingProjectId=id; this.projectDraft=this.projectService.projects().find(p=>p.id===id)?.title ?? ''; this.projectEditor=true;}
   archiveProject(id:string) {this.safely(()=>this.projectService.archive(id));}
