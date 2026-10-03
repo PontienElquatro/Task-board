@@ -57,6 +57,16 @@ export class AuthService {
     if (error) throw new Error('Modification du mot de passe impossible.');
     this.recovering.set(false);
   }
+  async updateProfile(input: { displayName?: string; email?: string }) {
+    const displayName = input.displayName?.trim();
+    const email = input.email?.trim().toLowerCase();
+    const { data, error } = await this.client.auth.updateUser({
+      ...(displayName ? { data: { full_name: displayName, name: displayName } } : {}),
+      ...(email ? { email } : {})
+    });
+    if (error) throw new Error('Mise à jour du profil impossible : ' + error.message);
+    if (data.user) this.user.set(data.user);
+  }
   async signOut() {
     const {error} = await this.client.auth.signOut();
     if (error) throw new Error('Déconnexion impossible. Réessayez.');
