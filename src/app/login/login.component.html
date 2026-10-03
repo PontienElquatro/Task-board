@@ -1,7 +1,7 @@
 <main id="main-content" class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl flex-col justify-center p-4 text-gray-900 dark:text-gray-100 sm:p-8">
   <a routerLink="/board" class="mb-4 inline-flex min-h-11 w-fit items-center rounded-lg px-2 text-sm text-gray-600 hover:text-blue-700 dark:text-gray-300 dark:hover:text-blue-300">← Retour au tableau</a>
-  <section class="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 lg:grid-cols-2" aria-labelledby="auth-heading">
-    <aside class="relative hidden min-h-[640px] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 p-8 text-white lg:flex">
+  <section class="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-800 sm:grid-cols-2" aria-labelledby="auth-heading">
+    <aside class="relative hidden min-h-[560px] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-800 p-6 text-white sm:flex lg:min-h-[640px] lg:p-8">
       <svg class="pointer-events-none absolute inset-0 h-full w-full opacity-30" viewBox="0 0 500 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
         <defs><pattern id="auth-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="white" stroke-opacity=".25" /></pattern></defs>
         <rect width="500" height="700" fill="url(#auth-grid)" />
@@ -15,8 +15,8 @@
       <div class="relative z-10 max-w-sm py-8"><p class="mb-4 text-sm text-blue-100">L’équilibre de vos projets</p><h2 class="text-4xl font-semibold leading-tight tracking-tight">{{mode === 'signup' ? 'Vos idées méritent un espace.' : mode === 'reset' || mode === 'recovery' ? 'Retrouvons votre équilibre.' : 'Heureux de vous retrouver.'}}</h2><p class="mt-6 text-sm leading-7 text-blue-100">Un tableau clair, des priorités visibles et une tâche après l’autre. Retrouvez le fil de vos projets, à votre rythme.</p><div class="mt-8 h-1 w-12 rounded-full bg-blue-200" aria-hidden="true"></div></div>
       <p class="relative z-10 text-xs text-blue-100">Moins de dispersion. Plus d’équilibre.</p>
     </aside>
-    <div class="flex min-w-0 flex-col justify-center p-6 sm:p-10 lg:p-12">
-      <div class="mb-6 lg:hidden"><app-brand /></div>
+    <div class="flex min-w-0 flex-col justify-center p-6 sm:p-8 lg:p-12">
+      <div class="mb-6 sm:hidden"><app-brand /></div>
       <p class="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-300">{{auth.user() && mode !== 'recovery' ? 'Votre espace personnel' : 'Bienvenue sur Ma’at'}}</p>
       <h1 id="auth-heading" class="m-0 text-2xl font-semibold tracking-tight">{{auth.user() && mode !== 'recovery' ? 'Mon compte' : mode === 'signup' ? 'Créer un compte' : mode === 'reset' ? 'Mot de passe oublié ?' : mode === 'recovery' ? 'Nouveau mot de passe' : 'Se connecter'}}</h1>
       <p class="mb-6 mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">{{auth.user() && mode !== 'recovery' ? 'Retrouvez votre tableau et vérifiez la sauvegarde de vos tâches.' : mode === 'signup' ? 'Créez votre espace personnel pour retrouver vos tâches avec votre compte.' : mode === 'reset' ? 'Renseignez votre adresse email pour recevoir un lien de récupération.' : mode === 'recovery' ? 'Choisissez un nouveau mot de passe pour sécuriser votre compte.' : 'Connectez-vous pour retrouver votre espace et vos projets.'}}</p>
