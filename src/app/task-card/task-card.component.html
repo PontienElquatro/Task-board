@@ -1,27 +1,25 @@
-<article *ngIf="task" class="task-card group rounded-xl border border-gray-200 bg-white p-4 shadow-none transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none motion-reduce:transition-none dark:border-gray-700 dark:bg-gray-800">
-  <div class="mb-2 flex items-center justify-between gap-2">
-    <span class="rounded px-2 py-1 text-xs font-medium" [ngClass]="task.priority === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200' : task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200'">{{ priorities[task.priority] }}</span>
-  </div>
-  <button class="block min-h-11 w-full rounded text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400" (click)="selected.emit(task)">
-    <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ task.title }}</h4>
-    <p *ngIf="task.description" class="mt-2 line-clamp-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">{{ task.description }}</p>
-  </button>
-  <div class="mt-2 flex flex-wrap gap-2" *ngIf="task.tags?.length"><span *ngFor="let tag of task.tags" class="rounded bg-gray-50 px-2 py-1 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-300">{{ tag }}</span></div>
-  <div *ngIf="task.subTasks.length > 0" class="subtask-progress mt-4">
-    <div class="mb-2 flex justify-between gap-2 text-xs text-gray-500 dark:text-gray-400"><span>Progression</span><span class="font-medium text-gray-700 dark:text-gray-300">{{ getCompletedSubTasksCount() }}/{{ task.subTasks.length }}</span></div>
-    <div class="h-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700" role="progressbar" [attr.aria-label]="'Sous-tâches de ' + task.title" [attr.aria-valuenow]="getCompletedSubTasksCount()" aria-valuemin="0" [attr.aria-valuemax]="task.subTasks.length"><span class="block h-full rounded-full bg-blue-600 transition-all duration-200 motion-reduce:transition-none dark:bg-blue-400" [style.width.%]="getCompletedSubTasksCount() / task.subTasks.length * 100"></span></div>
-  </div>
-  <footer class="mt-2 flex flex-wrap items-center justify-between gap-2">
-    <span class="text-xs text-gray-500 dark:text-gray-400" [ngClass]="isLate() ? 'text-red-700 dark:text-red-300' : ''" *ngIf="task.dueDate; else noDate">{{ isLate() ? 'En retard · ' : isToday() ? 'Aujourd’hui · ' : '' }}{{ task.dueDate | date:'dd/MM/yyyy' }}</span>
-    <ng-template #noDate><span class="sr-only">Sans échéance</span></ng-template>
-    <details class="relative ml-auto [&[open]]:w-full" #actions (keydown.escape)="actions.open=false">
-      <summary class="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 [&::-webkit-details-marker]:hidden" [attr.aria-label]="'Actions pour ' + task.title">•••</summary>
-      <div class="card-actions mt-2 grid w-full gap-2 rounded-xl border border-gray-200 bg-gray-50 p-2 dark:border-gray-600 dark:bg-gray-900">
-      <button class="flex min-h-11 items-center gap-2 rounded-lg p-2 text-left text-sm text-gray-700 hover:bg-blue-50 dark:text-gray-200 dark:hover:bg-blue-950" (click)="edit.emit(task)" [attr.aria-label]="'Modifier ' + task.title">Modifier</button>
-      <button class="flex min-h-11 items-center gap-2 rounded-lg p-2 text-left text-sm text-gray-700 hover:bg-blue-50 dark:text-gray-200 dark:hover:bg-blue-950" (click)="duplicate.emit(task)" [attr.aria-label]="'Dupliquer ' + task.title">Dupliquer</button>
-      <button class="flex min-h-11 items-center gap-2 rounded-lg p-2 text-left text-sm text-gray-700 hover:bg-blue-50 dark:text-gray-200 dark:hover:bg-blue-950" (click)="archive.emit(task)" [attr.aria-label]="'Archiver ' + task.title">Archiver</button>
-      <label class="grid gap-2 border-t border-gray-200 p-2 text-xs text-gray-600 dark:border-gray-600 dark:text-gray-300">Changer le statut<select class="min-h-11 w-full rounded-lg p-2 text-xs" [attr.aria-label]="'Statut de ' + task.title" [ngModel]="task.status" (ngModelChange)="statusChange.emit($event); actions.open=false"><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select></label>
+<article *ngIf="task" class="task-card group rounded-xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+  <div class="flex items-start gap-2">
+    <label class="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950" [attr.aria-label]="'Terminer ou rouvrir : ' + task.title">
+      <input type="checkbox" class="h-4 w-4 accent-blue-600" [checked]="task.status === 'done'" (change)="statusChange.emit(task.status === 'done' ? 'in-progress' : 'done')" (pointerdown)="$event.stopPropagation()" />
+    </label>
+    <button class="min-h-11 min-w-0 flex-1 rounded-lg py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600" (click)="selected.emit(task)">
+      <h4 class="break-words text-sm font-semibold text-gray-900 dark:text-gray-100" [class.line-through]="task.status === 'done'">{{ task.title }}</h4>
+    </button>
+    <details class="relative shrink-0" #actions (keydown.escape)="actions.open=false">
+      <summary class="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-400 dark:hover:bg-gray-700 [&::-webkit-details-marker]:hidden" [attr.aria-label]="'Actions pour ' + task.title">•••</summary>
+      <div class="absolute right-0 top-full z-20 grid w-48 gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+        <button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="selected.emit(task); actions.open=false">Ouvrir les détails</button>
+        <button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="duplicate.emit(task); actions.open=false">Dupliquer</button>
+        <button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="archive.emit(task); actions.open=false">Archiver</button>
+        <label class="grid gap-2 text-xs">Statut<select class="min-h-11 rounded-lg border border-gray-200 bg-white p-2 dark:border-gray-700 dark:bg-gray-800" [ngModel]="task.status" (ngModelChange)="statusChange.emit($event); actions.open=false"><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select></label>
       </div>
     </details>
-  </footer>
+  </div>
+  <div *ngIf="task.dueDate || task.subTasks.length || task.priority === 'high' || task.tags?.length" class="flex flex-wrap items-center gap-2 pb-2 pl-12 text-xs text-gray-500 dark:text-gray-400">
+    <span *ngIf="task.priority === 'high'" class="text-red-700 dark:text-red-300">Prioritaire</span>
+    <span *ngIf="task.dueDate" [ngClass]="isLate() ? 'text-red-700 dark:text-red-300' : ''">{{ isLate() ? 'En retard · ' : '' }}{{ task.dueDate | date:'dd/MM' }}</span>
+    <span *ngIf="task.subTasks.length" [attr.aria-label]="'Sous-tâches terminées : ' + getCompletedSubTasksCount() + ' sur ' + task.subTasks.length">☑ {{ getCompletedSubTasksCount() }}/{{ task.subTasks.length }}</span>
+    <span *ngIf="task.tags?.length" class="max-w-24 truncate">{{ task.tags?.[0] }}<span *ngIf="(task.tags?.length || 0) > 1"> +{{(task.tags?.length || 0) - 1}}</span></span>
+  </div>
 </article>

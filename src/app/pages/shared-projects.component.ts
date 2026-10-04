@@ -34,20 +34,17 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
    <section class="grid items-start gap-4 lg:grid-cols-3" aria-label="Tableau partagé">
     <div *ngFor="let column of columns" class="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900">
      <header class="mb-4 flex items-center justify-between"><h2 class="text-sm font-semibold">{{column.label}}</h2><span class="rounded-full bg-gray-200 px-2 py-1 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">{{columnTasks(column.id).length}}</span></header>
-     <article [id]="'task-'+task.id" *ngFor="let task of columnTasks(column.id); trackBy: trackTask" class="group mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-      <h3 class="break-words text-sm font-semibold text-gray-900 dark:text-gray-100">{{task.title}}</h3>
-      <p *ngIf="task.description" class="mt-2 line-clamp-2 break-words text-xs leading-relaxed text-gray-500 dark:text-gray-400">{{task.description}}</p>
-      <div *ngIf="taskSubtasks(task.id).length" class="mt-4">
-       <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"><span>Sous-tâches</span><span>{{subDone(task.id)}} / {{taskSubtasks(task.id).length}}</span></div>
-       <progress class="mt-2 h-1 w-full accent-blue-600" [value]="subDone(task.id)" [max]="taskSubtasks(task.id).length" aria-label="Sous-tâches terminées"></progress>
+     <article [id]="'task-'+task.id" *ngFor="let task of columnTasks(column.id); trackBy: trackTask" class="group mb-4 rounded-xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+      <div class="flex items-start gap-2">
+       <label class="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950" [attr.aria-label]="'Terminer ou rouvrir : ' + task.title"><input type="checkbox" class="h-4 w-4 accent-blue-600" [checked]="task.status === 'done'" [disabled]="busy() || !canWork(task.assignee_id)" (change)="progressWork(task.id,false,task.status === 'done' ? 'in-progress' : 'done')" /></label>
+       <h3 class="min-w-0 flex-1 break-words py-2 text-sm font-semibold text-gray-900 dark:text-gray-100" [class.line-through]="task.status === 'done'">{{task.title}}</h3>
       </div>
-      <footer class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-2 dark:border-gray-700">
-       <span class="flex min-w-0 items-center gap-2 text-xs text-gray-500 dark:text-gray-400"><span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300" aria-hidden="true">{{initials(task.assignee_id)}}</span><span class="truncate">{{memberName(task.assignee_id)}}</span></span>
-       <button *ngIf="canWork(task.assignee_id) && task.status !== 'done'" class="min-h-11 rounded-lg px-2 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-blue-300 dark:hover:bg-blue-950" [disabled]="busy()" (click)="progressWork(task.id,false,'done')">✓ Clôturer</button>
-       <span *ngIf="task.status === 'done'" class="text-xs font-medium text-blue-700 dark:text-blue-300">✓ Terminée</span>
-      </footer>
+      <div *ngIf="task.assignee_id || taskSubtasks(task.id).length" class="flex flex-wrap items-center gap-2 pl-12 text-xs text-gray-500 dark:text-gray-400">
+       <span *ngIf="taskSubtasks(task.id).length">☑ {{subDone(task.id)}}/{{taskSubtasks(task.id).length}}</span>
+       <span *ngIf="task.assignee_id" class="max-w-32 truncate" [title]="memberName(task.assignee_id)">{{memberName(task.assignee_id)}}</span>
+      </div>
       <details class="mt-2 border-t border-gray-100 dark:border-gray-700">
-       <summary class="flex min-h-11 cursor-pointer items-center justify-between rounded-lg px-2 text-xs font-medium text-gray-600 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:bg-gray-900"><span>Détails et sous-tâches</span><span aria-hidden="true">⌄</span></summary>
+       <summary class="flex min-h-11 cursor-pointer items-center justify-between rounded-lg px-2 text-xs font-medium text-gray-600 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:bg-gray-900"><span>Ouvrir les détails</span><span aria-hidden="true">⌄</span></summary>
        <div class="grid gap-4 pt-2">
         <ng-container *ngIf="canEdit(); else fullDescription">
          <label class="grid gap-2 text-xs">Titre<input [ngModel]="cardDraft(task).title" (ngModelChange)="setCardDraft(task,'title',$event)" maxlength="200" [disabled]="busy()" class="min-h-11 w-full rounded-lg border border-gray-300 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-900" /></label>
