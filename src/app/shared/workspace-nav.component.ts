@@ -13,6 +13,7 @@ export class WorkspaceNavComponent {
  private readonly router=inject(Router);
  currentLabel(){return this.items.find(item=>item.path===this.router.url.split(/[?#]/)[0])?.label ?? 'Mon espace';}
  readonly items=[
+ {path:'/team-projects',label:'Projets d’équipe',icon:'M3 7V4h7l2 3h9v13H3z'},
  {path:'/board',label:'Mon tableau',icon:'M3 4h18v16H3z M9 4v16 M15 4v16'},
  {path:'/projects',label:'Mes projets',icon:'M3 7V4h7l2 3h9v13H3z'},
  {path:'/calendar',label:'Calendrier',icon:'M4 5h16v16H4z M4 10h16 M8 3v4 M16 3v4'},

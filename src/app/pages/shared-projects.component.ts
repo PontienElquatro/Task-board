@@ -1,0 +1,57 @@
+import { Component, effect, inject, signal, untracked } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { PageShellComponent } from './page-shell.component';
+import { AuthService } from '../services/auth.service';
+import { TeamService } from '../services/team.service';
+
+interface Project {id:string;team_id:string;title:string;}
+interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;}
+
+@Component({standalone:true,imports:[CommonModule,FormsModule,PageShellComponent],template:`
+<app-page-shell title="Projets d’équipe" description="Un tableau partagé pour chaque projet, avec des responsables clairement identifiés.">
+ <p *ngIf="message()" role="status" class="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">{{message()}}</p>
+ <p *ngIf="!auth.user() && !auth.initializing()">Connectez-vous pour retrouver vos projets d’équipe.</p>
+ <div *ngIf="auth.user()" class="grid gap-4">
+  <label class="grid gap-2 text-sm">Équipe<select [ngModel]="teamId" (ngModelChange)="selectTeam($event)" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Choisir une équipe</option><option *ngFor="let team of teams.teams()" [value]="team.id">{{team.name}} · {{teams.roleLabel(teams.role(team))}}</option></select></label>
+  <form *ngIf="canManage()" (ngSubmit)="createProject()" class="flex flex-wrap gap-2"><label class="grid flex-1 gap-2 text-sm">Nouveau projet<input name="projectTitle" [(ngModel)]="projectTitle" required maxlength="100" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800" /></label><button class="primary min-h-11 self-end" [disabled]="busy()" type="submit">Créer le projet</button></form>
+  <label *ngIf="teamId" class="grid gap-2 text-sm">Projet<select [ngModel]="projectId" (ngModelChange)="selectProject($event)" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Choisir un projet</option><option *ngFor="let project of projects()" [value]="project.id">{{project.title}}</option></select></label>
+  <p *ngIf="teamId && !projects().length" class="text-sm text-gray-500 dark:text-gray-400">Aucun projet partagé dans cette équipe.</p>
+  <ng-container *ngIf="projectId">
+   <div class="flex flex-wrap items-end gap-4"><label class="grid gap-2 text-sm">Responsable<select [(ngModel)]="assigneeFilter" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Tous les membres</option><option value="none">Non assignées</option><option *ngFor="let member of teamMembers()" [value]="member.user_id">{{member.display_name}}</option></select></label><button class="secondary min-h-11" [disabled]="busy()" (click)="refreshTasks()">Actualiser</button></div>
+   <p *ngIf="!canEdit()" class="text-sm text-gray-500 dark:text-gray-400">Votre rôle Lecteur permet de consulter ce tableau.</p>
+   <form *ngIf="canEdit()" (ngSubmit)="saveTask()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+    <h2 class="font-semibold">{{editingId ? 'Modifier la tâche' : 'Nouvelle tâche'}}</h2>
+    <label class="grid gap-2 text-sm">Titre<input name="title" [(ngModel)]="title" required maxlength="200" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900" /></label>
+    <label class="grid gap-2 text-sm">Description<textarea name="description" [(ngModel)]="description" maxlength="10000" class="rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900"></textarea></label>
+    <div class="flex flex-wrap gap-4"><label class="grid gap-2 text-sm">Statut<select name="status" [(ngModel)]="status" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900"><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select></label>
+    <label class="grid gap-2 text-sm">Assigner à<select name="assignee" [(ngModel)]="assignee" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900"><option value="">Non assignée</option><option *ngFor="let member of teamMembers()" [value]="member.user_id">{{member.display_name}}</option></select></label></div>
+    <div class="flex gap-2"><button class="primary min-h-11" [disabled]="busy()" type="submit">Enregistrer</button><button *ngIf="editingId" type="button" class="secondary min-h-11" (click)="clearDraft()">Annuler</button></div>
+   </form>
+   <section class="grid gap-4 lg:grid-cols-3" aria-label="Tableau partagé"><div *ngFor="let column of columns" class="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900"><h2 class="mb-4 font-semibold">{{column.label}} · {{columnTasks(column.id).length}}</h2><article *ngFor="let task of columnTasks(column.id)" class="mb-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><h3 class="break-words text-sm font-semibold">{{task.title}}</h3><p class="mt-2 whitespace-pre-wrap break-words text-xs text-gray-500 dark:text-gray-400">{{task.description}}</p><p class="mt-4 text-xs text-blue-700 dark:text-blue-300">{{memberName(task.assignee_id)}}</p><button *ngIf="canEdit()" class="secondary mt-4 min-h-11" [disabled]="busy()" (click)="editTask(task)">Modifier</button></article><p *ngIf="!columnTasks(column.id).length" class="text-xs text-gray-500 dark:text-gray-400">Aucune tâche</p></div></section>
+  </ng-container>
+ </div>
+</app-page-shell>`})
+export class SharedProjectsComponent {
+ readonly auth=inject(AuthService);readonly teams=inject(TeamService);
+ readonly projects=signal<Project[]>([]);readonly tasks=signal<SharedTask[]>([]);readonly message=signal('');readonly busy=signal(false);
+ teamId='';projectId='';projectTitle='';assigneeFilter='';editingId='';title='';description='';status='todo';assignee='';
+ readonly columns=[{id:'todo',label:'À faire'},{id:'in-progress',label:'En cours'},{id:'done',label:'Terminé'}];
+ private revision=0;
+ constructor(){effect(()=>{const user=this.auth.user();if(!this.auth.initializing())untracked(()=>{this.revision++;this.teamId='';this.projectId='';this.projects.set([]);this.tasks.set([]);this.clearDraft();if(user)void this.run(()=>this.teams.load());});});}
+ currentTeam(){return this.teams.teams().find(t=>t.id===this.teamId);}
+ canManage(){const t=this.currentTeam();return !!t&&this.teams.canManage(t);}
+ canEdit(){const t=this.currentTeam();return !!t&&['owner','admin','member'].includes(this.teams.role(t)??'');}
+ teamMembers(){return this.teams.members().filter(m=>m.team_id===this.teamId);}
+ memberName(id:string|null){return id?this.teamMembers().find(m=>m.user_id===id)?.display_name??'Membre':'Non assignée';}
+ columnTasks(status:string){return this.tasks().filter(t=>t.status===status&&(!this.assigneeFilter||(this.assigneeFilter==='none'?!t.assignee_id:t.assignee_id===this.assigneeFilter)));}
+ async run(action:()=>Promise<unknown>){if(this.busy())return;this.busy.set(true);this.message.set('');try{await action();}catch(e){this.message.set(e instanceof Error?e.message:'Action impossible.');}finally{this.busy.set(false);}}
+ async selectTeam(id:string){if(this.busy())return;this.teamId=id;this.projectId='';this.assigneeFilter='';this.projects.set([]);this.tasks.set([]);this.clearDraft();const revision=++this.revision;if(!id)return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').select('id,team_id,title').eq('team_id',id).order('created_at');if(r.error)throw new Error(r.error.message);if(revision===this.revision)this.projects.set(r.data??[]);});}
+ async selectProject(id:string){if(this.busy())return;this.projectId=id;this.tasks.set([]);this.clearDraft();await this.refreshTasks();}
+ async readTasks(){const id=this.projectId,revision=this.revision;if(!id)return;const r=await this.auth.client.from('taskboard_shared_tasks').select('*').eq('project_id',id).order('created_at');if(r.error)throw new Error(r.error.message);if(id===this.projectId&&revision===this.revision)this.tasks.set(r.data??[]);}
+ async refreshTasks(){await this.run(()=>this.readTasks());}
+ async createProject(){if(!this.canManage()||!this.projectTitle.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').insert({team_id:this.teamId,title:this.projectTitle.trim()}).select('id,team_id,title').single();if(r.error)throw new Error(r.error.message);this.projects.update(p=>[...p,r.data]);this.projectId=r.data.id;this.projectTitle='';this.tasks.set([]);this.message.set('Projet partagé créé.');});}
+ clearDraft(){this.editingId='';this.title='';this.description='';this.status='todo';this.assignee='';}
+ editTask(t:SharedTask){this.editingId=t.id;this.title=t.title;this.description=t.description;this.status=t.status;this.assignee=t.assignee_id??'';}
+ async saveTask(){if(!this.canEdit()||!this.title.trim())return;await this.run(async()=>{const payload={title:this.title.trim(),description:this.description,status:this.status,assignee_id:this.assignee||null};const query=this.editingId?this.auth.client.from('taskboard_shared_tasks').update(payload).eq('id',this.editingId).eq('project_id',this.projectId):this.auth.client.from('taskboard_shared_tasks').insert({...payload,team_id:this.teamId,project_id:this.projectId});const r=await query.select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('La tâche a été supprimée ou vos droits ont changé.');await this.readTasks();this.clearDraft();this.message.set('Tâche enregistrée.');});}
+}

@@ -25,7 +25,7 @@ export class AppComponent implements OnDestroy {
   private updateLayout(url:string) {
     const path=url.split(/[?#]/)[0];
     this.authLayout.set(path==='/login');
-    this.workspaceLayout.set(['/board','/dashboard','/projects','/calendar','/team','/settings','/admin'].includes(path));
+    this.workspaceLayout.set(['/board','/dashboard','/projects','/team-projects','/calendar','/team','/settings','/admin'].includes(path));
   }
   private readonly theme = inject(ThemeService);
   private readonly updates = inject(SwUpdate, { optional: true });
