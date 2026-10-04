@@ -5,12 +5,14 @@ import { CloudStorageProvider } from '../providers/cloud-storage.provider';
 import { SyncConflictComponent } from '../shared/sync-conflict/sync-conflict.component';
 import { DeviceRestoreComponent } from '../shared/device-restore/device-restore.component';
 import { BrandComponent } from '../shared/brand/brand.component';
-@Component({selector:'app-account-bar',standalone:true,imports:[CommonModule,RouterLink,SyncConflictComponent,DeviceRestoreComponent,BrandComponent],template: `
+import { NotificationsComponent } from '../shared/notifications.component';
+@Component({selector:'app-account-bar',standalone:true,imports:[CommonModule,RouterLink,SyncConflictComponent,DeviceRestoreComponent,BrandComponent,NotificationsComponent],template: `
 <app-sync-conflict *ngIf="cloud.conflict()" />
 <header class="sticky top-0 z-50 border-b border-gray-200 bg-white px-4 py-2 dark:border-gray-700 dark:bg-gray-800 sm:px-6" aria-label="Compte et sauvegarde">
   <div class="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-2">
     <a routerLink="/board" class="flex min-h-11 items-center gap-2 rounded-lg font-semibold" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /> Ma’at</a>
     <div class="flex min-w-0 flex-wrap items-center gap-2">
+      <app-notifications />
       <span class="max-w-56 truncate text-xs text-gray-600 dark:text-gray-300" role="status" aria-live="polite" [title]="cloud.status()">{{cloud.auth.initializing() ? 'Vérification de votre session…' : cloud.status() === 'Synchronisé avec votre compte' ? '✓ Sauvegardé' : cloud.status()}}</span>
       <details class="relative" #accountMenu (keydown.escape)="accountMenu.open=false">
         <summary class="flex min-h-11 max-w-48 cursor-pointer list-none items-center gap-2 rounded-lg border border-gray-200 px-3 text-sm hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-gray-600 dark:hover:bg-gray-700 [&::-webkit-details-marker]:hidden"><img *ngIf="cloud.auth.avatarUrl()" [src]="cloud.auth.avatarUrl()" alt="" class="h-7 w-7 rounded-full object-cover" /><span *ngIf="!cloud.auth.avatarUrl()" class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">{{cloud.auth.initials()}}</span><span class="truncate">{{cloud.auth.displayName()}}</span><span aria-hidden="true">⌄</span></summary>
