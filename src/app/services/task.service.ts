@@ -3,6 +3,7 @@ import { ToastService } from './toast.service';
 import { STORAGE_PROVIDER } from '../providers/storage.provider';
 import { Task, Status, Priority } from '../models';
 import { normalizeTasks, moveTask, isOverdue } from '../models/task-utils';
+import { statusAfterChecklist } from '../core/subtask-workflow';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
@@ -82,9 +83,7 @@ export class TaskService {
     const previous = this.tasks().find(t => t.id === task.id);
     if (!previous) throw new Error('Cette tâche n’existe plus.');
     const updated = normalizeTasks([task])[0];
-    const newlyCompleted = updated.subTasks.some(sub => sub.completed &&
-      !previous.subTasks.find(old => old.id === sub.id)?.completed);
-    if (previous.status === 'todo' && updated.status === 'todo' && newlyCompleted) updated.status = 'in-progress';
+    updated.status = statusAfterChecklist(previous.subTasks, updated.subTasks, updated.status);
     if (previous.status !== updated.status) updated.order = Math.max(-1, ...this.activeTasks().filter(t => t.status === updated.status).map(t => t.order ?? 0)) + 1;
     this.commit(this.tasks().map(t => t.id === task.id ? updated : t), 'Tâche enregistrée.');
   }

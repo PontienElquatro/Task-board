@@ -106,16 +106,16 @@ describe('TaskService', () => {
     expect(storage.setItem).not.toHaveBeenCalled();
   });
   it('starts a task when a subtask is checked and does not revert when unchecked', () => {
-    service.updateTask({ ...task('a'), subTasks: [{ id: 's', title: 'Étape', completed: false }] });
+    service.updateTask({ ...task('a'), subTasks: [{ id: 's', title: 'Étape', completed: false }, {id:'s2',title:'Suite',completed:false}] });
     service.toggleSubTask('a', 's');
     expect(service.tasks()[0].status).toBe('in-progress');
     service.toggleSubTask('a', 's');
     expect(service.tasks()[0].status).toBe('in-progress');
   });
-  it('starts a task from edited subtasks but never reopens completed tasks', () => {
+  it('completes the last step and reopens its parent when unchecked', () => {
     service.updateTask({ ...task('a'), subTasks: [{ id: 's', title: 'Étape', completed: true }] });
+    expect(service.tasks()[0].status).toBe('done');
+    service.toggleSubTask('a','s');
     expect(service.tasks()[0].status).toBe('in-progress');
-    service.updateTask({ ...task('b', 'done'), subTasks: [{ id: 's', title: 'Étape', completed: true }] });
-    expect(service.tasks().find(t => t.id === 'b')?.status).toBe('done');
   });
 });
