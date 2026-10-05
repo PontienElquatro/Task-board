@@ -40,7 +40,9 @@ export class PresentationComponent {
 
 @Component({standalone:true,imports:[...imports,ModalScrollLockDirective,A11yModule,FormsModule,IconComponent,DismissMenuDirective],templateUrl:'./projects.component.html'})
 export class ProjectsComponent {
- constructor(){this.projectForm=inject(ActivatedRoute).snapshot.queryParamMap.get('create')==='project';}
+ private readonly router=inject(Router);
+ guidedCreation=false;
+ constructor(){this.guidedCreation=inject(ActivatedRoute).snapshot.queryParamMap.get('create')==='project';this.projectForm=this.guidedCreation;}
  readonly toast=inject(ToastService);
  readonly projects=inject(ProjectService); readonly tasks=inject(TaskService);
  projectForm=false;search='';
@@ -48,8 +50,14 @@ export class ProjectsComponent {
  visibleProjects(){return this.projects.projects().filter(p=>(this.showArchived||!p.archived)&&p.title.toLocaleLowerCase('fr').includes(this.search.trim().toLocaleLowerCase('fr')));}
  projectProgress(id:string){const total=this.count(id);return total?Math.round(100*this.count(id,true)/total):0;}
  count(id:string,done=false){return this.tasks.activeTasks().filter(t=>t.projectId===id&&(!done||t.status==='done')).length;}
- cancel(){this.draft='';this.editing=undefined;}
- save(){this.run(()=>{this.projects.save(this.draft,this.editing);this.cancel();this.projectForm=false;this.toast.success('Projet enregistré.');});}
+ cancel(){this.draft='';this.editing=undefined;this.guidedCreation=false;}
+ save(){this.run(()=>{
+  const continueGuide=this.guidedCreation&&!this.editing;
+  const id=this.projects.save(this.draft,this.editing);
+  this.cancel();this.projectForm=false;
+  this.toast.success(continueGuide?'Projet créé. Ajoutez votre première tâche.':'Projet enregistré.');
+  if(continueGuide)void this.router.navigate(['/board'],{queryParams:{project:id,create:'task'}});
+ });}
  archive(id:string){this.run(()=>this.projects.archive(id));}
  private run(action:()=>void){this.message.set('');try{action();}catch(e){this.message.set(e instanceof Error?e.message:'Action impossible.');}}
 }
