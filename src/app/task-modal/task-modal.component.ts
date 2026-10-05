@@ -7,7 +7,8 @@ import { Task, SubTask } from '../models';
 import { GoalService } from '../services/goal.service';
 import { dayKey } from '../models/task-utils';
 import { ProjectService } from '../services/project.service';
-@Component({ selector: 'app-task-modal', standalone: true, imports: [IconComponent, CommonModule, FormsModule, A11yModule], templateUrl: './task-modal.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
+import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
+@Component({ selector: 'app-task-modal', standalone: true, imports: [ModalScrollLockDirective, IconComponent, CommonModule, FormsModule, A11yModule], templateUrl: './task-modal.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskModalComponent implements OnChanges {
   @Input() task: Task | null = null;
   @Input() mode: 'view' | 'edit' | 'delete' = 'view';

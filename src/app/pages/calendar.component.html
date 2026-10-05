@@ -7,7 +7,7 @@
  <p *ngIf="tasks.notice()" role="alert" class="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{tasks.notice()}}</p>
  <div class="mb-4 flex flex-wrap gap-3">
   <div class="flex gap-1 rounded-xl bg-blue-50 p-1 dark:bg-indigo-950"><button *ngFor="let item of [{id:'month',label:'Mois'},{id:'week',label:'Semaine'},{id:'agenda',label:'Agenda'}]" class="min-h-11 rounded-lg px-4 text-sm font-medium" [class.bg-white]="view()===item.id" [class.dark:bg-gray-800]="view()===item.id" [attr.aria-pressed]="view()===item.id" (click)="view.set($any(item.id))">{{item.label}}</button></div>
-  <input aria-label="Rechercher une tâche" placeholder="Rechercher une tâche…" [ngModel]="query()" (ngModelChange)="query.set($event)" class="min-h-11 min-w-0 flex-1 rounded-xl border border-blue-100 bg-white p-3 text-sm dark:border-indigo-900 dark:bg-gray-900">
+  <input aria-label="Rechercher une tâche" placeholder="Rechercher une tâche…" [ngModel]="query()" (ngModelChange)="query.set($event)" class="min-h-11 w-full min-w-0 basis-full rounded-xl sm:w-auto sm:basis-64 sm:flex-1 border border-blue-100 bg-white p-3 text-sm dark:border-indigo-900 dark:bg-gray-900">
   <select aria-label="Filtrer par projet" [ngModel]="project()" (ngModelChange)="project.set($event)" class="min-h-11 max-w-full rounded-xl border border-blue-100 bg-white p-3 text-sm dark:border-indigo-900 dark:bg-gray-900"><option value="">Tous les projets</option><option *ngFor="let p of projects.projects()" [value]="p.id">{{p.title}}</option></select>
   <label class="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" [ngModel]="includeDone()" (ngModelChange)="includeDone.set($event)">Inclure les terminées</label>
  </div>

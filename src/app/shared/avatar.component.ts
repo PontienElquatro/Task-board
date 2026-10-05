@@ -9,5 +9,5 @@ import { profileInitials } from '../core/profile';
 export class AvatarComponent {
  @Input() name='Membre';@Input() url:string|null|undefined='';failedUrl='';
  get safeUrl(){try{const url=new URL(this.url||'');return url.protocol==='https:'?url.href:'';}catch{return '';}}
- get initialsForName(){return profileInitials(this.name);}
+ get initialsForName(){return this.name==='Membre'?'?':profileInitials(this.name);}
 }

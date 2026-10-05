@@ -16,12 +16,13 @@ import { TaskCardComponent } from '../task-card/task-card.component';
 import { Task } from '../models';
 import { sharedCard, matchesSharedAssignee } from '../core/collaboration/shared-card';
 import { TeamService } from '../services/team.service';
+import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
 
 interface Subtask {id:string;task_id:string;team_id:string;title:string;completed:boolean;assignee_id:string|null;}
 interface Project {id:string;team_id:string;title:string;}
 interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;}
 
-@Component({standalone:true,imports:[AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
+@Component({standalone:true,imports:[ModalScrollLockDirective,AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
 export class SharedProjectsComponent {
  readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly auth=inject(AuthService);readonly teams=inject(TeamService);
  private readonly route=inject(ActivatedRoute);
