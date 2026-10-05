@@ -11,6 +11,7 @@ import { CardAppearanceService } from '../services/card-appearance.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { RefreshQueue } from '../core/collaboration/refresh-queue';
 import { A11yModule } from '@angular/cdk/a11y';
+import { AvatarComponent } from '../shared/avatar.component';
 import { TaskCardComponent } from '../task-card/task-card.component';
 import { Task } from '../models';
 import { sharedCard, matchesSharedAssignee } from '../core/collaboration/shared-card';
@@ -20,7 +21,7 @@ interface Subtask {id:string;task_id:string;team_id:string;title:string;complete
 interface Project {id:string;team_id:string;title:string;}
 interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;}
 
-@Component({standalone:true,imports:[A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
+@Component({standalone:true,imports:[AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
 export class SharedProjectsComponent {
  readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly auth=inject(AuthService);readonly teams=inject(TeamService);
  private readonly route=inject(ActivatedRoute);
@@ -92,6 +93,7 @@ export class SharedProjectsComponent {
  canManage(){const t=this.currentTeam();return !!t&&this.teams.canManage(t);}
  canEdit(){const t=this.currentTeam();return !!t&&['owner','admin','member'].includes(this.teams.role(t)??'');}
  teamMembers(){return this.teams.members().filter(m=>m.team_id===this.teamId);}
+ memberAvatar(id:string|null){return this.teamMembers().find(m=>m.user_id===id)?.avatar_url??'';}
  memberName(id:string|null){return id?this.teamMembers().find(m=>m.user_id===id)?.display_name??'Membre':'Non assignée';}
  projectName(){return this.projects().find(p=>p.id===this.projectId)?.title??'Projet';}
  columnTasks(status:string){const query=this.search.trim().toLocaleLowerCase('fr');return this.tasks().filter(t=>t.status===status&&(!query||[t.title,t.description,...this.taskSubtasks(t.id).map(s=>s.title)].join(' ').toLocaleLowerCase('fr').includes(query))&&matchesSharedAssignee(t,this.subtasks(),this.assigneeFilter));}

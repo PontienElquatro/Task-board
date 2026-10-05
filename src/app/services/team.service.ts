@@ -1,23 +1,27 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { profileName } from '../core/profile';
 import { AuthService } from './auth.service';
 export type TeamRole='owner'|'admin'|'member'|'viewer';
+export interface TeamMember {team_id:string;user_id:string;role:TeamRole;display_name:string;avatar_url?:string|null;}
 export interface Team{id:string;owner_id:string;name:string;created_at:string;}
 export interface TeamInvitation{id:string;team_id:string;email:string;role:Exclude<TeamRole,'owner'>;expires_at:string;created_at:string;accepted_at?:string|null;}
 @Injectable({providedIn:'root'}) export class TeamService{
- private readonly auth=inject(AuthService); readonly teams=signal<Team[]>([]); readonly invitations=signal<TeamInvitation[]>([]); readonly members=signal<{team_id:string;user_id:string;role:TeamRole;display_name:string}[]>([]);
+ private readonly auth=inject(AuthService); readonly teams=signal<Team[]>([]); readonly invitations=signal<TeamInvitation[]>([]); readonly members=signal<TeamMember[]>([]);
  async load(){
  const account=this.auth.user()?.id;
  this.teams.set([]);this.members.set([]);this.invitations.set([]);
  if(!account)return;
  const result=await this.auth.client.from('taskboard_teams').select('*').order('created_at',{ascending:false});
  if(result.error)throw new Error('Chargement des équipes impossible.');
- const roster=await this.auth.client.rpc('taskboard_team_roster');
+ let roster=await this.auth.client.rpc('taskboard_team_profiles');
+ // Older backends remain usable until the additive migration is deployed.
+ if(roster.error && ['PGRST202','42883'].includes(roster.error.code))roster=await this.auth.client.rpc('taskboard_team_roster');
  if(roster.error)throw new Error('Chargement des membres impossible : '+roster.error.message);
  const ids=(result.data??[]).map((x:{id:string})=>x.id);
  const invites=ids.length?await this.auth.client.from('taskboard_team_invitations').select('id,team_id,email,role,expires_at,created_at,accepted_at').in('team_id',ids).order('created_at',{ascending:false}):{data:[],error:null};
  if(invites.error)throw new Error('Chargement des invitations impossible.');
  if(this.auth.user()?.id!==account)return;
- this.teams.set((result.data??[]) as Team[]);this.members.set(roster.data??[]);this.invitations.set((invites.data??[]) as TeamInvitation[]);
+ this.teams.set((result.data??[]) as Team[]);this.members.set((roster.data??[]).map((member:TeamMember)=>({...member,display_name:profileName({full_name:member.display_name})})));this.invitations.set((invites.data??[]) as TeamInvitation[]);
  }
  role(team:Team):TeamRole|undefined{return team.owner_id===this.auth.user()?.id?'owner':this.members().find(m=>m.team_id===team.id&&m.user_id===this.auth.user()?.id)?.role;}
  canManage(team:Team){return ['owner','admin'].includes(this.role(team)??'');}

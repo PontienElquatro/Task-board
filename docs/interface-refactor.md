@@ -39,4 +39,4 @@ Le formulaire de création n’a plus de titre ni de cadre imbriqué en double. 
 
 ## Limites backend
 
-Cette livraison ne modifie ni les migrations ni les notifications backend. Les notifications de clôture vers l’auteur de l’assignation et les photos de tous les membres via le roster restent un chantier distinct. Le responsable apparaît sur les cartes partagées avec des initiales, pas une photo prétendue disponible.
+Les notifications de clôture vers l’auteur de l’assignation restent un chantier distinct. Les noms et photos des membres sont maintenant pris en charge : voir `profile-team-cards.md` pour la migration et les vérifications.

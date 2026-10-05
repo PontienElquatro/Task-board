@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Task, Status } from '../models';
 import { CardAppearanceService } from '../services/card-appearance.service';
 import { IconComponent } from '../shared/icon.component';
+import { AvatarComponent } from '../shared/avatar.component';
 import { FormsModule } from '@angular/forms';
 import { isOverdue, dayKey } from '../models/task-utils';
-@Component({ selector: 'app-task-card', standalone: true, imports: [IconComponent, CommonModule, FormsModule], templateUrl: './task-card.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-task-card', standalone: true, imports: [AvatarComponent, IconComponent, CommonModule, FormsModule], templateUrl: './task-card.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskCardComponent {
   readonly appearance = inject(CardAppearanceService);
   @Input() task!: Task;
@@ -13,6 +14,7 @@ export class TaskCardComponent {
   @Input() canProgress = true;
   @Input() busy = false;
   @Input() responsible = '';
+  @Input() responsibleAvatar:string|null|undefined = '';
   @Output() selected = new EventEmitter<Task>();
   @Output() edit = new EventEmitter<Task>();
   @Output() delete = new EventEmitter<Task>();

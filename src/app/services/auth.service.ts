@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { createClient, User } from '@supabase/supabase-js';
 import { PUBLIC_BACKEND } from '../core/config/app-config';
+import { profileName, profileInitials, profileNames } from '../core/profile';
 import { tabSessionOptions } from '../core/auth/tab-session';
 
 @Injectable({providedIn:'root'})
@@ -13,12 +14,8 @@ export class AuthService {
   readonly initializing = signal(true);
   readonly recovering = signal(false);
   readonly sessionError = signal('');
-  readonly displayName = computed(() => {
-    const user = this.user();
-    const name = user?.user_metadata?.['full_name'] ?? user?.user_metadata?.['name'];
-    return typeof name === 'string' && name.trim() ? name.trim() : user?.email ?? 'Espace local';
-  });
-  readonly initials = computed(() => this.displayName().slice(0, 2).toLocaleUpperCase('fr'));
+  readonly displayName = computed(() => profileName(this.user()?.user_metadata, this.user() ? 'Mon compte' : 'Espace local'));
+  readonly initials = computed(() => profileInitials(this.displayName()));
   readonly avatarUrl = computed(() => {
     const value = this.user()?.user_metadata?.['avatar_url'];
     return typeof value === 'string' && value ? value : '';
@@ -55,8 +52,8 @@ export class AuthService {
     const {error} = await this.client.auth.signInWithPassword({email, password});
     if (error) throw new Error('Connexion impossible. Vérifiez vos identifiants et la confirmation de votre adresse email.');
   }
-  async signUp(email: string, password: string) {
-    const {error} = await this.client.auth.signUp({email, password, options:{emailRedirectTo:location.origin + '/login'}});
+  async signUp(email: string, password: string, firstName:string, lastName:string) {
+    const {error} = await this.client.auth.signUp({email, password, options:{data:profileNames(firstName,lastName),emailRedirectTo:location.origin + '/login'}});
     if (error) throw new Error('Inscription impossible : ' + error.message);
   }
   async resetPassword(email: string) {
@@ -68,11 +65,13 @@ export class AuthService {
     if (error) throw new Error('Modification du mot de passe impossible.');
     this.recovering.set(false);
   }
-  async updateProfile(input: { displayName?: string; email?: string; avatarUrl?: string | null }) {
+  async updateProfile(input: { displayName?: string; firstName?:string; lastName?:string; email?: string; avatarUrl?: string | null }) {
     const displayName = input.displayName?.trim();
     const email = input.email?.trim().toLowerCase();
+    const nameData=(input.firstName?.trim() || input.lastName?.trim()) ? profileNames(input.firstName||'',input.lastName||'') : displayName ? {full_name:displayName,name:displayName} : {};
+    const metadata={...this.user()?.user_metadata,...nameData,...(input.avatarUrl!==undefined ? {avatar_url:input.avatarUrl} : {})};
     const { data, error } = await this.client.auth.updateUser({
-      ...((displayName || input.avatarUrl !== undefined) ? { data: { ...this.user()?.user_metadata, ...(displayName ? { full_name: displayName, name: displayName } : {}), ...(input.avatarUrl !== undefined ? { avatar_url: input.avatarUrl } : {}) } } : {}),
+      ...((Object.keys(nameData).length || input.avatarUrl!==undefined) ? {data:metadata} : {}),
       ...(email ? { email } : {})
     });
     if (error) throw new Error('Mise à jour du profil impossible : ' + error.message);

@@ -29,7 +29,7 @@ try {
    if(url.pathname==='/functions/v1/taskboard-admin')return json({error:'Forbidden'},403);
    if(url.pathname.endsWith('/taskboard_workspaces'))return json({revision:1,data:{mytaskboard_tasks:[]}});
    if(url.pathname.endsWith('/taskboard_teams'))return json([team]);
-   if(url.pathname.endsWith('/taskboard_team_roster'))return json([{team_id:team.id,user_id:user.id,role:'owner',display_name:'Camille Martin'}]);
+   if(url.pathname.endsWith('/taskboard_team_profiles')||url.pathname.endsWith('/taskboard_team_roster'))return json([{team_id:team.id,user_id:user.id,role:'owner',display_name:'Camille Martin',avatar_url:null}]);
    if(url.pathname.endsWith('/taskboard_team_invitations')||url.pathname.endsWith('/taskboard_notifications'))return json([]);
    if(url.pathname.endsWith('/taskboard_shared_projects'))return json([project]);
    if(url.pathname.endsWith('/taskboard_shared_subtasks'))return json([{id:'sub-fixture',task_id:'task-fixture',team_id:team.id,title:'Valider la maquette',completed:false,assignee_id:user.id}]);

@@ -13,7 +13,7 @@ export class LoginComponent {
   private readonly router=inject(Router);
   private readonly route=inject(ActivatedRoute);
   mode: 'login'|'signup'|'reset'|'recovery' = this.route.snapshot.queryParamMap.get('mode') === 'recovery' ? 'recovery' : 'login';
-  email=''; password=''; confirmation='';
+  firstName='';lastName='';email=''; password=''; confirmation='';
   readonly busy=signal(false); readonly message=signal(''); readonly error=signal('');
   setMode(mode: 'login'|'signup'|'reset'|'recovery') { this.mode=mode; this.password=''; this.confirmation=''; this.error.set(''); this.message.set(''); }
   async submit() {
@@ -21,7 +21,7 @@ export class LoginComponent {
     this.error.set(''); this.message.set(''); this.busy.set(true);
     try {
       if(this.mode==='login') { await this.auth.signIn(this.email.trim(),this.password); await this.router.navigate(['/board']); }
-      if(this.mode==='signup') { if(this.password!==this.confirmation) throw new Error('Les mots de passe diffèrent.'); await this.auth.signUp(this.email.trim(),this.password); this.message.set('Vérifiez votre boîte email pour confirmer votre inscription.'); this.password=''; this.confirmation=''; }
+      if(this.mode==='signup') { if(this.password!==this.confirmation) throw new Error('Les mots de passe diffèrent.'); await this.auth.signUp(this.email.trim(),this.password,this.firstName,this.lastName); this.message.set('Vérifiez votre boîte email pour confirmer votre inscription.'); this.password=''; this.confirmation=''; }
       if(this.mode==='reset') { await this.auth.resetPassword(this.email.trim()); this.message.set('Si cette adresse est enregistrée, un lien de récupération sera envoyé.'); }
       if(this.mode==='recovery') { if(this.password!==this.confirmation) throw new Error('Les mots de passe diffèrent.'); await this.auth.changePassword(this.password); this.password=''; this.confirmation=''; this.message.set('Mot de passe modifié.'); this.mode='login'; }
     } catch(error) { this.error.set(error instanceof Error ? error.message : 'Service indisponible.'); }
