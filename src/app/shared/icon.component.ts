@@ -1,5 +1,10 @@
 import { Component, Input } from '@angular/core';
 const paths: Record<string,string> = {
+ user:'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2',
+ search:'M21 21l-5-5 M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14',
+ undo:'M8 4 3 9l5 5 M3 9h11a7 7 0 0 1 7 7v3',
+ filter:'M4 6h16 M7 12h10 M10 18h4 M8 4v4 M16 10v4',
+ shield:'M12 3 3 7v5c0 5 9 9 9 9s9-4 9-9V7z M9 12l2 2 4-4',
  cloud:'M7 19h11a4 4 0 0 0 1-7.9A7 7 0 0 0 5.2 9.2 5 5 0 0 0 7 19',
  'cloud-check':'M7 19h11a4 4 0 0 0 1-7.9A7 7 0 0 0 5.2 9.2 5 5 0 0 0 7 19 M9 13l2 2 4-4',
  'cloud-error':'M7 19h11a4 4 0 0 0 1-7.9A7 7 0 0 0 5.2 9.2 5 5 0 0 0 7 19 M10 11l4 4 M14 11l-4 4',

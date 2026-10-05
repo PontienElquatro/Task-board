@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { IconComponent } from '../icon.component';
 import { TaskService } from '../../services/task.service';
 import { Project } from '../../models';
 
 /** Presentation boundary; the existing task service remains the source of truth. */
 @Component({
-  selector:'app-filter-bar', standalone:true, imports:[CommonModule,FormsModule],
+  selector:'app-filter-bar', standalone:true, imports:[IconComponent,CommonModule,FormsModule],
   templateUrl:'./filter-bar.component.html', changeDetection:ChangeDetectionStrategy.OnPush
 })
 export class FilterBarComponent {

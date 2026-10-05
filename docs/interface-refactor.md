@@ -4,10 +4,11 @@
 
 - Projets d’équipe : première équipe sélectionnée, galerie de projets, ouverture du tableau, retour à la galerie.
 - Un composant de carte commun aux espaces personnel et partagé. Les actions non disponibles côté équipe ne sont pas proposées.
-- Détails partagés hors des colonnes, dans un panneau latéral avec focus piégé, fermeture au clavier et protection des brouillons.
+- Détails partagés hors des colonnes, dans une fenêtre centrée avec focus piégé, fermeture au clavier et protection des brouillons (ajustement après retour utilisateur).
 - Ajout d’une tâche depuis le tableau ou sa colonne. Sous-tâches et assignations restent dans le panneau.
 - Le filtre responsable inclut les tâches contenant une sous-tâche assignée à la personne recherchée.
-- Panneaux personnels, création/renommage de projets, vue d’ensemble et indicateurs administratifs harmonisés.
+- Fenêtres personnelles centrées, création/renommage de projets, vue d’ensemble et indicateurs administratifs harmonisés.
+- Menu du compte compact avec en-tête de profil, icônes SVG bleu/indigo et sauvegardes regroupées. Déconnexion rouge ; commandes de thème, annulation et filtres harmonisées avec le logo.
 - Confirmations de profil, photo et équipe dans le popup global de trois secondes. Les erreurs restent persistantes.
 - Palette des cartes, typographie, règles de droits et opérations backend existantes conservées.
 
