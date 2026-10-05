@@ -27,7 +27,9 @@ const paths: Record<string,string> = {
  archive:'M3 4h18v4H3z M5 8v12h14V8 M10 12h4',
  copy:'M9 9h12v12H9z M15 9V3H3v12h6',
  edit:'M16 3l5 5 M4 20l4-1L21 6l-3-3L5 16z',
- trash:'M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7'
+ trash:'M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7',
+ eye:'M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
+ 'eye-off':'M3 3l18 18 M10 5a12 12 0 0 1 2 0c7 0 10 7 10 7a18 18 0 0 1-3 4 M6 6a18 18 0 0 0-4 6s3 7 10 7a13 13 0 0 0 5-1 M10 10a3 3 0 0 0 4 4'
 };
 @Component({selector:'app-icon',standalone:true,template:`<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path [attr.d]="path" /></svg>`,host:{class:'inline-flex shrink-0 items-center justify-center'}})
 export class IconComponent {

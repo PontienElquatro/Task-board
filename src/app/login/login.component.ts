@@ -6,7 +6,8 @@ import { AuthService } from '../services/auth.service';
 import { CloudStorageProvider } from '../providers/cloud-storage.provider';
 import { normalizeTasks } from '../models/task-utils';
 import { BrandComponent } from '../shared/brand/brand.component';
-@Component({selector:'app-login',standalone:true,imports:[CommonModule,FormsModule,RouterLink,BrandComponent],templateUrl:'./login.component.html'})
+import { IconComponent } from '../shared/icon.component';
+@Component({selector:'app-login',standalone:true,imports:[CommonModule,FormsModule,RouterLink,BrandComponent,IconComponent],templateUrl:'./login.component.html'})
 export class LoginComponent {
   readonly auth=inject(AuthService);
   readonly cloud=inject(CloudStorageProvider);
@@ -14,8 +15,9 @@ export class LoginComponent {
   private readonly route=inject(ActivatedRoute);
   mode: 'login'|'signup'|'reset'|'recovery' = this.route.snapshot.queryParamMap.get('mode') === 'recovery' ? 'recovery' : 'login';
   firstName='';lastName='';email=''; password=''; confirmation='';
+  showPassword=false;showConfirmation=false;
   readonly busy=signal(false); readonly message=signal(''); readonly error=signal('');
-  setMode(mode: 'login'|'signup'|'reset'|'recovery') { this.mode=mode; this.password=''; this.confirmation=''; this.error.set(''); this.message.set(''); }
+  setMode(mode: 'login'|'signup'|'reset'|'recovery') { this.mode=mode; this.password=''; this.confirmation=''; this.showPassword=false;this.showConfirmation=false; this.error.set(''); this.message.set(''); }
   async submit() {
     if(this.busy()) return;
     this.error.set(''); this.message.set(''); this.busy.set(true);
