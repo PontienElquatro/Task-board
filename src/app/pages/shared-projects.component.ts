@@ -1,4 +1,4 @@
-import { HostListener, Component, effect, inject, signal, untracked, DestroyRef } from '@angular/core';
+import { HostListener, Component, effect, inject, signal, untracked, DestroyRef, afterNextRender, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PageShellComponent } from './page-shell.component';
@@ -27,6 +27,26 @@ export class SharedProjectsComponent {
  readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly auth=inject(AuthService);readonly teams=inject(TeamService);
  private readonly route=inject(ActivatedRoute);
  private readonly routeParams=toSignal(this.route.queryParamMap);
+ private readonly routeFragment=toSignal(this.route.fragment);
+ private readonly injector=inject(Injector);
+ readonly highlightedTask=signal('');readonly highlightedSubtask=signal('');
+ private handledNotification='';
+ private readonly notificationNavigation=effect(()=>{
+  const fragment=this.routeFragment(),params=this.routeParams(),tasks=this.tasks(),subs=this.subtasks();
+  const id=fragment?.startsWith('task-')?fragment.slice(5):'';
+  const sub=params?.get('subtask')??'';
+  const key=[params?.get('team'),params?.get('project'),fragment,sub].join('/');
+  if(!id){this.handledNotification='';this.highlightedTask.set('');this.highlightedSubtask.set('');return;}
+  if(key===this.handledNotification||!tasks.some(t=>t.id===id))return;
+  untracked(()=>{
+   this.handledNotification=key;this.selectedId=id;this.creating=false;this.projectForm=false;
+   this.highlightedTask.set(id);this.highlightedSubtask.set(subs.some(s=>s.id===sub&&s.task_id===id)?sub:'');
+   afterNextRender(()=>{
+    const target=document.getElementById('subtask-'+this.highlightedSubtask());
+    target?.scrollIntoView({block:'center',behavior:'instant'});target?.focus({preventScroll:true});
+   },{injector:this.injector});
+  });
+ });
  readonly subtasks=signal<Subtask[]>([]);subTitles:Record<string,string>={};subAssignees:Record<string,string>={};
  readonly projects=signal<Project[]>([]);readonly tasks=signal<SharedTask[]>([]);readonly message=signal('');readonly busy=signal(false);
  selectedId='';creating=false;projectForm=false;confirmDiscard=false;

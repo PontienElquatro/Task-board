@@ -24,6 +24,22 @@ describe('Notification dismissal',()=>{
   expect(query.lte).toHaveBeenCalledWith('created_at',jasmine.any(String));
   expect(component.load).toHaveBeenCalled();expect(component.busy()).toBeFalse();
  });
+ it('marks all unread alerts without dismissing them',async()=>{
+  component.unreadCount.set(72);await component.readAll();
+  expect(query.update).toHaveBeenCalledWith({read_at:jasmine.any(String)});
+  expect(query.eq).toHaveBeenCalledWith('user_id','account-a');
+  expect(query.is).toHaveBeenCalledWith('read_at',null);
+  expect(query.is).toHaveBeenCalledWith('dismissed_at',null);
+  expect(query.lte).toHaveBeenCalledWith('created_at',jasmine.any(String));
+  expect(component.load).toHaveBeenCalled();expect(component.busy()).toBeFalse();
+ });
+ it('does nothing when there are no unread alerts',async()=>{
+  await component.readAll();expect(query.update).not.toHaveBeenCalled();
+ });
+ it('switches filters and refreshes the server result',()=>{
+  component.setFilter('unread');expect(component.filter()).toBe('unread');expect(component.load).toHaveBeenCalledTimes(1);
+  component.setFilter('unread');expect(component.load).toHaveBeenCalledTimes(1);
+ });
  it('retains the list and reports errors',async()=>{
   query.then=(resolve:any)=>Promise.resolve({error:{message:'offline'}}).then(resolve);
   component.confirmClear.set(true);await component.dismiss();
