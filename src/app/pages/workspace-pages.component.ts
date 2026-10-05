@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { A11yModule } from '@angular/cdk/a11y';
@@ -21,7 +21,9 @@ import { STORAGE_PROVIDER } from '../providers/storage.provider';
 import { AuthService } from '../services/auth.service';
 import { TeamService, TeamRole } from '../services/team.service';
 
-import {localDayKey,calendarDays,calendarWeek} from '../core/calendar';
+import {localDayKey,calendarDays,calendarWeek,scheduledOn,validSchedule} from '../core/calendar';
+import { CalendarTeamService, CalendarTask } from '../services/calendar-team.service';
+import {isOverdue} from '../models/task-utils';
 const imports=[CommonModule,RouterLink,PageShellComponent];
 
 @Component({standalone:true,imports:[...imports,BrandComponent],template:`
@@ -63,27 +65,39 @@ export class ProjectsComponent {
 }
 
 export {localDayKey,calendarDays} from '../core/calendar';
-@Component({standalone:true,imports:[...imports,FormsModule,IconComponent,TaskModalComponent],templateUrl:'./calendar.component.html'})
+@Component({standalone:true,providers:[CalendarTeamService],imports:[...imports,A11yModule,ModalScrollLockDirective,AvatarComponent,FormsModule,IconComponent,TaskModalComponent],templateUrl:'./calendar.component.html'})
 export class CalendarComponent {
  private readonly storage=inject(STORAGE_PROVIDER);
  readonly projects=inject(ProjectService); readonly view=signal<'month'|'week'|'agenda'>('month');readonly query=signal('');readonly project=signal('');readonly includeDone=signal(false);readonly selectedDay=signal(localDayKey(new Date()));
- readonly filtered=computed(()=>this.tasks.activeTasks().filter(t=>(this.includeDone()||t.status!=='done')&&(!this.project()||t.projectId===this.project())&&t.title.toLocaleLowerCase('fr').includes(this.query().trim().toLocaleLowerCase('fr'))));
+ readonly teamCalendar=inject(CalendarTeamService); readonly scope=signal('');readonly statusFilter=signal('');readonly assigneeFilter=signal('');
+ readonly allTasks=computed<CalendarTask[]>(()=>[...this.tasks.activeTasks(),...this.teamCalendar.tasks()]);
+ readonly projectOptions=computed(()=>[...this.projects.projects().filter(p=>!p.archived).map(p=>({id:p.id,title:p.title+' · Personnel'})),...this.teamCalendar.projects().map(p=>({id:'team:'+p.id,title:p.title+' · Équipe'}))]);
+ readonly memberOptions=computed(()=>[...new Map(this.teamCalendar.teams.members().map(m=>[m.user_id,m])).values()]);
+ readonly filtered=computed(()=>this.allTasks().filter(t=>(this.includeDone()||t.status!=='done')&&(!this.scope()||(this.scope()==='team'?!!t.teamId:!t.teamId))&&(!this.project()||t.projectId===this.project())&&(!this.statusFilter()||t.status===this.statusFilter())&&(!this.assigneeFilter()||(this.assigneeFilter()==='none'?!!t.teamId&&!t.assigneeId:t.assigneeId===this.assigneeFilter()))&&t.title.toLocaleLowerCase('fr').includes(this.query().trim().toLocaleLowerCase('fr'))));
+ sharedSelected:CalendarTask|null=null;startText='';endText='';readonly saving=signal(false);readonly toast=inject(ToastService);
+ get invalidSchedule(){return !validSchedule(this.startText,this.endText);}
+ readonly overdue=computed(()=>this.filtered().filter(t=>isOverdue(t)));
  readonly week=computed(()=>calendarWeek(this.cursor()));
  readonly tasks=inject(TaskService); readonly cursor=signal(new Date()); readonly error=signal(''); selected:Task|null=null; mode:'view'|'edit'='edit';
  readonly weekdays=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
  readonly days=computed(()=>calendarDays(this.cursor().getFullYear(),this.cursor().getMonth()));
  readonly monthLabel=computed(()=>this.cursor().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}));
- readonly agenda=computed(()=>this.filtered().filter(t=>t.dueDate&&(this.view()==='week'?this.week().some(d=>localDayKey(d)===localDayKey(new Date(t.dueDate!))):new Date(t.dueDate).getMonth()===this.cursor().getMonth()&&new Date(t.dueDate).getFullYear()===this.cursor().getFullYear())).sort((a,b)=>new Date(a.dueDate!).getTime()-new Date(b.dueDate!).getTime()));
- readonly undated=computed(()=>this.filtered().filter(t=>!t.dueDate));
- readonly dayTasks=computed(()=>this.filtered().filter(t=>t.dueDate&&localDayKey(new Date(t.dueDate))===this.selectedDay()));
+ readonly agenda=computed(()=>this.filtered().filter(t=>(this.view()==='week'?this.week():this.days().filter((d):d is Date=>!!d)).some(d=>scheduledOn(t,d))).sort((a,b)=>(a.startDate??a.dueDate)!.getTime()-(b.startDate??b.dueDate)!.getTime()));
+ readonly undated=computed(()=>this.filtered().filter(t=>!t.dueDate&&!t.startDate));
+ readonly dayTasks=computed(()=>this.filtered().filter(t=>scheduledOn(t,new Date(this.selectedDay()+'T12:00:00'))));
  selectDay(day:Date){this.selectedDay.set(localDayKey(day));}
- projectName(task:Task){return this.projects.projects().find(p=>p.id===task.projectId)?.title||'Sans projet';}
+ projectName(task:CalendarTask){return task.teamId?(this.teamCalendar.projects().find(p=>p.id===task.sharedProjectId)?.title??'Projet d’équipe'):(this.projects.projects().find(p=>p.id===task.projectId)?.title||'Sans projet');}
+ memberName(task:CalendarTask){return this.teamCalendar.teams.members().find(m=>m.team_id===task.teamId&&m.user_id===task.assigneeId)?.display_name??'Non assignée';}
+ memberAvatar(task:CalendarTask){return this.teamCalendar.teams.members().find(m=>m.team_id===task.teamId&&m.user_id===task.assigneeId)?.avatar_url??'';}
  status(task:Task){return task.status==='done'?'Terminé':task.status==='in-progress'?'En cours':'À faire';}
- constructor(){if(this.storage.contextVersion)effect(()=>{this.storage.contextVersion!();untracked(()=>{this.selected=null;this.error.set('');this.project.set('');this.query.set('');});});}
- tasksFor(day:Date){return this.filtered().filter(t=>t.dueDate&&localDayKey(new Date(t.dueDate!))===localDayKey(day));}
+ constructor(){effect(()=>{const user=this.teamCalendar.auth.user();const initializing=this.teamCalendar.auth.initializing();untracked(()=>{this.teamCalendar.reset();this.sharedSelected=null;this.selected=null;if(user&&!initializing)void this.teamCalendar.load();});});if(this.storage.contextVersion)effect(()=>{this.storage.contextVersion!();untracked(()=>{this.selected=null;this.sharedSelected=null;this.error.set('');this.project.set('');this.query.set('');this.assigneeFilter.set('');});});inject(DestroyRef).onDestroy(()=>this.teamCalendar.reset());}
+ tasksFor(day:Date){return this.filtered().filter(t=>scheduledOn(t,day));}
+ late(task:Task){return isOverdue(task);}
  isToday(day:Date){return localDayKey(day)===localDayKey(new Date());}
  move(delta:number){this.cursor.update(d=>this.view()==='week'?new Date(d.getFullYear(),d.getMonth(),d.getDate()+delta*7):new Date(d.getFullYear(),d.getMonth()+delta,1));} today(){const now=new Date();this.cursor.set(now);this.selectDay(now);}
- open(task:Task){this.selected=task;this.error.set('');}
+ open(task:CalendarTask){this.error.set('');if(task.teamId){this.sharedSelected=task;const d=this.teamCalendar.dates(task);this.startText=d.start;this.endText=d.end;}else this.selected=task;}
+ async saveSharedDates(){if(!this.sharedSelected||this.saving()||this.invalidSchedule)return;this.saving.set(true);try{await this.teamCalendar.saveDates(this.sharedSelected,this.startText,this.endText);this.sharedSelected=null;this.toast.success('Planification enregistrée.');}catch(e){this.error.set(e instanceof Error?e.message:'Enregistrement impossible.');}finally{this.saving.set(false);}}
+ resetFilters(){this.scope.set('');this.project.set('');this.query.set('');this.statusFilter.set('');this.assigneeFilter.set('');}
  save(task:Task){try{this.tasks.updateTask(task);this.selected=null;}catch(e){this.error.set(e instanceof Error?e.message:'Enregistrement impossible.');}}
  toggleSubTask(id:string){if(!this.selected)return;try{this.tasks.toggleSubTask(this.selected.id,id);this.selected=this.tasks.tasks().find(t=>t.id===this.selected!.id)??null;}catch(e){this.error.set(e instanceof Error?e.message:'Modification impossible.');}}
 }

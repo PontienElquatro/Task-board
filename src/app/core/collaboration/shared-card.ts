@@ -2,6 +2,7 @@ import { Task, Status } from '../../models';
 
 export interface SharedCardTask {
   id:string; title:string; description:string; status:string; assignee_id:string|null;
+  start_date?:string|null; end_date?:string|null;
 }
 export interface SharedCardSubtask {
   id:string; task_id:string; title:string; completed:boolean; assignee_id:string|null;
@@ -11,6 +12,8 @@ export interface SharedCardSubtask {
 export function sharedCard(task:SharedCardTask, subtasks:SharedCardSubtask[]):Task {
   return {id:task.id,title:task.title,description:task.description,status:task.status as Status,
     priority:'low',subTasks:subtasks.filter(s=>s.task_id===task.id).map(s=>({id:s.id,title:s.title,completed:s.completed})),
+    startDate:task.start_date?new Date(task.start_date+'T12:00:00'):undefined,
+    dueDate:task.end_date?new Date(task.end_date+'T12:00:00'):undefined,
     createdAt:new Date(0),userId:task.assignee_id||''};
 }
 

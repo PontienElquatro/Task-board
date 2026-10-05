@@ -12,3 +12,12 @@ export function calendarWeek(date:Date):Date[] {
  const offset=(date.getDay()+6)%7;
  return Array.from({length:7},(_,i)=>new Date(date.getFullYear(),date.getMonth(),date.getDate()-offset+i));
 }
+
+/** Planned dates are inclusive local days; dates never change workflow status. */
+export function scheduledOn(task:{startDate?:Date;dueDate?:Date},day:Date):boolean {
+ const start=task.startDate??task.dueDate,end=task.dueDate??task.startDate;
+ return !!start&&!!end&&localDayKey(start)<=localDayKey(day)&&localDayKey(day)<=localDayKey(end);
+}
+export function validSchedule(start:string,end:string):boolean {
+ return !start||!end||start<=end;
+}

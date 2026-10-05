@@ -20,3 +20,12 @@ test('responsible filter includes delegated subtasks without including another p
  assert.equal(matchesSharedAssignee({...task,assignee_id:null},subs,'none'),true);
  assert.equal(matchesSharedAssignee(task,subs,''),true);
 });
+
+test('shared cards expose local planned dates without changing workflow',()=>{
+ const card=sharedCard({...task,start_date:'2026-10-05',end_date:'2026-10-08'},subs);
+ assert.equal(card.startDate.getDate(),5);
+ assert.equal(card.dueDate.getDate(),8);
+ assert.equal(card.startDate.getHours(),12);
+ assert.equal(card.status,'in-progress');
+ assert.equal(sharedCard(task,subs).dueDate,undefined);
+});

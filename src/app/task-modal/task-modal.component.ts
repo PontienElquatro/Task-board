@@ -27,6 +27,8 @@ export class TaskModalComponent implements OnChanges {
   newSubTaskTitle = '';
   tagsText = '';
   dueText = '';
+  startText = '';
+  get invalidSchedule() { return !!this.startText && !!this.dueText && this.startText > this.dueText; }
   discardPrompt = false;
   private original = '';
   ngOnChanges(changes: import('@angular/core').SimpleChanges) {
@@ -35,9 +37,10 @@ export class TaskModalComponent implements OnChanges {
     this.newSubTaskTitle = ''; this.discardPrompt = false;
     this.tagsText = this.task?.tags?.join(', ') ?? '';
     this.dueText = this.task?.dueDate ? dayKey(this.task.dueDate) : '';
+    this.startText = this.task?.startDate ? dayKey(this.task.startDate) : '';
     this.original = this.snapshot();
   }
-  private snapshot() { return JSON.stringify([this.tempTask, this.tagsText, this.dueText, this.newSubTaskTitle]); }
+  private snapshot() { return JSON.stringify([this.tempTask, this.tagsText, this.startText, this.dueText, this.newSubTaskTitle]); }
   requestClose() {
     if (this.mode === 'edit' && this.snapshot() !== this.original) this.discardPrompt = true;
     else this.close.emit();
@@ -45,11 +48,12 @@ export class TaskModalComponent implements OnChanges {
   @HostListener('document:keydown.escape', ['$event'])
   escape(event: Event) { event.preventDefault(); this.requestClose(); }
   onSave() {
-    if (!this.tempTask?.title.trim()) return;
+    if (!this.tempTask?.title.trim() || this.invalidSchedule) return;
     this.addSubTask();
     this.save.emit({ ...this.tempTask, title: this.tempTask.title.trim(),
       tags: [...new Set(this.tagsText.split(',').map(t => t.trim().slice(0, 30)).filter(Boolean))].slice(0, 10),
       dueDate: this.dueText ? new Date(this.dueText + 'T12:00:00') : undefined,
+      startDate: this.startText ? new Date(this.startText + 'T12:00:00') : undefined,
       subTasks: this.tempTask.subTasks.filter(s => s.title.trim()).map(s => ({ ...s, title: s.title.trim() }))
     });
   }

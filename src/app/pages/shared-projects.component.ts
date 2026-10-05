@@ -17,13 +17,16 @@ import { Task } from '../models';
 import { sharedCard, matchesSharedAssignee } from '../core/collaboration/shared-card';
 import { TeamService } from '../services/team.service';
 import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
+import { validSchedule } from '../core/calendar';
 
 interface Subtask {id:string;task_id:string;team_id:string;title:string;completed:boolean;assignee_id:string|null;}
 interface Project {id:string;team_id:string;title:string;}
-interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;}
+interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;start_date?:string|null;end_date?:string|null;}
 
 @Component({standalone:true,imports:[ModalScrollLockDirective,AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
 export class SharedProjectsComponent {
+ startDate='';endDate='';
+ readonly validSchedule=validSchedule;
  readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly auth=inject(AuthService);readonly teams=inject(TeamService);
  private readonly route=inject(ActivatedRoute);
  private readonly routeParams=toSignal(this.route.queryParamMap);
@@ -104,10 +107,10 @@ export class SharedProjectsComponent {
  asCard(task:SharedTask):Task{return sharedCard(task,this.subtasks());}
  openTask(id:string){if(this.busy())return;this.selectedId=id;this.confirmDiscard=false;}
  openCreate(status:string){if(this.busy())return;this.clearDraft();this.status=status;this.creating=true;this.confirmDiscard=false;}
- closePanel(){if(this.busy())return;const task=this.selectedTask();if((task&&(this.cardDirty(task)||this.subTitles[task.id]?.trim()))||(this.creating&&(this.title.trim()||this.description.trim()))||(this.projectForm&&this.projectTitle.trim())){this.confirmDiscard=true;return;}this.dismissPanel();}
+ closePanel(){if(this.busy())return;const task=this.selectedTask();if((task&&(this.cardDirty(task)||this.subTitles[task.id]?.trim()))||(this.creating&&(this.title.trim()||this.description.trim()||this.startDate||this.endDate))||(this.projectForm&&this.projectTitle.trim())){this.confirmDiscard=true;return;}this.dismissPanel();}
  dismissPanel(){if(this.busy())return;if(this.selectedId){this.discardCard(this.selectedId);delete this.subTitles[this.selectedId];delete this.subAssignees[this.selectedId];}this.selectedId='';this.creating=false;this.projectForm=false;this.confirmDiscard=false;this.clearDraft();this.projectTitle='';}
  prepareNavigation(){if(this.selectedId||this.creating||this.projectForm){this.closePanel();return !this.confirmDiscard;}return true;}
- @HostListener('window:beforeunload',['$event']) beforeUnload(event:BeforeUnloadEvent){const task=this.selectedTask();if((task&&this.cardDirty(task))||(this.creating&&this.title.trim())||(this.projectForm&&this.projectTitle.trim()))event.preventDefault();}
+ @HostListener('window:beforeunload',['$event']) beforeUnload(event:BeforeUnloadEvent){const task=this.selectedTask();if((task&&this.cardDirty(task))||(this.creating&&(this.title.trim()||this.startDate||this.endDate))||(this.projectForm&&this.projectTitle.trim()))event.preventDefault();}
  trackTask(_index:number,task:{id:string}){return task.id;}
  initials(id:string|null){return id?this.memberName(id).split(/\s+/).map(part=>part[0]).join('').slice(0,2).toUpperCase():'—';}
  currentTeam(){return this.teams.teams().find(t=>t.id===this.teamId);}
@@ -124,15 +127,15 @@ export class SharedProjectsComponent {
  async readTasks(){const id=this.projectId,revision=this.revision;if(!id)return;const r=await this.auth.client.from('taskboard_shared_tasks').select('*').eq('project_id',id).order('created_at');if(r.error)throw new Error(r.error.message);const ids=(r.data??[]).map((t:SharedTask)=>t.id);const subs=ids.length?await this.auth.client.from('taskboard_shared_subtasks').select('*').in('task_id',ids).order('created_at'):{data:[],error:null};if(subs.error)throw new Error(subs.error.message);if(id===this.projectId&&revision===this.revision){this.tasks.set(r.data??[]);this.subtasks.set(subs.data??[]);this.startLive(id);}}
  async refreshTasks(){await this.run(()=>this.readTasks());}
  async createProject(){if(!this.canManage()||!this.projectTitle.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').insert({team_id:this.teamId,title:this.projectTitle.trim()}).select('id,team_id,title').single();if(r.error)throw new Error(r.error.message);this.projects.update(p=>[...p,r.data]);this.stopLive();this.projectId=r.data.id;this.projectTitle='';this.projectForm=false;this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.readTasks();this.toast.success('Projet partagé créé.');});}
- clearDraft(){this.title='';this.description='';this.status='todo';this.assignee='';}
- async saveTask(){if(!this.canEdit()||!this.title.trim())return;await this.run(async()=>{const payload={title:this.title.trim(),description:this.description,status:this.status,assignee_id:this.assignee||null};const query=this.auth.client.from('taskboard_shared_tasks').insert({...payload,team_id:this.teamId,project_id:this.projectId});const r=await query.select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('La tâche a été supprimée ou vos droits ont changé.');await this.readTasks();this.clearDraft();this.creating=false;this.toast.success('Tâche enregistrée.');});}
+ clearDraft(){this.title='';this.description='';this.status='todo';this.assignee='';this.startDate='';this.endDate='';}
+ async saveTask(){if(!this.canEdit()||!this.title.trim())return;await this.run(async()=>{if(!validSchedule(this.startDate,this.endDate))throw new Error('La fin prévue doit être égale ou postérieure au début.');const payload={title:this.title.trim(),description:this.description,status:this.status,assignee_id:this.assignee||null,start_date:this.startDate||null,end_date:this.endDate||null};const query=this.auth.client.from('taskboard_shared_tasks').insert({...payload,team_id:this.teamId,project_id:this.projectId});const r=await query.select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('La tâche a été supprimée ou vos droits ont changé.');await this.readTasks();this.clearDraft();this.creating=false;this.toast.success('Tâche enregistrée.');});}
 
- cardDrafts:Record<string,{title:string;description:string}>={};
- cardDraft(task:SharedTask){return this.cardDrafts[task.id]??{title:task.title,description:task.description};}
- setCardDraft(task:SharedTask,field:'title'|'description',value:string){this.cardDrafts[task.id]={...this.cardDraft(task),[field]:value};}
- cardDirty(task:SharedTask){const d=this.cardDraft(task);return d.title!==task.title||d.description!==task.description;}
+ cardDrafts:Record<string,{title:string;description:string;start_date:string;end_date:string}>={};
+ cardDraft(task:SharedTask){return this.cardDrafts[task.id]??{title:task.title,description:task.description,start_date:task.start_date??'',end_date:task.end_date??''};}
+ setCardDraft(task:SharedTask,field:'title'|'description'|'start_date'|'end_date',value:string){this.cardDrafts[task.id]={...this.cardDraft(task),[field]:value};}
+ cardDirty(task:SharedTask){const d=this.cardDraft(task);return d.title!==task.title||d.description!==task.description||d.start_date!==(task.start_date??'')||d.end_date!==(task.end_date??'');}
  discardCard(id:string){delete this.cardDrafts[id];}
- async saveCard(task:SharedTask){const d=this.cardDraft(task);if(!this.canEdit()||!d.title.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_tasks').update({title:d.title.trim(),description:d.description}).eq('id',task.id).eq('project_id',this.projectId).select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('Modification refusée.');this.discardCard(task.id);await this.readTasks();this.toast.success('Tâche enregistrée.');});}
+ async saveCard(task:SharedTask){const d=this.cardDraft(task);if(!this.canEdit()||!d.title.trim())return;await this.run(async()=>{if(!validSchedule(d.start_date,d.end_date))throw new Error('La fin prévue doit être égale ou postérieure au début.');const r=await this.auth.client.from('taskboard_shared_tasks').update({title:d.title.trim(),description:d.description,start_date:d.start_date||null,end_date:d.end_date||null}).eq('id',task.id).eq('project_id',this.projectId).select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('Modification refusée.');this.discardCard(task.id);await this.readTasks();this.toast.success('Tâche enregistrée.');});}
  async assignTask(id:string,assignee:string){if(!this.canEdit())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_tasks').update({assignee_id:assignee||null}).eq('id',id).eq('project_id',this.projectId).select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('Modification refusée.');await this.readTasks();});}
  canWork(assigned:string|null){return this.canEdit() || (!!assigned&&assigned===this.auth.user()?.id);}
  taskSubtasks(id:string){return this.subtasks().filter(s=>s.task_id===id);}

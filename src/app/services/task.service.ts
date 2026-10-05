@@ -2,7 +2,7 @@ import { Injectable, signal, computed, inject, effect, untracked } from '@angula
 import { ToastService } from './toast.service';
 import { STORAGE_PROVIDER } from '../providers/storage.provider';
 import { Task, Status, Priority } from '../models';
-import { normalizeTasks, moveTask, isOverdue } from '../models/task-utils';
+import { normalizeTasks, moveTask, isOverdue, dayKey } from '../models/task-utils';
 import { statusAfterChecklist } from '../core/subtask-workflow';
 
 @Injectable({ providedIn: 'root' })
@@ -75,11 +75,13 @@ export class TaskService {
     }
   }
   addTask(task: Omit<Task, 'id' | 'createdAt' | 'userId'>) {
+    if(task.startDate && task.dueDate && dayKey(task.startDate)>dayKey(task.dueDate))throw new Error('La fin prévue doit être égale ou postérieure au début.');
     const added = normalizeTasks([{ ...task, id: crypto.randomUUID(), createdAt: new Date(), userId: 'default',
       archived: false, order: Math.max(-1, ...this.activeTasks().filter(t => t.status === task.status).map(t => t.order ?? 0)) + 1 }])[0];
     this.commit([...this.tasks(), added], 'Tâche créée.');
   }
   updateTask(task: Task) {
+    if(task.startDate && task.dueDate && dayKey(task.startDate)>dayKey(task.dueDate))throw new Error('La fin prévue doit être égale ou postérieure au début.');
     const previous = this.tasks().find(t => t.id === task.id);
     if (!previous) throw new Error('Cette tâche n’existe plus.');
     const updated = normalizeTasks([task])[0];
