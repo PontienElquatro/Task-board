@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../icon.component';
 import { TaskService } from '../../services/task.service';
 import { Project } from '../../models';
+import { DismissMenuDirective } from '../dismiss-menu.directive';
 
 /** Presentation boundary; the existing task service remains the source of truth. */
 @Component({
-  selector:'app-filter-bar', standalone:true, imports:[IconComponent,CommonModule,FormsModule],
+  selector:'app-filter-bar', standalone:true, imports:[DismissMenuDirective,IconComponent,CommonModule,FormsModule],
   templateUrl:'./filter-bar.component.html', changeDetection:ChangeDetectionStrategy.OnPush
 })
 export class FilterBarComponent {

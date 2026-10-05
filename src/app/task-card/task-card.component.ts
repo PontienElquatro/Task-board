@@ -5,8 +5,9 @@ import { CardAppearanceService } from '../services/card-appearance.service';
 import { IconComponent } from '../shared/icon.component';
 import { AvatarComponent } from '../shared/avatar.component';
 import { FormsModule } from '@angular/forms';
+import { DismissMenuDirective } from '../shared/dismiss-menu.directive';
 import { isOverdue, dayKey } from '../models/task-utils';
-@Component({ selector: 'app-task-card', standalone: true, imports: [AvatarComponent, IconComponent, CommonModule, FormsModule], templateUrl: './task-card.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-task-card', standalone: true, imports: [DismissMenuDirective, AvatarComponent, IconComponent, CommonModule, FormsModule], templateUrl: './task-card.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskCardComponent {
   readonly appearance = inject(CardAppearanceService);
   @Input() task!: Task;

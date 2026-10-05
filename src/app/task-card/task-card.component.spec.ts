@@ -39,9 +39,12 @@ describe('TaskCardComponent', () => {
   it('keeps action events unchanged', () => {
     fixture.componentRef.setInput('task', {id:'sample',title:'Exemple',description:'',status:'todo',priority:'medium',tags:[],subTasks:[],createdAt:new Date(),userId:'local'});
     fixture.detectChanges();
-    spyOn(component.edit, 'emit');
-    fixture.nativeElement.querySelector('[aria-label="Modifier Exemple"]').click();
-    expect(component.edit.emit).toHaveBeenCalledWith(component.task);
+    spyOn(component.selected, 'emit');
+    const menu=fixture.nativeElement.querySelector('details') as HTMLDetailsElement;
+    menu.open=true;
+    menu.querySelector('button')!.click();
+    expect(component.selected.emit).toHaveBeenCalledWith(component.task);
+    expect(menu.open).toBeFalse();
   });
   it('regroupe les actions dans un menu nommé, fermé par défaut',()=>{
     fixture.componentRef.setInput('task',{id:'sample',title:'Exemple',description:'',status:'todo',priority:'medium',tags:[],subTasks:[],createdAt:new Date(),userId:'local'});
