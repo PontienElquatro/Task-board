@@ -1,13 +1,15 @@
-import { Component, Input, computed, effect, inject, signal, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, Input, computed, effect, inject, untracked, Injector, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ProjectService } from '../services/project.service';
 import { TaskService } from '../services/task.service';
 import { IconComponent } from './icon.component';
+import { OnboardingService } from '../services/onboarding.service';
 
 @Component({selector:'app-getting-started',standalone:true,imports:[CommonModule,RouterLink,IconComponent],template:`
-<section *ngIf="force || (!hidden() && completed()<2)" aria-label="Premiers pas dans Ma’at" class="mb-6 overflow-hidden rounded-2xl border border-blue-100 bg-white dark:border-indigo-900 dark:bg-gray-900">
+<p *ngIf="guide.error() && !force" role="alert" class="mb-4 rounded-xl bg-orange-50 p-4 text-sm text-orange-800 dark:bg-orange-950 dark:text-orange-200">{{guide.error()}} <button type="button" class="secondary min-h-11" (click)="guide.retry()">Réessayer</button></p>
+<section *ngIf="force || (!guide.hidden() && completed()<2)" aria-label="Premiers pas dans Ma’at" class="mb-6 overflow-hidden rounded-2xl border border-blue-100 bg-white dark:border-indigo-900 dark:bg-gray-900">
  <header class="flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 dark:from-blue-950 dark:to-indigo-950 sm:p-5">
   <div><p class="text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">Bienvenue dans votre espace</p><h2 class="mt-1 text-lg font-semibold text-indigo-950 dark:text-white">Prenez vos marques, à votre rythme.</h2><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{completed()}} / 2 étapes essentielles réalisées · L’équipe est facultative.</p></div>
   <button *ngIf="!force" type="button" (click)="dismiss()" class="min-h-11 rounded-xl px-3 text-sm text-blue-700 hover:bg-blue-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-blue-300 dark:hover:bg-indigo-900">Passer le guide</button>
@@ -20,17 +22,16 @@ import { IconComponent } from './icon.component';
  </ol>
  <p *ngIf="force" class="px-5 pb-5 text-xs text-gray-500 dark:text-gray-400">Retrouvez ce guide ici à tout moment. Votre progression reflète vos projets et tâches existants.</p>
 </section>`})
-export class GettingStartedComponent {
+export class GettingStartedComponent implements OnInit {
  @Input() force=false;
  private readonly auth=inject(AuthService);
  private readonly projects=inject(ProjectService);
  private readonly tasks=inject(TaskService);
- private readonly platform=inject(PLATFORM_ID);
- readonly hidden=signal(false);
+ readonly guide=inject(OnboardingService);
+ private readonly injector=inject(Injector);
  readonly hasProject=computed(()=>this.projects.projects().length>0);
  readonly hasTask=computed(()=>this.tasks.tasks().length>0);
  readonly completed=computed(()=>Number(this.hasProject())+Number(this.hasTask()));
- private key(){return 'maat-guide-hidden:'+ (this.auth.user()?.id??'local');}
- constructor(){effect(()=>{this.auth.user();if(isPlatformBrowser(this.platform)){try{this.hidden.set(localStorage.getItem(this.key())==='true');}catch{this.hidden.set(false);}}});}
- dismiss(){this.hidden.set(true);try{localStorage.setItem(this.key(),'true');}catch{/* The guide can still be dismissed for this visit. */}}
+ ngOnInit(){effect(()=>{this.auth.user();const initializing=this.auth.initializing();const completed=this.completed();untracked(()=>{if(!this.force&&!initializing){this.guide.enter();if(completed===2)this.guide.dismiss();}});},{injector:this.injector});}
+ dismiss(){this.guide.dismiss();}
 }
