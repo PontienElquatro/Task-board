@@ -105,4 +105,17 @@ describe('TaskService', () => {
     expect(() => service.updateTask(task('missing'))).toThrow();
     expect(storage.setItem).not.toHaveBeenCalled();
   });
+  it('starts a task when a subtask is checked and does not revert when unchecked', () => {
+    service.updateTask({ ...task('a'), subTasks: [{ id: 's', title: 'Étape', completed: false }] });
+    service.toggleSubTask('a', 's');
+    expect(service.tasks()[0].status).toBe('in-progress');
+    service.toggleSubTask('a', 's');
+    expect(service.tasks()[0].status).toBe('in-progress');
+  });
+  it('starts a task from edited subtasks but never reopens completed tasks', () => {
+    service.updateTask({ ...task('a'), subTasks: [{ id: 's', title: 'Étape', completed: true }] });
+    expect(service.tasks()[0].status).toBe('in-progress');
+    service.updateTask({ ...task('b', 'done'), subTasks: [{ id: 's', title: 'Étape', completed: true }] });
+    expect(service.tasks().find(t => t.id === 'b')?.status).toBe('done');
+  });
 });

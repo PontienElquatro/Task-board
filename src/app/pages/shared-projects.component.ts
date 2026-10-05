@@ -5,6 +5,7 @@ import { PageShellComponent } from './page-shell.component';
 import { AuthService } from '../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { CardAppearanceService } from '../services/card-appearance.service';
 import { TeamService } from '../services/team.service';
 
 interface Subtask {id:string;task_id:string;team_id:string;title:string;completed:boolean;assignee_id:string|null;}
@@ -34,7 +35,7 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
    <section class="grid items-start gap-4 lg:grid-cols-3" aria-label="Tableau partagé">
     <div *ngFor="let column of columns" class="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900">
      <header class="mb-4 flex items-center justify-between"><h2 class="text-sm font-semibold">{{column.label}}</h2><span class="rounded-full bg-gray-200 px-2 py-1 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">{{columnTasks(column.id).length}}</span></header>
-     <article [id]="'task-'+task.id" *ngFor="let task of columnTasks(column.id); trackBy: trackTask" class="group mb-4 rounded-xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+     <article [id]="'task-'+task.id" *ngFor="let task of columnTasks(column.id); trackBy: trackTask" [ngClass]="appearance.classes(task.status)" class="group mb-4 rounded-xl border border-gray-200 p-2 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700">
       <div class="flex items-start gap-2">
        <label class="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950" [attr.aria-label]="'Terminer ou rouvrir : ' + task.title"><input type="checkbox" class="h-4 w-4 accent-blue-600" [checked]="task.status === 'done'" [disabled]="busy() || !canWork(task.assignee_id)" (change)="progressWork(task.id,false,task.status === 'done' ? 'in-progress' : 'done')" /></label>
        <h3 class="min-w-0 flex-1 break-words py-2 text-sm font-semibold text-gray-900 dark:text-gray-100" [class.line-through]="task.status === 'done'">{{task.title}}</h3>
@@ -77,7 +78,7 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
  </div>
 </app-page-shell>`})
 export class SharedProjectsComponent {
- readonly auth=inject(AuthService);readonly teams=inject(TeamService);
+ readonly appearance=inject(CardAppearanceService);readonly auth=inject(AuthService);readonly teams=inject(TeamService);
  private readonly route=inject(ActivatedRoute);
  private readonly routeParams=toSignal(this.route.queryParamMap);
  readonly subtasks=signal<Subtask[]>([]);subTitles:Record<string,string>={};subAssignees:Record<string,string>={};

@@ -80,6 +80,9 @@ export class TaskService {
     const previous = this.tasks().find(t => t.id === task.id);
     if (!previous) throw new Error('Cette tâche n’existe plus.');
     const updated = normalizeTasks([task])[0];
+    const newlyCompleted = updated.subTasks.some(sub => sub.completed &&
+      !previous.subTasks.find(old => old.id === sub.id)?.completed);
+    if (previous.status === 'todo' && updated.status === 'todo' && newlyCompleted) updated.status = 'in-progress';
     if (previous.status !== updated.status) updated.order = Math.max(-1, ...this.activeTasks().filter(t => t.status === updated.status).map(t => t.order ?? 0)) + 1;
     this.commit(this.tasks().map(t => t.id === task.id ? updated : t), 'Tâche enregistrée.');
   }

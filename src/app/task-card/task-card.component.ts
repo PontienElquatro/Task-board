@@ -1,10 +1,12 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Task, Status } from '../models';
+import { CardAppearanceService } from '../services/card-appearance.service';
 import { FormsModule } from '@angular/forms';
 import { isOverdue, dayKey } from '../models/task-utils';
 @Component({ selector: 'app-task-card', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './task-card.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskCardComponent {
+  readonly appearance = inject(CardAppearanceService);
   @Input() task!: Task;
   @Output() selected = new EventEmitter<Task>();
   @Output() edit = new EventEmitter<Task>();
