@@ -2,10 +2,13 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { createClient, User } from '@supabase/supabase-js';
 import { PUBLIC_BACKEND } from '../core/config/app-config';
+import { tabSessionOptions } from '../core/auth/tab-session';
 
 @Injectable({providedIn:'root'})
 export class AuthService {
-  readonly client = createClient(PUBLIC_BACKEND.url, PUBLIC_BACKEND.publishableKey);
+  readonly client = createClient(PUBLIC_BACKEND.url, PUBLIC_BACKEND.publishableKey, {
+    auth: tabSessionOptions('maat-auth-' + new URL(PUBLIC_BACKEND.url).hostname, this.tabStorage())
+  });
   readonly user = signal<User | null>(null);
   readonly initializing = signal(true);
   readonly recovering = signal(false);
@@ -21,6 +24,10 @@ export class AuthService {
     return typeof value === 'string' && value ? value : '';
   });
   private readonly router = inject(Router);
+  private tabStorage(): Storage | undefined {
+    try { return typeof window === 'undefined' ? undefined : window.sessionStorage; }
+    catch { return undefined; }
+  }
   constructor() {
     let authEventReceived = false;
     this.client.auth.onAuthStateChange((event, session) => {
@@ -91,7 +98,7 @@ export class AuthService {
     this.user.set({ ...user, user_metadata: { ...user.user_metadata, avatar_url: null } });
   }
   async signOut() {
-    const {error} = await this.client.auth.signOut();
+    const {error} = await this.client.auth.signOut({ scope: 'local' });
     if (error) throw new Error('Déconnexion impossible. Réessayez.');
   }
 }
