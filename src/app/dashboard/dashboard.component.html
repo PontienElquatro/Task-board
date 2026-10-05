@@ -1,20 +1,20 @@
-<main class="dashboard-page" id="main-content">
-<header class="topbar"><a routerLink="/board">← Retour au tableau</a><span class="eyebrow">MA’AT / VUE D’ENSEMBLE</span></header>
-<section class="page-heading"><div><p class="eyebrow">PRENDRE UN PEU DE RECUL</p><h1>Chaque avancée compte.</h1><p class="subtitle">Un aperçu de vos tâches actives, sans les archives.</p></div></section>
+<main class="mx-auto max-w-6xl p-4 text-gray-900 dark:text-gray-100 sm:p-8" id="main-content">
+<header class="mb-8 flex flex-wrap items-center justify-between gap-4"><div><p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Espace personnel</p><h1 class="mt-2 text-2xl font-semibold tracking-tight">Vue d’ensemble</h1><p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Vos avancées et les échéances à surveiller.</p></div><a routerLink="/board" class="primary min-h-11">Ouvrir mon tableau</a></header>
+
 <section *ngIf="!dashboardService.stats().total" class="welcome"><div class="mb-4 flex justify-center"><app-brand [compact]="true" /></div><h2>Votre progression commence ici.</h2><p>Créez votre première tâche. Cette page affichera ensuite vos avancées et les échéances à surveiller.</p><a routerLink="/board" class="primary min-h-11">Ouvrir mon tableau</a></section>
 <ng-container *ngIf="dashboardService.stats().total">
-<section class="stats-strip" aria-label="Indicateurs">
-<div><span class="stat-label">Total</span><strong>{{ dashboardService.stats().total }}</strong><span class="stat-caption">tâches actives</span></div>
-<div><span class="stat-label">Terminées</span><strong>{{ dashboardService.stats().completed }}</strong><span class="stat-caption">belles avancées</span></div>
-<div><span class="stat-label">En retard</span><strong class="danger-text">{{ dashboardService.stats().late }}</strong><span class="stat-caption">à replanifier</span></div>
-<div><span class="stat-label">Progression</span><strong>{{ dashboardService.stats().progressPercentage }}<small>%</small></strong><div class="progress-track"><span [style.width.%]="dashboardService.stats().progressPercentage"></span></div></div>
+<section class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4 [&>div]:rounded-2xl [&>div]:border [&>div]:border-gray-200 [&>div]:bg-white [&>div]:p-6 dark:[&>div]:border-gray-700 dark:[&>div]:bg-gray-800" aria-label="Indicateurs">
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">Total</span><strong class="my-2 block text-3xl font-semibold">{{ dashboardService.stats().total }}</strong><span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">tâches actives</span></div>
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">Terminées</span><strong class="my-2 block text-3xl font-semibold">{{ dashboardService.stats().completed }}</strong><span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">belles avancées</span></div>
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">En retard</span><strong class="my-2 block text-3xl font-semibold text-red-600 dark:text-red-300">{{ dashboardService.stats().late }}</strong><span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">à replanifier</span></div>
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">Progression</span><strong class="my-2 block text-3xl font-semibold">{{ dashboardService.stats().progressPercentage }}<small>%</small></strong><div class="progress-track"><span [style.width.%]="dashboardService.stats().progressPercentage"></span></div></div>
 </section>
-<div class="dashboard-grid"><section class="chart-panel"><h2>Où en sont vos tâches ?</h2>
+<div class="grid gap-4 lg:grid-cols-2"><section class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 [&>h2]:mb-4 [&>h2]:text-base [&>h2]:font-semibold"><h2>Où en sont vos tâches ?</h2>
 <div class="chart-row" *ngFor="let item of dashboardService.distribution()"><div><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div><div class="progress-track" role="meter" [attr.aria-label]="item.label" aria-valuemin="0" [attr.aria-valuemax]="dashboardService.stats().total || 1" [attr.aria-valuenow]="item.count"><span [style.width.%]="item.percent" [style.background]="item.color"></span></div></div>
-<p class="muted" *ngIf="!dashboardService.stats().total">Créez une tâche pour suivre votre progression.</p>
-</section><section class="chart-panel"><h2>Vos priorités</h2><p class="muted">Tâches encore à faire ou en cours.</p>
+<p class="text-sm text-gray-500 dark:text-gray-400" *ngIf="!dashboardService.stats().total">Créez une tâche pour suivre votre progression.</p>
+</section><section class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 [&>h2]:mb-4 [&>h2]:text-base [&>h2]:font-semibold"><h2>Vos priorités</h2><p class="text-sm text-gray-500 dark:text-gray-400">Tâches encore à faire ou en cours.</p>
 <div class="chart-row" *ngFor="let item of dashboardService.priorities()"><div><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div><div class="progress-track" role="meter" [attr.aria-label]="item.label" aria-valuemin="0" [attr.aria-valuemax]="item.total || 1" [attr.aria-valuenow]="item.count"><span [style.width.%]="item.percent" [style.background]="item.color"></span></div></div>
 </section></div>
 </ng-container>
-<section class="chart-panel dashboard-goals" *ngIf="dashboardService.goalsProgress().length"><h2>Progression des objectifs</h2><div class="chart-row" *ngFor="let goal of dashboardService.goalsProgress()"><div><span>{{ goal.title }}</span><strong>{{ goal.completedTasks }}/{{ goal.totalTasks }}</strong></div><div class="progress-track"><span [style.width.%]="goal.progress"></span></div></div></section>
+<section class="mt-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800" *ngIf="dashboardService.goalsProgress().length"><h2>Progression des objectifs</h2><div class="chart-row" *ngFor="let goal of dashboardService.goalsProgress()"><div><span>{{ goal.title }}</span><strong>{{ goal.completedTasks }}/{{ goal.totalTasks }}</strong></div><div class="progress-track"><span [style.width.%]="goal.progress"></span></div></div></section>
 </main>

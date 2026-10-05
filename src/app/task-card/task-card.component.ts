@@ -9,6 +9,10 @@ import { isOverdue, dayKey } from '../models/task-utils';
 export class TaskCardComponent {
   readonly appearance = inject(CardAppearanceService);
   @Input() task!: Task;
+  @Input() allowOrganize = true;
+  @Input() canProgress = true;
+  @Input() busy = false;
+  @Input() responsible = '';
   @Output() selected = new EventEmitter<Task>();
   @Output() edit = new EventEmitter<Task>();
   @Output() delete = new EventEmitter<Task>();

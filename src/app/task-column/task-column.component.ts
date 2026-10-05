@@ -1,9 +1,10 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../shared/icon.component';
 import { Task, Status } from '../models';
 import { TaskCardComponent } from '../task-card/task-card.component';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
-@Component({ selector: 'app-task-column', standalone: true, imports: [CommonModule, TaskCardComponent, DragDropModule], templateUrl: './task-column.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-task-column', standalone: true, imports: [IconComponent, CommonModule, TaskCardComponent, DragDropModule], templateUrl: './task-column.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskColumnComponent {
   @Input() label = '';
   @Input() status: Status = 'todo';

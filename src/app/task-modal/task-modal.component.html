@@ -1,9 +1,9 @@
-<div class="modal-overlay" (click)="requestClose()">
-<section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
-  <header class="modal-header"><p class="eyebrow">{{ mode === 'delete' ? 'ARCHIVES' : 'VOTRE ESPACE DE TRAVAIL' }}</p><button class="icon-button" (click)="requestClose()" aria-label="Fermer">×</button></header>
+<div class="fixed inset-0 z-[100] flex justify-end bg-gray-950/40 backdrop-blur-sm" (click)="requestClose()">
+<section class="modal-panel !h-full !max-h-full !w-full !max-w-lg !rounded-none !border-0 !p-4 sm:!p-6" role="dialog" aria-modal="true" aria-labelledby="modal-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (click)="$event.stopPropagation()">
+  <header class="modal-header"><p class="eyebrow">{{ mode === 'delete' ? 'ARCHIVES' : 'VOTRE ESPACE DE TRAVAIL' }}</p><button class="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" (click)="requestClose()" aria-label="Fermer"><app-icon name="close" /></button></header>
   <p *ngIf="error" class="notice danger-text" role="alert">{{ error }} Votre saisie reste disponible.</p>
   <ng-container *ngIf="mode === 'edit' && tempTask">
-    <h2 id="modal-title">{{ tempTask.id ? 'Un détail à ajuster ?' : 'Une nouvelle avancée.' }}</h2><p class="muted">Définissez l’essentiel. Le reste suivra.</p>
+    <h2 id="modal-title">{{ tempTask.id ? 'Modifier la tâche' : 'Nouvelle tâche' }}</h2><p class="muted">Définissez l’essentiel. Le reste suivra.</p>
     <form (ngSubmit)="onSave()" #taskForm="ngForm">
       <label for="task-title">Titre <span class="muted">(obligatoire)</span></label><input id="task-title" cdkFocusInitial name="title" [(ngModel)]="tempTask.title" required maxlength="200" placeholder="Qu’avez-vous en tête ?">
       <label for="task-description">Description</label><textarea id="task-description" name="description" [(ngModel)]="tempTask.description" maxlength="10000" rows="3" placeholder="Quelques détails pour vous aider…"></textarea>
@@ -12,7 +12,7 @@
       <div class="form-grid"><div><label for="task-due">Échéance</label><input id="task-due" type="date" name="due" [(ngModel)]="dueText"></div><div><label for="task-tags">Tags</label><input id="task-tags" name="tags" [(ngModel)]="tagsText" maxlength="310" placeholder="Design, Personnel…" aria-describedby="tags-help"></div></div><p id="tags-help" class="field-help">Séparez les tags par une virgule. 10 tags maximum.</p>
       <ng-container *ngIf="goalService.goals().length"><label for="task-goal">Objectif</label><select id="task-goal" name="goal" [(ngModel)]="tempTask.goalId"><option [ngValue]="undefined">Aucun objectif</option><option *ngFor="let goal of goalService.goals()" [value]="goal.id">{{ goal.title }}</option></select></ng-container>
       <label for="new-subtask">Sous-tâches</label>
-      <div class="subtask-row" *ngFor="let sub of tempTask.subTasks; let i = index"><input type="checkbox" [name]="'completed-' + i" [(ngModel)]="sub.completed" [attr.aria-label]="'Terminer ' + sub.title"><input [name]="'sub-' + i" [(ngModel)]="sub.title" maxlength="200" [attr.aria-label]="'Titre de la sous-tâche ' + (i + 1)"><button type="button" class="icon-button" (click)="removeSubTask(sub.id)" aria-label="Retirer la sous-tâche">×</button></div>
+      <div class="subtask-row" *ngFor="let sub of tempTask.subTasks; let i = index"><input type="checkbox" [name]="'completed-' + i" [(ngModel)]="sub.completed" [attr.aria-label]="'Terminer ' + sub.title"><input [name]="'sub-' + i" [(ngModel)]="sub.title" maxlength="200" [attr.aria-label]="'Titre de la sous-tâche ' + (i + 1)"><button type="button" class="icon-button" (click)="removeSubTask(sub.id)" aria-label="Retirer la sous-tâche"><app-icon name="close" /></button></div>
       <div class="subtask-row"><input id="new-subtask" name="newSubTask" [(ngModel)]="newSubTaskTitle" maxlength="200" (keydown.enter)="$event.preventDefault(); addSubTask()" placeholder="Décomposer en petites étapes…"><button class="secondary" type="button" (click)="addSubTask()" [disabled]="!newSubTaskTitle.trim()">Ajouter</button></div>
       <footer class="modal-actions"><button type="button" class="secondary" (click)="requestClose()">Annuler</button><button type="submit" class="primary" [disabled]="taskForm.invalid || !tempTask.title.trim()">{{ tempTask.id ? 'Enregistrer' : 'Créer la tâche' }}</button></footer>
     </form>

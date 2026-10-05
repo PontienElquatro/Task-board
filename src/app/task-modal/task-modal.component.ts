@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, OnChanges, inject, ChangeDetect
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { A11yModule } from '@angular/cdk/a11y';
+import { IconComponent } from '../shared/icon.component';
 import { Task, SubTask } from '../models';
 import { GoalService } from '../services/goal.service';
 import { dayKey } from '../models/task-utils';
 import { ProjectService } from '../services/project.service';
-@Component({ selector: 'app-task-modal', standalone: true, imports: [CommonModule, FormsModule, A11yModule], templateUrl: './task-modal.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-task-modal', standalone: true, imports: [IconComponent, CommonModule, FormsModule, A11yModule], templateUrl: './task-modal.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskModalComponent implements OnChanges {
   @Input() task: Task | null = null;
   @Input() mode: 'view' | 'edit' | 'delete' = 'view';
