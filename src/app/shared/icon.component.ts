@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 const paths: Record<string,string> = {
+ 'arrow-right':'M4 12h16 M14 6l6 6-6 6',
  user:'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0 M4 21v-2a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v2',
  search:'M21 21l-5-5 M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14',
  undo:'M8 4 3 9l5 5 M3 9h11a7 7 0 0 1 7 7v3',

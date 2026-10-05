@@ -33,4 +33,10 @@ Scénarios prévus : galerie → tableau → détails, conservation d’un broui
 
 ## Limites
 
+## Ajustement visuel : projets d’équipe
+
+Le formulaire de création n’a plus de titre ni de cadre imbriqué en double. Les champs principaux sont séparés du groupe statut/responsable, et la création reste désactivée sans titre valide. La galerie et l’en-tête du tableau reprennent le bleu, le bleu profond et l’indigo du logo. Les membres et compteurs affichés proviennent des données existantes ; aucun indicateur fictif n’est ajouté. La progression utilise une barre personnalisée avec attributs ARIA, à la place du contrôle natif dont la couleur variait selon le navigateur. Vérification Angular réussie ; validation visuelle en navigateur toujours en attente.
+
+## Limites backend
+
 Cette livraison ne modifie ni les migrations ni les notifications backend. Les notifications de clôture vers l’auteur de l’assignation et les photos de tous les membres via le roster restent un chantier distinct. Le responsable apparaît sur les cartes partagées avec des initiales, pas une photo prétendue disponible.

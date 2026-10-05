@@ -58,7 +58,8 @@ try {
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Only the board may scroll horizontally');
   await page.screenshot({path:`outputs/ux/team-board-${width}-${theme}.png`,fullPage:true});
   await page.getByRole('button',{name:'Nouvelle tâche',exact:true}).click();await page.getByRole('dialog').waitFor();
-  assert.equal(await page.getByRole('dialog').getByLabel('Titre',{exact:true}).count(),1);
+  assert.equal(await page.getByRole('dialog').getByLabel(/Titre de la tâche/).count(),1);
+  assert.equal(await page.getByRole('dialog').getByRole('button',{name:'Créer la tâche',exact:true}).isDisabled(),true);
   await page.getByRole('button',{name:'Fermer les détails'}).click();
   await page.goto(new URL('/dashboard',origin).href);await page.getByRole('heading',{name:'Vue d’ensemble',exact:true}).waitFor();
   assert.deepEqual(errors,[]);console.log(`PASS ${width}px ${theme}: gallery, drawer, draft guard, save, completion, creation, dashboard, no runtime errors`);
