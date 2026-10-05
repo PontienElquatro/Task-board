@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal, untracked } from '@angular/core';
+import { Component, effect, inject, signal, untracked, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PageShellComponent } from './page-shell.component';
@@ -6,6 +6,8 @@ import { AuthService } from '../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CardAppearanceService } from '../services/card-appearance.service';
+import { RealtimeChannel } from '@supabase/supabase-js';
+import { RefreshQueue } from '../core/collaboration/refresh-queue';
 import { TeamService } from '../services/team.service';
 
 interface Subtask {id:string;task_id:string;team_id:string;title:string;completed:boolean;assignee_id:string|null;}
@@ -21,7 +23,7 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
   <form *ngIf="canManage()" (ngSubmit)="createProject()" class="flex flex-wrap gap-2"><label class="grid flex-1 gap-2 text-sm">Nouveau projet<input name="projectTitle" [(ngModel)]="projectTitle" required maxlength="100" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800" /></label><button class="primary min-h-11 self-end" [disabled]="busy()" type="submit">Créer le projet</button></form>
   <label *ngIf="teamId" class="grid gap-2 text-sm">Projet<select [ngModel]="projectId" (ngModelChange)="selectProject($event)" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Choisir un projet</option><option *ngFor="let project of projects()" [value]="project.id">{{project.title}}</option></select></label>
   <p *ngIf="teamId && !projects().length" class="text-sm text-gray-500 dark:text-gray-400">Aucun projet partagé dans cette équipe.</p>
-  <ng-container *ngIf="projectId"><section class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950" aria-label="Avancement du projet"><h2 class="font-semibold">Avancement · {{progress()}} %</h2><p class="mt-2 text-sm">{{doneCount()}} / {{tasks().length}} tâches terminées · {{completedSubtasks()}} / {{subtasks().length}} sous-tâches terminées</p><progress class="mt-3 h-2 w-full accent-blue-600" [value]="progress()" max="100" aria-label="Pourcentage de tâches terminées"></progress></section>
+  <ng-container *ngIf="projectId"><p role="status" class="text-xs text-gray-500 dark:text-gray-400">{{liveStatus()}}</p><section class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950" aria-label="Avancement du projet"><h2 class="font-semibold">Avancement · {{progress()}} %</h2><p class="mt-2 text-sm">{{doneCount()}} / {{tasks().length}} tâches terminées · {{completedSubtasks()}} / {{subtasks().length}} sous-tâches terminées</p><progress class="mt-3 h-2 w-full accent-blue-600" [value]="progress()" max="100" aria-label="Pourcentage de tâches terminées"></progress></section>
    <div class="flex flex-wrap items-end gap-4"><label class="grid gap-2 text-sm">Responsable<select [(ngModel)]="assigneeFilter" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Tous les membres</option><option value="none">Non assignées</option><option *ngFor="let member of teamMembers()" [value]="member.user_id">{{member.display_name}}</option></select></label><button class="secondary min-h-11" [disabled]="busy()" (click)="refreshTasks()">Actualiser</button></div>
    <p *ngIf="!canEdit()" class="text-sm text-gray-500 dark:text-gray-400">Vous pouvez mettre à jour le travail qui vous est assigné.</p>
    <form *ngIf="canEdit()" (ngSubmit)="saveTask()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
@@ -85,8 +87,53 @@ export class SharedProjectsComponent {
  readonly projects=signal<Project[]>([]);readonly tasks=signal<SharedTask[]>([]);readonly message=signal('');readonly busy=signal(false);
  teamId='';projectId='';projectTitle='';assigneeFilter='';title='';description='';status='todo';assignee='';
  readonly columns=[{id:'todo',label:'À faire'},{id:'in-progress',label:'En cours'},{id:'done',label:'Terminé'}];
+ readonly liveStatus=signal('Connexion au temps réel…');
+ private liveChannel?:RealtimeChannel;
+ private refreshQueue?:RefreshQueue;
+ private liveProject='';
+ private fallbackTimer?:ReturnType<typeof setInterval>;
+ private readonly destroyRef=inject(DestroyRef);
  private revision=0;
- constructor(){effect(()=>{this.routeParams();const user=this.auth.user();if(!this.auth.initializing())untracked(()=>{this.revision++;this.teamId='';this.projectId='';this.projects.set([]);this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();if(user)void this.run(async()=>{await this.teams.load();const tid=this.route.snapshot.queryParamMap.get('team');if(tid&&this.teams.teams().some(t=>t.id===tid)){this.teamId=tid;const r=await this.auth.client.from('taskboard_shared_projects').select('id,team_id,title').eq('team_id',tid);if(r.error)throw new Error(r.error.message);this.projects.set(r.data??[]);const pid=this.route.snapshot.queryParamMap.get('project');if(pid&&this.projects().some(p=>p.id===pid)){this.projectId=pid;await this.readTasks();}}});});});}
+ private readonly catchUp=()=>this.refreshQueue?.request();
+ private startLive(id:string){
+   if(this.liveProject===id || !this.auth.user() || typeof window==='undefined')return;
+   this.stopLive();
+   this.liveProject=id;
+   this.liveStatus.set('Connexion au temps réel…');
+   const queue=new RefreshQueue(()=>this.busy(),async()=>{
+     if(this.liveProject!==id)return;
+     this.busy.set(true);
+     try{await this.readTasks();}
+     catch{if(this.liveProject===id)this.liveStatus.set('Actualisation interrompue · nouvelle tentative automatique');}
+     finally{this.busy.set(false);}
+   });
+   this.refreshQueue=queue;
+   const changed=()=>queue.request();
+   // Only authorized INSERT/UPDATE payloads. DELETE is recovered by the periodic
+   // authenticated read because Postgres DELETE events cannot be RLS-filtered.
+   this.liveChannel=this.auth.client.channel('shared-project-'+id+'-'+crypto.randomUUID())
+     .on('postgres_changes',{event:'INSERT',schema:'public',table:'taskboard_shared_tasks',filter:'project_id=eq.'+id},changed)
+     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'taskboard_shared_tasks',filter:'project_id=eq.'+id},changed)
+     .on('postgres_changes',{event:'INSERT',schema:'public',table:'taskboard_shared_subtasks',filter:'team_id=eq.'+this.teamId},changed)
+     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'taskboard_shared_subtasks',filter:'team_id=eq.'+this.teamId},changed)
+     .subscribe(status=>{
+       if(this.liveProject!==id)return;
+       this.liveStatus.set(status==='SUBSCRIBED'?'En direct · mises à jour automatiques':'Connexion interrompue · rattrapage automatique');
+       if(status==='SUBSCRIBED')queue.request();
+     });
+   this.fallbackTimer=setInterval(()=>queue.request(),30000);
+   window.addEventListener('online',this.catchUp);
+   window.addEventListener('focus',this.catchUp);
+ }
+ private stopLive(){
+   this.liveProject='';
+   this.refreshQueue?.dispose();this.refreshQueue=undefined;
+   clearInterval(this.fallbackTimer);
+   if(this.liveChannel)void this.auth.client.removeChannel(this.liveChannel);
+   this.liveChannel=undefined;
+   if(typeof window!=='undefined'){window.removeEventListener('online',this.catchUp);window.removeEventListener('focus',this.catchUp);}
+ }
+ constructor(){this.destroyRef.onDestroy(()=>{this.revision++;this.stopLive();});effect(()=>{this.routeParams();const user=this.auth.user();if(!this.auth.initializing())untracked(()=>{this.stopLive();this.revision++;this.teamId='';this.projectId='';this.projects.set([]);this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();if(user)void this.run(async()=>{await this.teams.load();const tid=this.route.snapshot.queryParamMap.get('team');if(tid&&this.teams.teams().some(t=>t.id===tid)){this.teamId=tid;const r=await this.auth.client.from('taskboard_shared_projects').select('id,team_id,title').eq('team_id',tid);if(r.error)throw new Error(r.error.message);this.projects.set(r.data??[]);const pid=this.route.snapshot.queryParamMap.get('project');if(pid&&this.projects().some(p=>p.id===pid)){this.projectId=pid;await this.readTasks();}}});});});}
  trackTask(_index:number,task:{id:string}){return task.id;}
  initials(id:string|null){return id?this.memberName(id).split(/\s+/).map(part=>part[0]).join('').slice(0,2).toUpperCase():'—';}
  currentTeam(){return this.teams.teams().find(t=>t.id===this.teamId);}
@@ -96,11 +143,11 @@ export class SharedProjectsComponent {
  memberName(id:string|null){return id?this.teamMembers().find(m=>m.user_id===id)?.display_name??'Membre':'Non assignée';}
  columnTasks(status:string){return this.tasks().filter(t=>t.status===status&&(!this.assigneeFilter||(this.assigneeFilter==='none'?!t.assignee_id:t.assignee_id===this.assigneeFilter)));}
  async run(action:()=>Promise<unknown>){if(this.busy())return;this.busy.set(true);this.message.set('');try{await action();}catch(e){this.message.set(e instanceof Error?e.message:'Action impossible.');}finally{this.busy.set(false);}}
- async selectTeam(id:string){if(this.busy())return;this.teamId=id;this.projectId='';this.assigneeFilter='';this.projects.set([]);this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();const revision=++this.revision;if(!id)return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').select('id,team_id,title').eq('team_id',id).order('created_at');if(r.error)throw new Error(r.error.message);if(revision===this.revision)this.projects.set(r.data??[]);});}
- async selectProject(id:string){if(this.busy())return;this.projectId=id;this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.refreshTasks();}
- async readTasks(){const id=this.projectId,revision=this.revision;if(!id)return;const r=await this.auth.client.from('taskboard_shared_tasks').select('*').eq('project_id',id).order('created_at');if(r.error)throw new Error(r.error.message);const ids=(r.data??[]).map((t:SharedTask)=>t.id);const subs=ids.length?await this.auth.client.from('taskboard_shared_subtasks').select('*').in('task_id',ids).order('created_at'):{data:[],error:null};if(subs.error)throw new Error(subs.error.message);if(id===this.projectId&&revision===this.revision){this.tasks.set(r.data??[]);this.subtasks.set(subs.data??[]);}}
+ async selectTeam(id:string){if(this.busy())return;this.stopLive();this.teamId=id;this.projectId='';this.assigneeFilter='';this.projects.set([]);this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();const revision=++this.revision;if(!id)return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').select('id,team_id,title').eq('team_id',id).order('created_at');if(r.error)throw new Error(r.error.message);if(revision===this.revision)this.projects.set(r.data??[]);});}
+ async selectProject(id:string){if(this.busy())return;this.stopLive();this.projectId=id;this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.refreshTasks();}
+ async readTasks(){const id=this.projectId,revision=this.revision;if(!id)return;const r=await this.auth.client.from('taskboard_shared_tasks').select('*').eq('project_id',id).order('created_at');if(r.error)throw new Error(r.error.message);const ids=(r.data??[]).map((t:SharedTask)=>t.id);const subs=ids.length?await this.auth.client.from('taskboard_shared_subtasks').select('*').in('task_id',ids).order('created_at'):{data:[],error:null};if(subs.error)throw new Error(subs.error.message);if(id===this.projectId&&revision===this.revision){this.tasks.set(r.data??[]);this.subtasks.set(subs.data??[]);this.startLive(id);}}
  async refreshTasks(){await this.run(()=>this.readTasks());}
- async createProject(){if(!this.canManage()||!this.projectTitle.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').insert({team_id:this.teamId,title:this.projectTitle.trim()}).select('id,team_id,title').single();if(r.error)throw new Error(r.error.message);this.projects.update(p=>[...p,r.data]);this.projectId=r.data.id;this.projectTitle='';this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();this.message.set('Projet partagé créé.');});}
+ async createProject(){if(!this.canManage()||!this.projectTitle.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').insert({team_id:this.teamId,title:this.projectTitle.trim()}).select('id,team_id,title').single();if(r.error)throw new Error(r.error.message);this.projects.update(p=>[...p,r.data]);this.stopLive();this.projectId=r.data.id;this.projectTitle='';this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.readTasks();this.message.set('Projet partagé créé.');});}
  clearDraft(){this.title='';this.description='';this.status='todo';this.assignee='';}
  async saveTask(){if(!this.canEdit()||!this.title.trim())return;await this.run(async()=>{const payload={title:this.title.trim(),description:this.description,status:this.status,assignee_id:this.assignee||null};const query=this.auth.client.from('taskboard_shared_tasks').insert({...payload,team_id:this.teamId,project_id:this.projectId});const r=await query.select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('La tâche a été supprimée ou vos droits ont changé.');await this.readTasks();this.clearDraft();this.message.set('Tâche enregistrée.');});}
 
