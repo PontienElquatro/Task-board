@@ -65,6 +65,12 @@ export class AuthService {
     if (error) throw new Error('Modification du mot de passe impossible.');
     this.recovering.set(false);
   }
+
+  async isAdmin() {
+    if (!this.user()) return false;
+    const {data,error}=await this.client.functions.invoke('taskboard-admin',{body:{page:1}});
+    return !error && !!data && !data.error;
+  }
   async updateProfile(input: { displayName?: string; firstName?:string; lastName?:string; email?: string; avatarUrl?: string | null }) {
     const displayName = input.displayName?.trim();
     const email = input.email?.trim().toLowerCase();

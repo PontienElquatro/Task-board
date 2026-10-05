@@ -22,7 +22,7 @@ export class LoginComponent {
     if(this.busy()) return;
     this.error.set(''); this.message.set(''); this.busy.set(true);
     try {
-      if(this.mode==='login') { await this.auth.signIn(this.email.trim(),this.password); await this.router.navigate(['/board']); }
+      if(this.mode==='login') { await this.auth.signIn(this.email.trim(),this.password); await this.router.navigate([await this.auth.isAdmin()?'/admin':'/board']); }
       if(this.mode==='signup') { if(this.password!==this.confirmation) throw new Error('Les mots de passe diffèrent.'); await this.auth.signUp(this.email.trim(),this.password,this.firstName,this.lastName); this.message.set('Vérifiez votre boîte email pour confirmer votre inscription.'); this.password=''; this.confirmation=''; }
       if(this.mode==='reset') { await this.auth.resetPassword(this.email.trim()); this.message.set('Si cette adresse est enregistrée, un lien de récupération sera envoyé.'); }
       if(this.mode==='recovery') { if(this.password!==this.confirmation) throw new Error('Les mots de passe diffèrent.'); await this.auth.changePassword(this.password); this.password=''; this.confirmation=''; this.message.set('Mot de passe modifié.'); this.mode='login'; }
