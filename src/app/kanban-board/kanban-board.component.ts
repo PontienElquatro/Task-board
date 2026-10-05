@@ -1,4 +1,5 @@
-import { Component, inject, ChangeDetectionStrategy, signal, computed, HostListener } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, HostListener, afterNextRender, Injector } from '@angular/core';
+import { GettingStartedComponent } from '../shared/getting-started.component';
 import { IconComponent } from '../shared/icon.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,7 @@ import { Task, Status } from '../models';
 import { TaskColumnComponent } from '../task-column/task-column.component';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { isOverdue } from '../models/task-utils';
 import { ProjectService } from '../services/project.service';
@@ -21,7 +22,7 @@ import { CloudStorageProvider } from '../providers/cloud-storage.provider';
 
 @Component({
   selector: 'app-kanban-board', standalone: true,
-  imports: [IconComponent, CommonModule, FormsModule, TaskColumnComponent, TaskModalComponent, DragDropModule, RouterLink, BrandComponent, FilterBarComponent],
+  imports: [GettingStartedComponent,IconComponent, CommonModule, FormsModule, TaskColumnComponent, TaskModalComponent, DragDropModule, RouterLink, BrandComponent, FilterBarComponent],
   templateUrl: './kanban-board.component.html', styleUrl: './kanban-board.component.css', changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent {
@@ -31,10 +32,16 @@ export class KanbanBoardComponent {
   readonly projectService = inject(ProjectService);
   private readonly storage = inject(STORAGE_PROVIDER);
   private readonly route = inject(ActivatedRoute);
+  private readonly injector=inject(Injector);
+  private readonly router=inject(Router);
   projectDraft=''; projectEditor=false; editingProjectId?:string;
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params=>{
       this.openBoard(); this.taskService.filterProject.set(params.get('project') ?? '');
+      if(params.get('create')==='task')afterNextRender(()=>{
+        void this.router.navigate([],{relativeTo:this.route,queryParams:{create:null},queryParamsHandling:'merge',replaceUrl:true});
+        this.addTask();
+      },{injector:this.injector});
     });
     if(this.storage.contextVersion) effect(()=>{this.storage.contextVersion!(); untracked(()=>{
       this.closeModal(); this.projectEditor=false;
