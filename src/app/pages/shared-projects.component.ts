@@ -20,21 +20,37 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
  <p *ngIf="!auth.user() && !auth.initializing()">Connectez-vous pour retrouver vos projets d’équipe.</p>
  <div *ngIf="auth.user()" class="grid gap-4">
   <label class="grid gap-2 text-sm">Équipe<select [ngModel]="teamId" (ngModelChange)="selectTeam($event)" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Choisir une équipe</option><option *ngFor="let team of teams.teams()" [value]="team.id">{{team.name}} · {{teams.roleLabel(teams.role(team))}}</option></select></label>
-  <form *ngIf="canManage()" (ngSubmit)="createProject()" class="flex flex-wrap gap-2"><label class="grid flex-1 gap-2 text-sm">Nouveau projet<input name="projectTitle" [(ngModel)]="projectTitle" required maxlength="100" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800" /></label><button class="primary min-h-11 self-end" [disabled]="busy()" type="submit">Créer le projet</button></form>
+  <details *ngIf="canManage()" class="rounded-xl border border-gray-200 p-4 dark:border-gray-700"><summary class="cursor-pointer text-sm text-blue-700 dark:text-blue-300">+ Créer un projet partagé</summary><form (ngSubmit)="createProject()" class="flex flex-wrap gap-2"><label class="grid flex-1 gap-2 text-sm">Nouveau projet<input name="projectTitle" [(ngModel)]="projectTitle" required maxlength="100" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800" /></label><button class="primary min-h-11 self-end" [disabled]="busy()" type="submit">Créer le projet</button></form></details>
   <label *ngIf="teamId" class="grid gap-2 text-sm">Projet<select [ngModel]="projectId" (ngModelChange)="selectProject($event)" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Choisir un projet</option><option *ngFor="let project of projects()" [value]="project.id">{{project.title}}</option></select></label>
   <p *ngIf="teamId && !projects().length" class="text-sm text-gray-500 dark:text-gray-400">Aucun projet partagé dans cette équipe.</p>
-  <ng-container *ngIf="projectId"><p role="status" class="text-xs text-gray-500 dark:text-gray-400">{{liveStatus()}}</p><section class="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-900 dark:bg-blue-950" aria-label="Avancement du projet"><h2 class="font-semibold">Avancement · {{progress()}} %</h2><p class="mt-2 text-sm">{{doneCount()}} / {{tasks().length}} tâches terminées · {{completedSubtasks()}} / {{subtasks().length}} sous-tâches terminées</p><progress class="mt-3 h-2 w-full accent-blue-600" [value]="progress()" max="100" aria-label="Pourcentage de tâches terminées"></progress></section>
-   <div class="flex flex-wrap items-end gap-4"><label class="grid gap-2 text-sm">Responsable<select [(ngModel)]="assigneeFilter" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="">Tous les membres</option><option value="none">Non assignées</option><option *ngFor="let member of teamMembers()" [value]="member.user_id">{{member.display_name}}</option></select></label><button class="secondary min-h-11" [disabled]="busy()" (click)="refreshTasks()">Actualiser</button></div>
+  <ng-container *ngIf="projectId">
+   <header class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-6">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+     <div><p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{{currentTeam()?.name}} / Projet partagé</p><h2 class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{projectName()}}</h2></div>
+     <div class="flex flex-wrap items-center gap-2"><span *ngFor="let member of teamMembers() | slice:0:5" [title]="member.display_name" class="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{initials(member.user_id)}}</span><span class="text-xs text-gray-500 dark:text-gray-400">{{teamMembers().length}} membres</span></div>
+    </div>
+    <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400"><span>{{tasks().length}} tâches</span><span>{{doneCount()}} terminées</span><span>{{progress()}} % réalisé</span><span class="ml-auto">{{liveStatus()}}</span></div>
+    <progress class="mt-2 h-1 w-full accent-blue-600" [value]="progress()" max="100" aria-label="Avancement du projet"></progress>
+   </header>
+   <div class="flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-4 dark:border-gray-700">
+    <span class="border-b-2 border-blue-600 pb-2 text-sm font-semibold text-blue-700 dark:text-blue-300">Tableau</span>
+    <div class="flex flex-wrap items-center gap-2">
+     <label class="sr-only" for="shared-search">Rechercher une tâche</label><input id="shared-search" [(ngModel)]="search" placeholder="Rechercher une tâche…" class="min-h-11 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-800" />
+     <label class="sr-only" for="shared-member-filter">Responsable</label><select id="shared-member-filter" [(ngModel)]="assigneeFilter" class="min-h-11 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-800"><option value="">Tous les responsables</option><option value="none">Non assignées</option><option *ngFor="let member of teamMembers()" [value]="member.user_id">{{member.display_name}}</option></select>
+     <button class="min-h-11 rounded-lg px-4 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950" [attr.aria-pressed]="assigneeFilter===auth.user()?.id" (click)="assigneeFilter=assigneeFilter===auth.user()?.id?'':auth.user()?.id || ''">Mes tâches</button>
+     <button class="min-h-11 min-w-11 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" aria-label="Actualiser le tableau" [disabled]="busy()" (click)="refreshTasks()">↻</button>
+    </div>
+   </div>
    <p *ngIf="!canEdit()" class="text-sm text-gray-500 dark:text-gray-400">Vous pouvez mettre à jour le travail qui vous est assigné.</p>
-   <form *ngIf="canEdit()" (ngSubmit)="saveTask()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+   <details *ngIf="canEdit()" class="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"><summary class="flex min-h-11 cursor-pointer items-center gap-2 px-4 text-sm font-medium text-blue-700 dark:text-blue-300">+ Nouvelle tâche</summary><form (ngSubmit)="saveTask()" class="grid gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
     <h2 class="font-semibold">Nouvelle tâche</h2>
     <label class="grid gap-2 text-sm">Titre<input name="title" [(ngModel)]="title" required maxlength="200" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900" /></label>
     <label class="grid gap-2 text-sm">Description<textarea name="description" [(ngModel)]="description" maxlength="10000" class="rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900"></textarea></label>
     <div class="flex flex-wrap gap-4"><label class="grid gap-2 text-sm">Statut<select name="status" [(ngModel)]="status" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900"><option value="todo">À faire</option><option value="in-progress">En cours</option><option value="done">Terminé</option></select></label>
     <label class="grid gap-2 text-sm">Assigner à<select name="assignee" [(ngModel)]="assignee" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-900"><option value="">Non assignée</option><option *ngFor="let member of teamMembers()" [value]="member.user_id">{{member.display_name}}</option></select></label></div>
     <div class="flex gap-2"><button class="primary min-h-11" [disabled]="busy()" type="submit">Enregistrer</button></div>
-   </form>
-   <section class="grid items-start gap-4 lg:grid-cols-3" aria-label="Tableau partagé">
+   </form></details>
+   <section class="grid items-start gap-4 overflow-x-auto md:grid-cols-3" aria-label="Tableau partagé">
     <div *ngFor="let column of columns" class="min-w-0 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900">
      <header class="mb-4 flex items-center justify-between"><h2 class="text-sm font-semibold">{{column.label}}</h2><span class="rounded-full bg-gray-200 px-2 py-1 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-300">{{columnTasks(column.id).length}}</span></header>
      <article [id]="'task-'+task.id" *ngFor="let task of columnTasks(column.id); trackBy: trackTask" [ngClass]="appearance.classes(task.status)" class="group mb-4 rounded-xl border border-gray-200 p-2 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-gray-700">
@@ -85,7 +101,7 @@ export class SharedProjectsComponent {
  private readonly routeParams=toSignal(this.route.queryParamMap);
  readonly subtasks=signal<Subtask[]>([]);subTitles:Record<string,string>={};subAssignees:Record<string,string>={};
  readonly projects=signal<Project[]>([]);readonly tasks=signal<SharedTask[]>([]);readonly message=signal('');readonly busy=signal(false);
- teamId='';projectId='';projectTitle='';assigneeFilter='';title='';description='';status='todo';assignee='';
+ teamId='';projectId='';projectTitle='';assigneeFilter='';search='';title='';description='';status='todo';assignee='';
  readonly columns=[{id:'todo',label:'À faire'},{id:'in-progress',label:'En cours'},{id:'done',label:'Terminé'}];
  readonly liveStatus=signal('Connexion au temps réel…');
  private liveChannel?:RealtimeChannel;
@@ -141,9 +157,10 @@ export class SharedProjectsComponent {
  canEdit(){const t=this.currentTeam();return !!t&&['owner','admin','member'].includes(this.teams.role(t)??'');}
  teamMembers(){return this.teams.members().filter(m=>m.team_id===this.teamId);}
  memberName(id:string|null){return id?this.teamMembers().find(m=>m.user_id===id)?.display_name??'Membre':'Non assignée';}
- columnTasks(status:string){return this.tasks().filter(t=>t.status===status&&(!this.assigneeFilter||(this.assigneeFilter==='none'?!t.assignee_id:t.assignee_id===this.assigneeFilter)));}
+ projectName(){return this.projects().find(p=>p.id===this.projectId)?.title??'Projet';}
+ columnTasks(status:string){const query=this.search.trim().toLocaleLowerCase('fr');return this.tasks().filter(t=>t.status===status&&(!query||[t.title,t.description,...this.taskSubtasks(t.id).map(s=>s.title)].join(' ').toLocaleLowerCase('fr').includes(query))&&(!this.assigneeFilter||(this.assigneeFilter==='none'?!t.assignee_id:t.assignee_id===this.assigneeFilter)));}
  async run(action:()=>Promise<unknown>){if(this.busy())return;this.busy.set(true);this.message.set('');try{await action();}catch(e){this.message.set(e instanceof Error?e.message:'Action impossible.');}finally{this.busy.set(false);}}
- async selectTeam(id:string){if(this.busy())return;this.stopLive();this.teamId=id;this.projectId='';this.assigneeFilter='';this.projects.set([]);this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();const revision=++this.revision;if(!id)return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').select('id,team_id,title').eq('team_id',id).order('created_at');if(r.error)throw new Error(r.error.message);if(revision===this.revision)this.projects.set(r.data??[]);});}
+ async selectTeam(id:string){if(this.busy())return;this.stopLive();this.teamId=id;this.projectId='';this.assigneeFilter='';this.search='';this.projects.set([]);this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();const revision=++this.revision;if(!id)return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').select('id,team_id,title').eq('team_id',id).order('created_at');if(r.error)throw new Error(r.error.message);if(revision===this.revision)this.projects.set(r.data??[]);});}
  async selectProject(id:string){if(this.busy())return;this.stopLive();this.projectId=id;this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.refreshTasks();}
  async readTasks(){const id=this.projectId,revision=this.revision;if(!id)return;const r=await this.auth.client.from('taskboard_shared_tasks').select('*').eq('project_id',id).order('created_at');if(r.error)throw new Error(r.error.message);const ids=(r.data??[]).map((t:SharedTask)=>t.id);const subs=ids.length?await this.auth.client.from('taskboard_shared_subtasks').select('*').in('task_id',ids).order('created_at'):{data:[],error:null};if(subs.error)throw new Error(subs.error.message);if(id===this.projectId&&revision===this.revision){this.tasks.set(r.data??[]);this.subtasks.set(subs.data??[]);this.startLive(id);}}
  async refreshTasks(){await this.run(()=>this.readTasks());}

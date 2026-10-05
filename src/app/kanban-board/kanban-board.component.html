@@ -1,9 +1,10 @@
 <div class="workspace flex min-h-[calc(100dvh-4rem)] flex-col lg:flex-row">
   <main class="main-content w-full max-w-none p-4 sm:p-6 lg:p-8" id="main-content">
-    <section class="page-heading gap-4 py-4">
-      <div><p class="eyebrow">MON ESPACE DE TRAVAIL</p><h1>{{ archiveOpen() ? 'Archives' : 'Mon tableau' }}</h1><p class="subtitle">{{archiveOpen() ? 'Retrouvez vos tâches et restaurez-les à tout moment.' : 'Une vue claire pour avancer, une tâche à la fois.'}}</p></div>
+    <section class="page-heading mb-4 gap-4 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:p-6">
+      <div><p class="eyebrow">PROJET PERSONNEL</p><h1>{{ archiveOpen() ? 'Archives' : activeProjectTitle() }}</h1><p class="subtitle">{{archiveOpen() ? 'Retrouvez vos tâches et restaurez-les à tout moment.' : 'Une vue claire pour avancer, une tâche à la fois.'}}</p></div>
       <div class="flex flex-wrap items-center gap-2"><button class="quiet min-h-11 text-sm" (click)="archiveOpen() ? openBoard() : archiveOpen.set(true)">{{archiveOpen() ? 'Retour aux tâches' : 'Archives (' + taskService.archivedTasks().length + ')'}}</button><button class="icon-button" (click)="themeService.toggleDarkMode()" [attr.aria-label]="themeService.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'">{{themeService.darkMode() ? '☀' : '☾'}}</button><button *ngIf="!archiveOpen()" class="primary min-h-11" (click)="addTask()"><span aria-hidden="true">+</span> Nouvelle tâche <kbd>N</kbd></button></div>
     </section>
+    <div *ngIf="!archiveOpen()" class="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-gray-200 pb-4 dark:border-gray-700"><span class="border-b-2 border-blue-600 pb-2 text-sm font-semibold text-blue-700 dark:text-blue-300">Tableau</span><span class="text-xs text-gray-500 dark:text-gray-400">{{taskService.filteredTasks().length}} tâches affichées · {{taskService.filterProject() ? 'Projet sélectionné' : 'Tous les projets'}}</span><a routerLink="/projects" class="min-h-11 rounded-lg px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950">Mes projets →</a></div>
     <div class="notice" role="status" *ngIf="taskService.notice()"><span>{{ taskService.notice() }}</span><button aria-label="Fermer le message" (click)="taskService.notice.set('')">×</button></div>
     <ng-container *ngIf="!archiveOpen(); else archives">
       <section *ngIf="taskService.activeTasks().length" class="board-toolbar" aria-label="Filtres du tableau">

@@ -24,6 +24,7 @@ import { CloudStorageProvider } from '../providers/cloud-storage.provider';
   templateUrl: './kanban-board.component.html', styleUrl: './kanban-board.component.css', changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent {
+  activeProjectTitle(){return this.projectService.projects().find(p=>p.id===this.taskService.filterProject())?.title??'Mon tableau';}
   readonly cloud = inject(CloudStorageProvider);
   readonly taskService = inject(TaskService);
   readonly projectService = inject(ProjectService);
