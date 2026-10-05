@@ -5,6 +5,8 @@ import { PageShellComponent } from './page-shell.component';
 import { AuthService } from '../services/auth.service';
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { IconComponent } from '../shared/icon.component';
+import { ToastService } from '../services/toast.service';
 import { CardAppearanceService } from '../services/card-appearance.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { RefreshQueue } from '../core/collaboration/refresh-queue';
@@ -14,7 +16,7 @@ interface Subtask {id:string;task_id:string;team_id:string;title:string;complete
 interface Project {id:string;team_id:string;title:string;}
 interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;}
 
-@Component({standalone:true,imports:[CommonModule,FormsModule,PageShellComponent],template:`
+@Component({standalone:true,imports:[IconComponent,CommonModule,FormsModule,PageShellComponent],template:`
 <app-page-shell title="Projets d’équipe" description="Un tableau partagé pour chaque projet, avec des responsables clairement identifiés.">
  <p *ngIf="message()" role="status" class="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">{{message()}}</p>
  <p *ngIf="!auth.user() && !auth.initializing()">Connectez-vous pour retrouver vos projets d’équipe.</p>
@@ -38,7 +40,7 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
      <label class="sr-only" for="shared-search">Rechercher une tâche</label><input id="shared-search" [(ngModel)]="search" placeholder="Rechercher une tâche…" class="min-h-11 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-800" />
      <label class="sr-only" for="shared-member-filter">Responsable</label><select id="shared-member-filter" [(ngModel)]="assigneeFilter" class="min-h-11 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-800"><option value="">Tous les responsables</option><option value="none">Non assignées</option><option *ngFor="let member of teamMembers()" [value]="member.user_id">{{member.display_name}}</option></select>
      <button class="min-h-11 rounded-lg px-4 text-sm text-blue-700 hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-950" [attr.aria-pressed]="assigneeFilter===auth.user()?.id" (click)="assigneeFilter=assigneeFilter===auth.user()?.id?'':auth.user()?.id || ''">Mes tâches</button>
-     <button class="min-h-11 min-w-11 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" aria-label="Actualiser le tableau" [disabled]="busy()" (click)="refreshTasks()">↻</button>
+     <button class="min-h-11 min-w-11 rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" aria-label="Actualiser le tableau" [disabled]="busy()" (click)="refreshTasks()"><app-icon name="refresh" /></button>
     </div>
    </div>
    <p *ngIf="!canEdit()" class="text-sm text-gray-500 dark:text-gray-400">Vous pouvez mettre à jour le travail qui vous est assigné.</p>
@@ -63,7 +65,7 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
        <span *ngIf="task.assignee_id" class="max-w-32 truncate" [title]="memberName(task.assignee_id)">{{memberName(task.assignee_id)}}</span>
       </div>
       <details class="mt-2 border-t border-gray-100 dark:border-gray-700">
-       <summary class="flex min-h-11 cursor-pointer items-center justify-between rounded-lg px-2 text-xs font-medium text-gray-600 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:bg-gray-900"><span>Ouvrir les détails</span><span aria-hidden="true">⌄</span></summary>
+       <summary class="flex min-h-11 cursor-pointer items-center justify-between rounded-lg px-2 text-xs font-medium text-gray-600 hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:bg-gray-900"><span>Ouvrir les détails</span><app-icon name="chevron" /></summary>
        <div class="grid gap-4 pt-2">
         <ng-container *ngIf="canEdit(); else fullDescription">
          <label class="grid gap-2 text-xs">Titre<input [ngModel]="cardDraft(task).title" (ngModelChange)="setCardDraft(task,'title',$event)" maxlength="200" [disabled]="busy()" class="min-h-11 w-full rounded-lg border border-gray-300 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-900" /></label>
@@ -96,7 +98,7 @@ interface SharedTask {id:string;project_id:string;team_id:string;title:string;de
  </div>
 </app-page-shell>`})
 export class SharedProjectsComponent {
- readonly appearance=inject(CardAppearanceService);readonly auth=inject(AuthService);readonly teams=inject(TeamService);
+ readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly auth=inject(AuthService);readonly teams=inject(TeamService);
  private readonly route=inject(ActivatedRoute);
  private readonly routeParams=toSignal(this.route.queryParamMap);
  readonly subtasks=signal<Subtask[]>([]);subTitles:Record<string,string>={};subAssignees:Record<string,string>={};
@@ -164,16 +166,16 @@ export class SharedProjectsComponent {
  async selectProject(id:string){if(this.busy())return;this.stopLive();this.projectId=id;this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.refreshTasks();}
  async readTasks(){const id=this.projectId,revision=this.revision;if(!id)return;const r=await this.auth.client.from('taskboard_shared_tasks').select('*').eq('project_id',id).order('created_at');if(r.error)throw new Error(r.error.message);const ids=(r.data??[]).map((t:SharedTask)=>t.id);const subs=ids.length?await this.auth.client.from('taskboard_shared_subtasks').select('*').in('task_id',ids).order('created_at'):{data:[],error:null};if(subs.error)throw new Error(subs.error.message);if(id===this.projectId&&revision===this.revision){this.tasks.set(r.data??[]);this.subtasks.set(subs.data??[]);this.startLive(id);}}
  async refreshTasks(){await this.run(()=>this.readTasks());}
- async createProject(){if(!this.canManage()||!this.projectTitle.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').insert({team_id:this.teamId,title:this.projectTitle.trim()}).select('id,team_id,title').single();if(r.error)throw new Error(r.error.message);this.projects.update(p=>[...p,r.data]);this.stopLive();this.projectId=r.data.id;this.projectTitle='';this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.readTasks();this.message.set('Projet partagé créé.');});}
+ async createProject(){if(!this.canManage()||!this.projectTitle.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_projects').insert({team_id:this.teamId,title:this.projectTitle.trim()}).select('id,team_id,title').single();if(r.error)throw new Error(r.error.message);this.projects.update(p=>[...p,r.data]);this.stopLive();this.projectId=r.data.id;this.projectTitle='';this.tasks.set([]);this.subtasks.set([]);this.cardDrafts={};this.clearDraft();await this.readTasks();this.toast.success('Projet partagé créé.');});}
  clearDraft(){this.title='';this.description='';this.status='todo';this.assignee='';}
- async saveTask(){if(!this.canEdit()||!this.title.trim())return;await this.run(async()=>{const payload={title:this.title.trim(),description:this.description,status:this.status,assignee_id:this.assignee||null};const query=this.auth.client.from('taskboard_shared_tasks').insert({...payload,team_id:this.teamId,project_id:this.projectId});const r=await query.select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('La tâche a été supprimée ou vos droits ont changé.');await this.readTasks();this.clearDraft();this.message.set('Tâche enregistrée.');});}
+ async saveTask(){if(!this.canEdit()||!this.title.trim())return;await this.run(async()=>{const payload={title:this.title.trim(),description:this.description,status:this.status,assignee_id:this.assignee||null};const query=this.auth.client.from('taskboard_shared_tasks').insert({...payload,team_id:this.teamId,project_id:this.projectId});const r=await query.select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('La tâche a été supprimée ou vos droits ont changé.');await this.readTasks();this.clearDraft();this.toast.success('Tâche enregistrée.');});}
 
  cardDrafts:Record<string,{title:string;description:string}>={};
  cardDraft(task:SharedTask){return this.cardDrafts[task.id]??{title:task.title,description:task.description};}
  setCardDraft(task:SharedTask,field:'title'|'description',value:string){this.cardDrafts[task.id]={...this.cardDraft(task),[field]:value};}
  cardDirty(task:SharedTask){const d=this.cardDraft(task);return d.title!==task.title||d.description!==task.description;}
  discardCard(id:string){delete this.cardDrafts[id];}
- async saveCard(task:SharedTask){const d=this.cardDraft(task);if(!this.canEdit()||!d.title.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_tasks').update({title:d.title.trim(),description:d.description}).eq('id',task.id).eq('project_id',this.projectId).select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('Modification refusée.');this.discardCard(task.id);await this.readTasks();this.message.set('Tâche enregistrée.');});}
+ async saveCard(task:SharedTask){const d=this.cardDraft(task);if(!this.canEdit()||!d.title.trim())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_tasks').update({title:d.title.trim(),description:d.description}).eq('id',task.id).eq('project_id',this.projectId).select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('Modification refusée.');this.discardCard(task.id);await this.readTasks();this.toast.success('Tâche enregistrée.');});}
  async assignTask(id:string,assignee:string){if(!this.canEdit())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_tasks').update({assignee_id:assignee||null}).eq('id',id).eq('project_id',this.projectId).select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('Modification refusée.');await this.readTasks();});}
  canWork(assigned:string|null){return this.canEdit() || (!!assigned&&assigned===this.auth.user()?.id);}
  taskSubtasks(id:string){return this.subtasks().filter(s=>s.task_id===id);}
@@ -182,6 +184,6 @@ export class SharedProjectsComponent {
  completedSubtasks(){return this.subtasks().filter(s=>s.completed).length;}
  progress(){return this.tasks().length?Math.round(100*this.doneCount()/this.tasks().length):0;}
  async progressWork(id:string,sub:boolean,status:string){await this.run(async()=>{const r=await this.auth.client.rpc('progress_taskboard_work',{work_id:id,is_subtask:sub,new_status:status});if(r.error)throw new Error(r.error.message);await this.readTasks();});}
- async addSubtask(taskId:string){const title=this.subTitles[taskId]?.trim();if(!title||!this.canEdit())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_subtasks').insert({task_id:taskId,team_id:this.teamId,title,assignee_id:this.subAssignees[taskId]||null});if(r.error)throw new Error(r.error.message);this.subTitles[taskId]='';await this.readTasks();this.message.set('Sous-tâche ajoutée.');});}
+ async addSubtask(taskId:string){const title=this.subTitles[taskId]?.trim();if(!title||!this.canEdit())return;await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_subtasks').insert({task_id:taskId,team_id:this.teamId,title,assignee_id:this.subAssignees[taskId]||null});if(r.error)throw new Error(r.error.message);this.subTitles[taskId]='';await this.readTasks();this.toast.success('Sous-tâche ajoutée.');});}
  async assignSubtask(id:string,assignee:string){await this.run(async()=>{const r=await this.auth.client.from('taskboard_shared_subtasks').update({assignee_id:assignee||null}).eq('id',id).select('id');if(r.error)throw new Error(r.error.message);if(!r.data?.length)throw new Error('Modification refusée.');await this.readTasks();});}
 }

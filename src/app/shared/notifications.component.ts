@@ -1,13 +1,14 @@
 import { Component, effect, inject, signal, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { IconComponent } from './icon.component';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 interface Notification {id:string;title:string;team_id:string;project_id:string;task_id:string;read_at:string|null;created_at:string;}
-@Component({selector:'app-notifications',standalone:true,imports:[CommonModule,RouterLink],template:`
+@Component({selector:'app-notifications',standalone:true,imports:[IconComponent,CommonModule,RouterLink],template:`
 <details *ngIf="auth.user()" class="relative" #menu (keydown.escape)="menu.open=false">
- <summary class="flex min-h-11 cursor-pointer items-center rounded-lg border border-gray-200 px-3 text-sm dark:border-gray-700">Notifications <span *ngIf="unread()" class="ml-2 rounded-full bg-blue-600 px-2 text-xs text-white">{{unread()}}</span></summary>
+ <summary aria-label="Ouvrir les notifications" class="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center gap-2 rounded-lg px-3 text-sm text-gray-600 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-300 dark:hover:bg-blue-950 [&::-webkit-details-marker]:hidden"><app-icon name="bell" /><span class="sr-only">Notifications</span> <span *ngIf="unread()" class="ml-2 rounded-full bg-blue-600 px-2 text-xs text-white">{{unread()}}</span></summary>
  <section class="absolute right-0 z-50 mt-2 grid max-h-[70dvh] w-80 max-w-[calc(100vw-2rem)] gap-2 overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800" aria-label="Vos notifications">
-  <button class="secondary min-h-11" (click)="load()">Actualiser</button><p *ngIf="error()" role="status" class="text-xs">{{error()}}</p>
+  <header class="flex items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-700"><h2 class="text-sm font-semibold">Notifications</h2><button class="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900" aria-label="Actualiser les notifications" (click)="load()"><app-icon name="refresh" /></button></header><p *ngIf="error()" role="status" class="text-xs">{{error()}}</p>
   <p *ngIf="!items().length" class="text-sm text-gray-500 dark:text-gray-400">Aucune notification.</p>
   <a *ngFor="let item of items()" routerLink="/team-projects" [queryParams]="{team:item.team_id,project:item.project_id}" [fragment]="'task-'+item.task_id" (click)="read(item);menu.open=false" class="rounded-lg border border-gray-200 p-3 text-sm hover:bg-blue-50 dark:border-gray-700 dark:hover:bg-gray-900"><span [class.font-semibold]="!item.read_at">{{item.title}}</span><span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">{{item.created_at | date:'dd/MM HH:mm'}} · {{item.read_at ? 'Lue' : 'Nouvelle'}}</span></a>
  </section>

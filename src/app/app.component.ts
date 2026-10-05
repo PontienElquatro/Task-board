@@ -7,13 +7,14 @@ import { LoaderComponent } from './shared/loader/loader.component';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { inject } from '@angular/core';
 import { ThemeService } from './services/theme.service';
+import { ToastComponent } from './shared/toast.component';
 import { BRAND } from './core/brand';
 import { WorkspaceNavComponent } from './shared/workspace-nav.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, AccountBarComponent, LoaderComponent, WorkspaceNavComponent],
+  imports: [ToastComponent, RouterOutlet, CommonModule, AccountBarComponent, LoaderComponent, WorkspaceNavComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

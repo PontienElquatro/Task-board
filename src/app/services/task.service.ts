@@ -1,10 +1,12 @@
 import { Injectable, signal, computed, inject, effect, untracked } from '@angular/core';
+import { ToastService } from './toast.service';
 import { STORAGE_PROVIDER } from '../providers/storage.provider';
 import { Task, Status, Priority } from '../models';
 import { normalizeTasks, moveTask, isOverdue } from '../models/task-utils';
 
 @Injectable({ providedIn: 'root' })
 export class TaskService {
+  private readonly toast = inject(ToastService);
   private readonly storage = inject(STORAGE_PROVIDER);
   private readonly key = 'mytaskboard_tasks';
   readonly notice = signal('');
@@ -65,7 +67,7 @@ export class TaskService {
       this.storage.setItem(this.key, tasks);
       this.history.update(h => [...h.slice(-19), this.state()]);
       this.state.set(tasks);
-      this.notice.set(message);
+      this.notice.set(''); this.toast.success(message);
     } catch {
       this.notice.set('Enregistrement impossible : stockage indisponible ou plein. Aucune modification appliquée.');
       throw new Error('Enregistrement impossible.');
@@ -105,7 +107,7 @@ export class TaskService {
     if (!previous) return;
     try {
       this.storage.setItem(this.key, previous);
-      this.state.set(previous); this.history.update(h => h.slice(0, -1)); this.notice.set('Action annulée.');
+      this.state.set(previous); this.history.update(h => h.slice(0, -1)); this.notice.set(''); this.toast.success('Action annulée.');
     } catch { this.notice.set('Impossible d’annuler : stockage indisponible.'); }
   }
   importTasks(data: unknown) {

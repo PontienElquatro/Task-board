@@ -6,6 +6,8 @@ import { PageShellComponent } from './page-shell.component';
 import { BrandComponent } from '../shared/brand/brand.component';
 import { ProjectService } from '../services/project.service';
 import { TaskService } from '../services/task.service';
+import { IconComponent } from '../shared/icon.component';
+import { ToastService } from '../services/toast.service';
 import { CardAppearanceService } from '../services/card-appearance.service';
 import { ThemeService } from '../services/theme.service';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
@@ -30,7 +32,7 @@ export class PresentationComponent {
  readonly benefits=[{title:'Organisez vos projets',text:'Regroupez les tâches sans multiplier les outils.'},{title:'Anticipez les échéances',text:'Retrouvez les tâches datées dans votre calendrier.'},{title:'Gardez le contrôle',text:'Filtres, sous-tâches, sauvegardes et thème sombre : choisissez votre rythme.'}];
 }
 
-@Component({standalone:true,imports:[...imports,FormsModule],template:`
+@Component({standalone:true,imports:[...imports,FormsModule,IconComponent],template:`
 <app-page-shell title="Mes projets" description="Vos projets, vos prochaines actions. Choisissez un tableau pour avancer.">
  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
   <div class="flex items-center gap-2 text-sm"><span class="rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{visibleProjects().length}} projets</span><span class="text-gray-500 dark:text-gray-400">Espace personnel</span></div>
@@ -43,7 +45,7 @@ export class PresentationComponent {
  <div class="mb-4 flex flex-wrap items-center justify-between gap-4"><label class="sr-only" for="project-search">Rechercher un projet</label><input id="project-search" [(ngModel)]="search" placeholder="Rechercher un projet…" class="min-h-11 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-800"><label class="flex min-h-11 items-center gap-2 text-xs text-gray-500 dark:text-gray-400"><input type="checkbox" [(ngModel)]="showArchived">Inclure les archives</label></div>
  <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Liste des projets">
   <article *ngFor="let project of visibleProjects()" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-   <div class="flex items-center justify-between"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" aria-hidden="true">▤</span><details class="relative"><summary class="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-900" [attr.aria-label]="'Actions du projet '+project.title">•••</summary><div class="absolute right-0 z-10 grid w-40 gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-900"><button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="editing=project.id; draft=project.title">Renommer</button><button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="archive(project.id)">{{project.archived ? 'Restaurer' : 'Archiver'}}</button></div></details></div>
+   <div class="flex items-center justify-between"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" aria-hidden="true"><app-icon name="folder" /></span><details class="relative"><summary class="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-900" [attr.aria-label]="'Actions du projet '+project.title"><app-icon name="more" /></summary><div class="absolute right-0 z-10 grid w-40 gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-900"><button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="editing=project.id; draft=project.title">Renommer</button><button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="archive(project.id)">{{project.archived ? 'Restaurer' : 'Archiver'}}</button></div></details></div>
    <a routerLink="/board" [queryParams]="{project:project.id}" class="mt-4 block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"><h2 class="break-words text-lg font-semibold text-gray-900 dark:text-gray-100">{{project.title}}</h2><p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{project.archived ? 'Projet archivé' : 'Ouvrir le tableau →'}}</p></a>
    <div class="mt-6 flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>{{count(project.id)}} tâches</span><span>{{projectProgress(project.id)}} %</span></div>
    <progress class="mt-2 h-1 w-full accent-blue-600" [value]="projectProgress(project.id)" max="100" [attr.aria-label]="'Progression de '+project.title"></progress><p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{count(project.id,true)}} terminées</p>
@@ -52,6 +54,7 @@ export class PresentationComponent {
  <div *ngIf="!visibleProjects().length" class="rounded-2xl border border-gray-200 p-8 text-center dark:border-gray-700"><h2 class="font-semibold">Aucun projet à afficher</h2><p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Créez un projet ou ajustez votre recherche.</p></div>
 </app-page-shell>`})
 export class ProjectsComponent {
+ readonly toast=inject(ToastService);
  readonly projects=inject(ProjectService); readonly tasks=inject(TaskService);
  projectForm=false;search='';
  draft=''; editing:string|undefined; showArchived=false; readonly message=signal('');
@@ -59,7 +62,7 @@ export class ProjectsComponent {
  projectProgress(id:string){const total=this.count(id);return total?Math.round(100*this.count(id,true)/total):0;}
  count(id:string,done=false){return this.tasks.activeTasks().filter(t=>t.projectId===id&&(!done||t.status==='done')).length;}
  cancel(){this.draft='';this.editing=undefined;}
- save(){this.run(()=>{this.projects.save(this.draft,this.editing);this.cancel();this.projectForm=false;this.message.set('Projet enregistré.');});}
+ save(){this.run(()=>{this.projects.save(this.draft,this.editing);this.cancel();this.projectForm=false;this.toast.success('Projet enregistré.');});}
  archive(id:string){this.run(()=>this.projects.archive(id));}
  private run(action:()=>void){this.message.set('');try{action();}catch(e){this.message.set(e instanceof Error?e.message:'Action impossible.');}}
 }

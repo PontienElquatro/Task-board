@@ -1,4 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy, signal, computed, HostListener } from '@angular/core';
+import { IconComponent } from '../shared/icon.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../services/task.service';
@@ -20,7 +21,7 @@ import { CloudStorageProvider } from '../providers/cloud-storage.provider';
 
 @Component({
   selector: 'app-kanban-board', standalone: true,
-  imports: [CommonModule, FormsModule, TaskColumnComponent, TaskModalComponent, DragDropModule, RouterLink, BrandComponent, FilterBarComponent],
+  imports: [IconComponent, CommonModule, FormsModule, TaskColumnComponent, TaskModalComponent, DragDropModule, RouterLink, BrandComponent, FilterBarComponent],
   templateUrl: './kanban-board.component.html', styleUrl: './kanban-board.component.css', changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class KanbanBoardComponent {
