@@ -8,6 +8,7 @@ import { BrandComponent } from '../shared/brand/brand.component';
 import { ProjectService } from '../services/project.service';
 import { TaskService } from '../services/task.service';
 import { IconComponent } from '../shared/icon.component';
+import { DismissMenuDirective } from '../shared/dismiss-menu.directive';
 import { AvatarComponent } from '../shared/avatar.component';
 import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
 import { ToastService } from '../services/toast.service';
@@ -36,30 +37,7 @@ export class PresentationComponent {
  readonly benefits=[{title:'Organisez vos projets',text:'Regroupez les tâches sans multiplier les outils.'},{title:'Anticipez les échéances',text:'Retrouvez les tâches datées dans votre calendrier.'},{title:'Gardez le contrôle',text:'Filtres, sous-tâches, sauvegardes et thème sombre : choisissez votre rythme.'}];
 }
 
-@Component({standalone:true,imports:[...imports,ModalScrollLockDirective,A11yModule,FormsModule,IconComponent],template:`
-<app-page-shell title="Mes projets" description="Vos projets, vos prochaines actions. Choisissez un tableau pour avancer.">
- <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-  <div class="flex items-center gap-2 text-sm"><span class="rounded-lg bg-blue-50 px-4 py-2 font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">{{visibleProjects().length}} projets</span><span class="text-gray-500 dark:text-gray-400">Espace personnel</span></div>
-  <button class="primary min-h-11" (click)="projectForm=true; cancel()">+ Nouveau projet</button>
- </div>
- <div *ngIf="projectForm || editing" appModalScrollLock class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-950/40 p-4 backdrop-blur-sm"><section role="dialog" aria-modal="true" aria-labelledby="project-editor-heading" (keydown.escape)="cancel(); projectForm=false; $event.stopPropagation()" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" class="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-700 dark:bg-gray-900"><h2 id="project-editor-heading" class="mb-4 text-lg font-semibold">{{editing ? 'Renommer le projet' : 'Nouveau projet'}}</h2>
- <p *ngIf="message() || projects.error()" role="alert" class="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{projects.error() || message()}}</p>
- <form (ngSubmit)="save()" class="grid gap-4">
-  <label class="grid flex-1 gap-2 text-sm" for="project-title">{{editing ? 'Renommer le projet' : 'Nom du projet'}}<input id="project-title" name="title" [(ngModel)]="draft" required maxlength="100" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:border-gray-600 dark:bg-gray-900" placeholder="Ex. Lancement de mon site"></label><button class="primary min-h-11" type="submit">Enregistrer</button><button type="button" class="secondary min-h-11" (click)="cancel(); projectForm=false">Annuler</button>
- </form>
- </section></div>
- <p *ngIf="message() || projects.error()" role="status" class="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">{{projects.error() || message()}}</p>
- <div class="mb-4 flex flex-wrap items-center justify-between gap-4"><label class="sr-only" for="project-search">Rechercher un projet</label><input id="project-search" [(ngModel)]="search" placeholder="Rechercher un projet…" class="min-h-11 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-700 dark:bg-gray-800"><label class="flex min-h-11 items-center gap-2 text-xs text-gray-500 dark:text-gray-400"><input type="checkbox" [(ngModel)]="showArchived">Inclure les archives</label></div>
- <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Liste des projets">
-  <article *ngFor="let project of visibleProjects()" class="group rounded-2xl border border-gray-200 bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
-   <div class="flex items-center justify-between"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300" aria-hidden="true"><app-icon name="folder" /></span><details class="relative"><summary class="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-lg text-gray-500 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-900" [attr.aria-label]="'Actions du projet '+project.title"><app-icon name="more" /></summary><div class="absolute right-0 z-10 grid w-40 gap-2 rounded-xl border border-gray-200 bg-white p-2 shadow-lg dark:border-gray-700 dark:bg-gray-900"><button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="editing=project.id; draft=project.title">Renommer</button><button class="min-h-11 rounded-lg p-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-950" (click)="archive(project.id)">{{project.archived ? 'Restaurer' : 'Archiver'}}</button></div></details></div>
-   <a routerLink="/board" [queryParams]="{project:project.id}" class="mt-4 block rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600"><h2 class="break-words text-lg font-semibold text-gray-900 dark:text-gray-100">{{project.title}}</h2><p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{project.archived ? 'Projet archivé' : 'Ouvrir le tableau →'}}</p></a>
-   <div class="mt-6 flex justify-between text-xs text-gray-500 dark:text-gray-400"><span>{{count(project.id)}} tâches</span><span>{{projectProgress(project.id)}} %</span></div>
-   <progress class="mt-2 h-1 w-full accent-blue-600" [value]="projectProgress(project.id)" max="100" [attr.aria-label]="'Progression de '+project.title"></progress><p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{count(project.id,true)}} terminées</p>
-  </article>
- </section>
- <div *ngIf="!visibleProjects().length" class="rounded-2xl border border-gray-200 p-8 text-center dark:border-gray-700"><h2 class="font-semibold">Aucun projet à afficher</h2><p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Créez un projet ou ajustez votre recherche.</p></div>
-</app-page-shell>`})
+@Component({standalone:true,imports:[...imports,ModalScrollLockDirective,A11yModule,FormsModule,IconComponent,DismissMenuDirective],templateUrl:'./projects.component.html'})
 export class ProjectsComponent {
  readonly toast=inject(ToastService);
  readonly projects=inject(ProjectService); readonly tasks=inject(TaskService);
