@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectionStrategy, signal, computed, HostListener, afterNextRender, Injector } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed, HostListener, afterNextRender, Injector } from '@angular/core';
 import { GettingStartedComponent } from '../shared/getting-started.component';
 import { IconComponent } from '../shared/icon.component';
 import { CommonModule } from '@angular/common';
@@ -34,6 +34,7 @@ export class KanbanBoardComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly injector=inject(Injector);
   private readonly router=inject(Router);
+  private readonly changeDetector=inject(ChangeDetectorRef);
   projectDraft=''; projectEditor=false; editingProjectId?:string;
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params=>{
@@ -41,7 +42,9 @@ export class KanbanBoardComponent {
       if(params.get('create')==='task')afterNextRender(()=>{
         void this.router.navigate([],{relativeTo:this.route,queryParams:{create:null},queryParamsHandling:'merge',replaceUrl:true});
         this.addTask();
+        this.changeDetector.markForCheck();
       },{injector:this.injector});
+      this.changeDetector.markForCheck();
     });
     if(this.storage.contextVersion) effect(()=>{this.storage.contextVersion!(); untracked(()=>{
       this.closeModal(); this.projectEditor=false;
