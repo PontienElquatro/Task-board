@@ -6,6 +6,7 @@ import { SyncConflictComponent } from '../shared/sync-conflict/sync-conflict.com
 import { DeviceRestoreComponent } from '../shared/device-restore/device-restore.component';
 import { BrandComponent } from '../shared/brand/brand.component';
 import { IconComponent } from '../shared/icon.component';
+import { cloudIndicator } from '../core/cloud-indicator';
 import { NotificationsComponent } from '../shared/notifications.component';
 @Component({selector:'app-account-bar',standalone:true,imports:[IconComponent,CommonModule,RouterLink,SyncConflictComponent,DeviceRestoreComponent,BrandComponent,NotificationsComponent],template: `
 <app-sync-conflict *ngIf="cloud.conflict()" />
@@ -14,7 +15,7 @@ import { NotificationsComponent } from '../shared/notifications.component';
     <a routerLink="/board" class="flex min-h-11 items-center gap-2 rounded-lg font-semibold" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /> Ma’at</a>
     <div class="flex min-w-0 flex-wrap items-center gap-2">
       <app-notifications />
-      <span class="flex max-w-56 items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-xs text-blue-700 dark:bg-blue-950 dark:text-blue-200" role="status" aria-live="polite" [title]="cloud.status()"><app-icon *ngIf="!cloud.auth.initializing() && cloud.status() === 'Synchronisé avec votre compte'" name="check" /><span class="truncate">{{cloud.auth.initializing() ? 'Vérification de votre session…' : cloud.status() === 'Synchronisé avec votre compte' ? 'Sauvegardé' : cloud.status()}}</span></span>
+      <span class="flex min-h-11 min-w-11 items-center justify-center rounded-xl transition-colors duration-200 motion-reduce:transition-none" [ngClass]="saveState()==='saved' ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300' : saveState()==='error' ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300' : saveState()==='local' ? 'bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'" role="status" aria-live="polite" [title]="saveLabel()"><app-icon [name]="saveState()==='saved' ? 'cloud-check' : saveState()==='error' ? 'cloud-error' : 'cloud'" /><span class="sr-only">{{saveLabel()}}</span></span>
       <details class="group/account relative" #accountMenu (keydown.escape)="accountMenu.open=false">
         <summary class="flex min-h-11 max-w-48 cursor-pointer list-none items-center gap-2 rounded-xl border border-blue-100 bg-white px-3 text-sm transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-blue-900 dark:bg-gray-800 dark:hover:border-blue-600 dark:hover:bg-blue-950 motion-reduce:transition-none [&::-webkit-details-marker]:hidden"><img *ngIf="cloud.auth.avatarUrl()" [src]="cloud.auth.avatarUrl()" alt="" class="h-7 w-7 rounded-full object-cover ring-2 ring-blue-100 transition-transform duration-200 group-hover/account:scale-105 dark:ring-blue-900 motion-reduce:transform-none motion-reduce:transition-none" /><span *ngIf="!cloud.auth.avatarUrl()" class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">{{cloud.auth.initials()}}</span><span class="truncate">{{cloud.auth.displayName()}}</span><app-icon name="chevron" class="text-blue-600 transition-transform duration-200 group-open/account:rotate-180 dark:text-blue-300 motion-reduce:transform-none motion-reduce:transition-none" /></summary>
         <div class="absolute right-0 z-50 mt-2 grid max-h-[70dvh] w-72 max-w-[calc(100vw-2rem)] gap-2 overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-600 dark:bg-gray-800">
@@ -47,6 +48,8 @@ import { NotificationsComponent } from '../shared/notifications.component';
 export class AccountBarComponent {
   readonly cloud=inject(CloudStorageProvider); restoreOpen=false;
   readonly syncNeedsAttention=computed(()=>/indisponible|réessayer|différée|illisible/i.test(this.cloud.status()));
+  readonly saveState=computed(()=>cloudIndicator(this.cloud.status(),this.cloud.auth.initializing(),!!this.cloud.auth.user(),!!this.cloud.conflict(),this.cloud.auth.sessionError()));
+  readonly saveLabel=computed(()=>this.cloud.auth.initializing() ? 'Vérification de la sauvegarde…' : this.cloud.auth.sessionError() || (this.saveState()==='saved' ? 'Sauvegarde cloud confirmée' : this.saveState()==='local' ? 'Mode local — aucune sauvegarde cloud' : this.cloud.status()));
   readonly signingOut=signal(false); readonly logoutError=signal('');
   async signOut() {
     if(this.signingOut()) return;

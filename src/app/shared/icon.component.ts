@@ -1,5 +1,8 @@
 import { Component, Input } from '@angular/core';
 const paths: Record<string,string> = {
+ cloud:'M7 19h11a4 4 0 0 0 1-7.9A7 7 0 0 0 5.2 9.2 5 5 0 0 0 7 19',
+ 'cloud-check':'M7 19h11a4 4 0 0 0 1-7.9A7 7 0 0 0 5.2 9.2 5 5 0 0 0 7 19 M9 13l2 2 4-4',
+ 'cloud-error':'M7 19h11a4 4 0 0 0 1-7.9A7 7 0 0 0 5.2 9.2 5 5 0 0 0 7 19 M10 11l4 4 M14 11l-4 4',
  bell:'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 21h4',
  logout:'M9 4H4v16h5 M14 8l4 4-4 4 M8 12h10',
  chevron:'m6 9 6 6 6-6', close:'m6 6 12 12 M18 6 6 18',
