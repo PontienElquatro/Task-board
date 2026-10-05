@@ -1,4 +1,5 @@
-<article *ngIf="task" [ngClass]="appearance.classes(task.status)" class="task-card group !rounded-2xl !p-3 !shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:!shadow-md motion-reduce:transform-none dark:border-gray-700">
+<article *ngIf="task" [ngClass]="appearance.classes(task.status)" class="group rounded-2xl border border-gray-200 p-4 shadow-sm transition-all duration-200 ease-in-out hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none motion-reduce:transition-none dark:border-gray-700 [overflow-wrap:anywhere]">
+ <div class="mb-2 flex items-center gap-2 text-[11px] font-medium text-gray-500 dark:text-gray-400"><span class="h-1.5 w-1.5 rounded-full bg-blue-500" [class.bg-orange-500]="task.status==='in-progress'" [class.bg-emerald-500]="task.status==='done'" aria-hidden="true"></span>{{task.status==='done'?'Terminé':task.status==='in-progress'?'En cours':'À faire'}}</div>
  <div class="flex items-start gap-1">
   <label class="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl hover:bg-blue-50 dark:hover:bg-indigo-950">
    <input type="checkbox" class="h-5 w-5 rounded-md accent-blue-600" [class.accent-emerald-600]="task.status==='done'" [attr.aria-label]="'Terminer ou rouvrir : ' + task.title" [disabled]="busy || !canProgress" [checked]="task.status==='done'" (change)="statusChange.emit(task.status==='done' ? 'in-progress' : 'done')" (pointerdown)="$event.stopPropagation()" />
@@ -14,15 +15,15 @@
    </div>
   </details>
  </div>
- <div *ngIf="task.priority==='high' || task.tags?.length" class="mt-1 flex flex-wrap gap-2 pl-12">
+ <div *ngIf="task.priority==='high' || task.tags?.length" class="mt-1 flex flex-wrap gap-2 pl-1">
   <span *ngIf="task.priority==='high'" class="rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700 dark:bg-red-950 dark:text-red-200">Prioritaire</span>
   <span *ngIf="task.tags?.length" class="max-w-40 truncate rounded-md bg-blue-50 px-2 py-1 text-[11px] font-medium text-blue-700 dark:bg-indigo-950 dark:text-blue-200">{{task.tags?.[0]}}<span *ngIf="(task.tags?.length || 0)>1"> +{{(task.tags?.length || 0)-1}}</span></span>
  </div>
- <div *ngIf="task.subTasks.length" class="mt-3 px-2">
+ <div *ngIf="task.subTasks.length" class="mt-4 rounded-xl bg-white/60 p-3 dark:bg-gray-900/40">
   <div class="mb-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400"><span class="flex items-center gap-1"><app-icon name="check" />Étapes</span><span [attr.aria-label]="'Sous-tâches terminées : '+getCompletedSubTasksCount()+' sur '+task.subTasks.length">{{getCompletedSubTasksCount()}}/{{task.subTasks.length}}</span></div>
   <div class="h-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700" role="progressbar" aria-label="Avancement des sous-tâches" [attr.aria-valuenow]="getCompletedSubTasksCount()" aria-valuemin="0" [attr.aria-valuemax]="task.subTasks.length"><div class="h-full rounded-full bg-blue-500 transition-all duration-200 motion-reduce:transition-none" [class.bg-emerald-500]="getCompletedSubTasksCount()===task.subTasks.length" [style.width.%]="100*getCompletedSubTasksCount()/task.subTasks.length"></div></div>
  </div>
- <footer *ngIf="responsible || task.dueDate" class="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-2 border-t border-gray-100 px-2 pt-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+ <footer *ngIf="responsible || task.dueDate" class="mt-3 flex min-h-8 flex-wrap items-center justify-between gap-2 border-t border-gray-200/60 pt-3 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
   <span *ngIf="task.dueDate" class="flex items-center gap-1 rounded-md px-2 py-1" [ngClass]="isLate() ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-200' : 'bg-gray-50 dark:bg-gray-900'"><app-icon name="calendar" />{{isLate() ? 'En retard · ' : ''}}{{task.dueDate | date:'dd/MM'}}</span>
   <span *ngIf="responsible" class="ml-auto flex items-center gap-2" [title]="responsible"><span class="max-w-28 truncate">{{responsible}}</span><app-avatar class="h-8 w-8" [name]="responsible" [url]="responsibleAvatar" /></span>
  </footer>
