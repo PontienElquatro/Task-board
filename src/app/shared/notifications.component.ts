@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal, PLATFORM_ID } from '@angular/core';
+import { Component, effect, inject, signal, untracked, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { IconComponent } from './icon.component';
 import { RouterLink } from '@angular/router';
@@ -36,7 +36,9 @@ export class NotificationsComponent {
   const account=this.auth.user()?.id;const epoch=++this.epoch;
   this.items.set([]);this.error.set('');this.live.set(false);this.busy.set(false);this.confirmClear.set(false);this.filter.set('all');this.unreadCount.set(0);
   if(!account||!isPlatformBrowser(this.platform))return;
-  void this.load();
+  // Track the account only: load() reads the filter synchronously.
+  // Tracking that read would reset the entire panel whenever the filter changes.
+  untracked(()=>void this.load());
   const channel=this.auth.client.channel('notifications-'+account+'-'+epoch)
    .on('postgres_changes',{event:'INSERT',schema:'public',table:'taskboard_notifications',filter:'user_id=eq.'+account},()=>{if(epoch===this.epoch)void this.load();})
    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'taskboard_notifications',filter:'user_id=eq.'+account},()=>{if(epoch===this.epoch)void this.load();})

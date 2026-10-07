@@ -3,6 +3,22 @@ import { PLATFORM_ID, signal } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { NotificationsComponent } from './notifications.component';
 
+describe('Notification filter isolation',()=>{
+ afterEach(()=>TestBed.resetTestingModule());
+ it('does not reinitialize the account effect when the filter changes',()=>{
+  const channel:any={on:()=>channel,subscribe:()=>channel};
+  const createChannel=jasmine.createSpy('channel').and.returnValue(channel);
+  TestBed.configureTestingModule({providers:[{provide:PLATFORM_ID,useValue:'browser'},{provide:AuthService,useValue:{user:signal({id:'account-a'}),client:{channel:createChannel,removeChannel:()=>Promise.resolve()}}}]});
+  const component=TestBed.runInInjectionContext(()=>new NotificationsComponent());
+  spyOn(component,'load').and.callFake(async()=>{component.filter();});
+  TestBed.tick();
+  component.setFilter('unread');
+  TestBed.tick();
+  expect(component.filter()).toBe('unread');
+  expect(createChannel).toHaveBeenCalledTimes(1);
+ });
+});
+
 describe('Notification dismissal',()=>{
  let component:NotificationsComponent;
  let query:any;
