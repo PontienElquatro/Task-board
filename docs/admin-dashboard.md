@@ -21,7 +21,15 @@ Limites explicites : la récupération complète de l’annuaire est adaptée à
 
 Vérification locale : tools/test-admin-edge.mjs simule 1 051 comptes sur deux lots et la deuxième page du journal. tools/test-admin-ui.mjs vérifie trois pages sur 125 comptes, la recherche globale et l’échappement CSV (guillemets et formules). La réception du téléchargement dans le navigateur reste à vérifier sur le nouveau frontend déployé.
 
-La suspension, suppression de compte et gestion des droits depuis la console ne sont pas implémentées. Elles exigent une gestion complète des sessions, des protections contre le retrait du dernier administrateur et un audit des mutations.
+Suspension/réactivation : depuis la fiche d’un compte standard, confirmation avec motif de 10 à 500 caractères, contrôle de concurrence et audit transactionnel (auteur, cible, motif et date). Tous les comptes Admin sont protégés, ainsi que le compte de l’opérateur. Les données sont conservées.
+
+La barrière immédiate est taskboard_account_status, vérifiée par les politiques restrictives sur les tables Ma’at, les écritures d’avatars et les RPC SECURITY DEFINER existantes. Le statut n’est pas dérivé de user_metadata ni d’un jeton pouvant être ancien. Auth est synchronisé via updateUserById/ban_duration (876000h ou none). Un échec de synchronisation est signalé à l’opérateur et inscrit dans le journal ; le statut DB reste autoritatif et ne fait jamais l’objet d’une réactivation automatique en compensation. Auth et Postgres ne sont pas une transaction distribuée : un échec/race de synchronisation Auth peut nécessiter une réparation par le propriétaire du backend. Aucun mot de passe n’est créé ou modifié.
+
+La suspension bloque les requêtes serveur, pas les données déjà téléchargées ou conservées hors ligne. Le bucket public d’avatars reste public ; ses fichiers existants ne sont pas effacés. La suppression de comptes et la gestion des droits Admin ne sont pas implémentées.
+
+Appliquer database/account-security.sql une seule fois, après les scripts existants, d’abord sur TEST. Après toute réinstallation d’une ancienne définition de RPC, réappliquer la garde de compte actif ; les migrations ultérieures doivent la préserver. database/account-security-test.sql vérifie les refus RLS/RPC en transaction annulée sur le compte fixture dédié.
+
+Les avis Supabase restent les avertissements préexistants concernant les RPC SECURITY DEFINER exposées (gardées ici) et la protection contre les mots de passe compromis désactivée. Références : https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable ; https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection .
 
 Les métriques Kanban (temps de cycle, débit et cumul des statuts) nécessitent un historique horodaté de transitions, absent aujourd’hui. Ne pas les déduire des dates d’échéance.
 

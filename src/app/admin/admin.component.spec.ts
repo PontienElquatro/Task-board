@@ -14,6 +14,21 @@ describe('AdminComponent',()=>{
     fixture=TestBed.createComponent(AdminComponent);fixture.detectChanges();
   });
   it('does not query administration for a guest',()=>{expect(invoke).not.toHaveBeenCalled();expect(fixture.nativeElement.textContent).toContain('Connexion nécessaire');});
+  it('protects admin and own accounts before showing a confirmation',()=>{
+    const c=fixture.componentInstance;
+    const account={id:'self',email:'test@example.invalid',createdAt:'2026-01-01',lastSignIn:null,confirmed:true,admin:true,updatedAt:null};
+    c.requestAccountAction(account);expect(c.pendingAccount).toBeNull();
+    user.set({id:'self'});
+    c.requestAccountAction({...account,admin:false});expect(c.pendingAccount).toBeNull();
+    c.requestAccountAction({...account,id:'other',admin:false});expect(c.pendingAccount?.id).toBe('other');
+  });
+  it('never submits an account action without a sufficient reason',async()=>{
+    const c=fixture.componentInstance;
+    c.pendingAccount={id:'other',email:'test@example.invalid',createdAt:'2026-01-01',lastSignIn:null,confirmed:true,admin:false,updatedAt:null};
+    c.actionReason='court';
+    await c.confirmAccountAction();
+    expect(invoke).not.toHaveBeenCalled();
+  });
   it('combines account filters and keeps page indicators scoped',()=>{
     const c=fixture.componentInstance;
     c.snapshot.set({total:75,page:1,workspaces:1,events:[],users:[

@@ -13,6 +13,11 @@ let auditFailure=false;
 let auditWrites=0;
 let metricsFailure=false;
 let directory=null;
+let actorSuspended=false;
+let banFailure=false;
+let mutationFailure=false;
+let mutationCalls=0;
+let bannedTarget='';
 const directoryPages=[];
 const auditRanges=[];
 const selections=[];
@@ -26,8 +31,10 @@ class Query {
   limit(){return this;}
   range(start,end){auditRanges.push([start,end]);return this;}
   insert(){if(this.table==='taskboard_admin_audit')auditWrites++;return this;}
+  update(){return this;}
   result(){
-    if(this.table==='taskboard_admin_allowlist')return {data:this.filters.email ? (allow ? {email:this.filters.email}:null) : [{email:'admin@example.invalid'}],error:permissionFailure ? {message:'lookup failed'}:null};
+    if(this.table==='taskboard_account_status')return {data:this.filters.user_id?{suspended:actorSuspended}:[],error:null};
+    if(this.table==='taskboard_admin_allowlist')return {data:this.filters.email ? (allow && this.filters.email===currentUser.email ? {email:this.filters.email}:null) : [{email:'admin@example.invalid'}],error:permissionFailure ? {message:'lookup failed'}:null};
     if(this.table==='taskboard_admin_audit')return {data:[],count:rate,error:auditFailure ? {message:'audit failed'}:null};
     return {data:[{user_id:'admin-id',updated_at:'2026-01-02'}],count:1,error:null};
   }
@@ -37,6 +44,14 @@ class Query {
 const client={auth:{getUser:async()=>({data:{user:currentUser},error:authError}),admin:{listUsers:async()=>({data:{users:[{...currentUser,created_at:'2026-01-01',user_metadata:{role:'admin'},identities:['PRIVATE'],password:'PRIVATE'}],total:1},error:null})}},from:table=>new Query(table)};
 const source=await readFile(new URL('../supabase/functions/taskboard-admin/index.ts',import.meta.url),'utf8');
 client.rpc=async()=>({data:{teams:1,sharedProjects:1,pendingInvitations:0,expiredInvitations:0,acceptedInvitations:1},error:metricsFailure?new Error('Unavailable'):null});
+const metricsRpc=client.rpc;
+client.rpc=async(name,args)=>{
+ if(name!=='taskboard_set_account_status')return metricsRpc();
+ mutationCalls++;
+ return {data:42,error:mutationFailure?{code:'PT409'}:null};
+};
+client.auth.admin.getUserById=async id=>({data:{user:{id,email:id.endsWith('002')?currentUser.email:'user@example.invalid'}},error:null});
+client.auth.admin.updateUserById=async(id,attributes)=>{bannedTarget=attributes.ban_duration;return {error:banFailure?new Error('Auth unavailable'):null};};
 const originalList=client.auth.admin.listUsers;
 client.auth.admin.listUsers=async({page,perPage})=>{
   directoryPages.push(page);
@@ -66,7 +81,7 @@ assert.equal(auditWrites,beforeCheck);
 metricsFailure=true;assert.equal((await handler(request())).status,503);metricsFailure=false;
 assert.equal((await handler(request({action:'suspend'}))).status,400);
 const snapshot=await result.json();
-assert.deepEqual(Object.keys(snapshot.users[0]).sort(),['admin','confirmed','createdAt','email','id','lastSignIn','updatedAt'].sort());
+assert.deepEqual(Object.keys(snapshot.users[0]).sort(),['admin','confirmed','createdAt','email','id','lastSignIn','updatedAt','suspended'].sort());
 assert.equal(snapshot.users[0].admin,true);
 assert.equal(snapshot.workspaces,1);
 assert.equal(snapshot.metrics.teams,1);
@@ -81,5 +96,16 @@ assert.deepEqual(auditRanges.at(-1),[30,59]);
 assert.equal(globalSnapshot.auditPage,2);
 assert.equal((await handler(request({auditPage:0}))).status,400);
 directory=null;
+actorSuspended=true;assert.equal((await handler(request())).status,403);actorSuspended=false;
+const accountAction={action:'suspend',targetId:'00000000-0000-4000-8000-000000000001',reason:'Motif de test uniquement',expectedSuspended:false};
+assert.equal((await handler(request({...accountAction,reason:'court'}))).status,400);
+assert.equal((await handler(request({...accountAction,targetId:'00000000-0000-4000-8000-000000000002'}))).status,403);
+const oldId=currentUser.id;currentUser.id=accountAction.targetId;
+assert.equal((await handler(request(accountAction))).status,403);currentUser.id=oldId;
+mutationFailure=true;assert.equal((await handler(request(accountAction))).status,409);mutationFailure=false;
+assert.equal((await handler(request(accountAction))).status,200);assert.equal(bannedTarget,'876000h');
+assert.equal((await handler(request({...accountAction,action:'reactivate',expectedSuspended:true}))).status,200);assert.equal(bannedTarget,'none');
+banFailure=true;const partial=await (await handler(request(accountAction))).json();assert.ok(partial.warning);banFailure=false;
+assert.ok(mutationCalls>=4);
 assert.ok(!selections.some(([table,fields])=>table==='taskboard_workspaces' && /data|\*/.test(fields)));
 console.log('Admin Edge: checks passed (authentication, permissions, role probe without audit, metrics failures, pagination, rate limit, private data).');

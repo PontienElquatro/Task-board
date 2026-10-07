@@ -25,17 +25,42 @@ Deno.serve(async (req:Request) => {
     const {data:allowed,error:permissionError}=await backend.from('taskboard_admin_allowlist').select('email').eq('email',user.email.toLowerCase()).maybeSingle();
     if (permissionError) throw permissionError;
     if (!allowed) return reply(403,{error:'Administrator required'});
+    const {data:actorStatus,error:statusError}=await backend.from('taskboard_account_status').select('suspended').eq('user_id',user.id).maybeSingle();
+    if(statusError) throw statusError;
+    if(actorStatus?.suspended) return reply(403,{error:'Account suspended'});
     const minuteAgo=new Date(Date.now()-60000).toISOString();
     const {count:recent,error:rateError}=await backend.from('taskboard_admin_audit').select('id',{count:'exact',head:true}).eq('actor_id',user.id).gte('created_at',minuteAgo);
     if (rateError) throw rateError;
     if ((recent ?? 0)>=30) return reply(429,{error:'Too many requests'});
     const raw=await req.text();
     if (raw.length>1024) return reply(413,{error:'Payload too large'});
-    let body: {page?:number;action?:string;auditPage?:number};
+    let body: {page?:number;action?:string;auditPage?:number;targetId?:string;reason?:string;expectedSuspended?:boolean};
     try { body=raw ? JSON.parse(raw) : {}; } catch { return reply(400,{error:'Invalid JSON'}); }
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage'].includes(key))) return reply(400,{error:'Invalid request'});
-    if(body.action!==undefined && body.action!=='check_access') return reply(400,{error:'Invalid action'});
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage','targetId','reason','expectedSuspended'].includes(key))) return reply(400,{error:'Invalid request'});
+    if(body.action!==undefined && !['check_access','suspend','reactivate'].includes(body.action)) return reply(400,{error:'Invalid action'});
     if(body.action==='check_access') return reply(200,{isAdmin:true});
+    if(body.action==='suspend'||body.action==='reactivate'){
+      if(typeof body.targetId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.targetId)
+        ||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.trim().length>500
+        ||typeof body.expectedSuspended!=='boolean') return reply(400,{error:'Invalid account action'});
+      if(body.targetId===user.id) return reply(403,{error:'Self action forbidden'});
+      const {data:targetData,error:targetError}=await backend.auth.admin.getUserById(body.targetId);
+      if(targetError||!targetData.user) return reply(404,{error:'Account not found'});
+      const target=targetData.user;
+      const {data:protectedRole,error:roleError}=await backend.from('taskboard_admin_allowlist').select('email').eq('email',(target.email??'').toLowerCase()).maybeSingle();
+      if(roleError) throw roleError;
+      if(protectedRole) return reply(403,{error:'Administrator accounts are protected'});
+      const suspended=body.action==='suspend';
+      const {data:auditId,error:mutationError}=await backend.rpc('taskboard_set_account_status',{
+        actor:user.id,actor_email:user.email,target:target.id,target_email:target.email??'',
+        new_suspended:suspended,expected_suspended:body.expectedSuspended,action_reason:body.reason.trim()
+      });
+      if(mutationError) return reply(mutationError.code==='PT409'?409:503,{error:'Account change rejected'});
+      // Database gate is authoritative even while Auth synchronization fails.
+      const {error:banError}=await backend.auth.admin.updateUserById(target.id,{ban_duration:suspended?'876000h':'none'});
+      const {error:syncAuditError}=await backend.from('taskboard_admin_audit').update({auth_sync:banError?'failed':'success'}).eq('id',auditId);
+      return reply(200,{suspended,warning:banError||syncAuditError?'Le statut est enregistré, mais la synchronisation Auth doit être vérifiée.':''});
+    }
     const page=body?.page ?? 1;
     if (!Number.isSafeInteger(page) || page<1 || page>10000) return reply(400,{error:'Invalid page'});
     const auditPage=body.auditPage??1;
@@ -62,18 +87,24 @@ Deno.serve(async (req:Request) => {
     }
     const adminEmails=new Set((roles.data ?? []).map(row=>row.email));
     const updates=new Map((spaces.data ?? []).map(row=>[row.user_id,row.updated_at]));
+    const suspendedIds=new Set<string>();
+    for(let offset=0;offset<ids.length;offset+=500){
+      const {data:statuses,error:statusesError}=await backend.from('taskboard_account_status').select('user_id,suspended').in('user_id',ids.slice(offset,offset+500));
+      if(statusesError) throw statusesError;
+      for(const row of statuses??[])if(row.suspended)suspendedIds.add(row.user_id);
+    }
     // Explicit safe projection: no passwords, identities, tokens, metadata or private workspace data.
     const users=accounts.data.users.map(account=>({
       id:account.id,email:account.email ?? '',createdAt:account.created_at,
       lastSignIn:account.last_sign_in_at ?? null,confirmed:!!account.email_confirmed_at,
       admin:!!account.email_confirmed_at && adminEmails.has((account.email ?? '').toLowerCase()),
-      updatedAt:updates.get(account.id) ?? null
+      updatedAt:updates.get(account.id) ?? null,suspended:suspendedIds.has(account.id)
     }));
     if(auditPage===1){
       const {error:auditError}=await backend.from('taskboard_admin_audit').insert({actor_id:user.id,action:'dashboard_view'});
       if (auditError) throw auditError;
     }
-    const {data:events,count:auditTotal,error:eventsError}=await backend.from('taskboard_admin_audit').select('id,actor_id,action,created_at',{count:'exact'}).order('created_at',{ascending:false}).order('id',{ascending:false}).range((auditPage-1)*30,auditPage*30-1);
+    const {data:events,count:auditTotal,error:eventsError}=await backend.from('taskboard_admin_audit').select('id,actor_id,action,created_at,target_id,reason,auth_sync',{count:'exact'}).order('created_at',{ascending:false}).order('id',{ascending:false}).range((auditPage-1)*30,auditPage*30-1);
     if (eventsError) throw eventsError;
     const {data:metrics,error:metricsError}=await backend.rpc('taskboard_admin_metrics');
     if(metricsError) throw metricsError;
