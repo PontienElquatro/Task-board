@@ -13,6 +13,10 @@ Deuxième lot : champs communs étendus aux paramètres, équipes, projets et ca
 Les changements de mode de connexion réinitialisent les états touched/dirty/submitted
 sans perdre l’email. Les erreurs redeviennent visibles après interaction.
 
+Troisième lot : en-têtes avec variantes sombres explicites et déconnexion compacte
+(icône accessible, cible 44 × 44 px, traitement neutre et rouge au survol).
+La logique de déconnexion reste inchangée. Validation visuelle après déploiement.
+
 À terminer : harmonisation des boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.

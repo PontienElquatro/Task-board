@@ -1,6 +1,6 @@
 <app-page-shell [hideHeader]="true" title="Projets d’équipe" description="Un tableau partagé pour chaque projet, avec des responsables clairement identifiés.">
 
- <section *ngIf="!projectId" class="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-800 to-indigo-950 p-6 text-white shadow-lg sm:p-8">
+ <section *ngIf="!projectId" class="relative mb-6 overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-800 to-indigo-950 dark:from-gray-950 dark:via-indigo-950 dark:to-gray-900 p-6 text-white shadow-lg sm:p-8">
   <div aria-hidden="true" class="pointer-events-none absolute -right-8 -top-8 h-48 w-48 rounded-full border-[24px] border-white/5"></div>
   <div class="relative flex flex-wrap items-start justify-between gap-6"><div class="max-w-xl"><span class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium"><app-icon name="team" />Espace collaboratif</span><h1 class="mt-4 text-3xl font-semibold tracking-tight">Des projets. Une équipe.</h1><p class="mt-3 text-sm leading-6 text-blue-100">Répartissez les actions et avancez ensemble dans un tableau clair.</p></div><div class="rounded-2xl border border-white/20 bg-white/10 px-5 py-4"><p class="text-3xl font-semibold">{{projects().length}}</p><p class="mt-1 text-xs text-blue-100">projets dans cette équipe</p></div></div>
  </section>
@@ -26,7 +26,7 @@
   <ng-container *ngIf="projectId">
    <button class="flex min-h-11 items-center gap-2 text-sm text-blue-700 dark:text-blue-300" (click)="selectProject('')"><app-icon name="folder" />Tous les projets de l’équipe</button>
    <header class="overflow-hidden rounded-3xl border border-blue-200 bg-white shadow-sm dark:border-indigo-900 dark:bg-gray-800">
-    <div class="bg-gradient-to-br from-blue-600 via-blue-800 to-indigo-950 p-6 text-white sm:p-8">
+    <div class="bg-gradient-to-br from-blue-600 via-blue-800 to-indigo-950 dark:from-gray-950 dark:via-indigo-950 dark:to-gray-900 p-6 text-white sm:p-8">
      <div class="flex flex-wrap items-start justify-between gap-4"><div><p class="text-xs font-medium uppercase tracking-wider text-blue-100">{{currentTeam()?.name}} / Projet partagé</p><h1 class="mt-3 break-words text-3xl font-semibold tracking-tight">{{projectName()}}</h1></div><div class="flex items-center gap-3"><div class="flex -space-x-2"><app-avatar *ngFor="let member of teamMembers() | slice:0:5" class="h-10 w-10" [name]="member.display_name" [url]="member.avatar_url" /></div><span class="text-xs text-blue-100">{{teamMembers().length}} membres</span></div></div>
      <p class="mt-4 flex items-center gap-2 text-xs text-blue-100"><app-icon name="refresh" />{{liveStatus()}}</p>
     </div>
