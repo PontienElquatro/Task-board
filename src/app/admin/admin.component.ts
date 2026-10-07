@@ -16,6 +16,8 @@ export class AdminComponent {
   readonly loading=signal(false);
   readonly error=signal('');
   search='';
+  section='overview';
+  readonly sections=[{id:'overview',label:'Vue d’ensemble'},{id:'users',label:'Utilisateurs'},{id:'audit',label:'Journal'},{id:'settings',label:'Paramètres'}];
   private generation=0;
   constructor() {
     effect(() => {
@@ -37,6 +39,7 @@ export class AdminComponent {
       if (generation!==this.generation) return;
       if (error || !data || data.error) throw new Error('Accès réservé aux administrateurs confirmés. Si vous êtes autorisé, vérifiez votre connexion puis réessayez.');
       this.snapshot.set(data);
+      this.auth.adminAccess.set(true);
     } catch (error) {
       if (generation===this.generation) { this.snapshot.set(null); this.error.set(error instanceof Error ? error.message : 'Service indisponible.'); }
     } finally { if (generation===this.generation) this.loading.set(false); }

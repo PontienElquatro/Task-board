@@ -13,6 +13,7 @@ export class AuthService {
   readonly user = signal<User | null>(null);
   readonly initializing = signal(true);
   readonly recovering = signal(false);
+  readonly adminAccess = signal(false);
   readonly sessionError = signal('');
   readonly displayName = computed(() => profileName(this.user()?.user_metadata, this.user() ? 'Mon compte' : 'Espace local'));
   readonly initials = computed(() => profileInitials(this.displayName()));
@@ -29,7 +30,10 @@ export class AuthService {
     let authEventReceived = false;
     this.client.auth.onAuthStateChange((event, session) => {
       authEventReceived = true;
+      const accountChanged=this.user()?.id!==session?.user?.id;
       this.user.set(session?.user ?? null);
+      if(accountChanged || !session) this.adminAccess.set(false);
+      if(session && (accountChanged || event==='INITIAL_SESSION')) setTimeout(()=>void this.isAdmin(),0);
       this.sessionError.set('');
       this.initializing.set(false);
       if (event === 'PASSWORD_RECOVERY') {
@@ -43,6 +47,7 @@ export class AuthService {
       if (authEventReceived) return;
       if (error) { this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.'); return; }
       this.user.set(data.session?.user ?? null);
+      if(data.session) void this.isAdmin();
       this.initializing.set(false);
     }).catch(() => {
       if (!authEventReceived) this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.');
@@ -68,8 +73,17 @@ export class AuthService {
 
   async isAdmin() {
     if (!this.user()) return false;
-    const {data,error}=await this.client.functions.invoke('taskboard-admin',{body:{page:1}});
-    return !error && !!data && !data.error;
+    const accountId=this.user()!.id;
+    try {
+      const {data,error}=await this.client.functions.invoke('taskboard-admin',{body:{page:1}});
+      if(this.user()?.id!==accountId) return false;
+      const allowed=!error && !!data && !data.error;
+      this.adminAccess.set(allowed);
+      return allowed;
+    } catch {
+      if(this.user()?.id===accountId) this.adminAccess.set(false);
+      return false;
+    }
   }
   async updateProfile(input: { displayName?: string; firstName?:string; lastName?:string; email?: string; avatarUrl?: string | null }) {
     const displayName = input.displayName?.trim();
