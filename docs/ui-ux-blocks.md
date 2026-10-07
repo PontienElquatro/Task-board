@@ -28,6 +28,14 @@ actions de création de tâches personnelles/partagées adaptées au mobile.
 Les états vides ne masquent pas un chargement ou une erreur de projets partagés.
 Validation visuelle sur déploiement encore requise.
 
+Contrôles live qx9h3dsvn : déconnexion 44 × 44 px avec infobulle ; archives et retour ;
+validation titre de tâche partagée, Échap et retour du focus ; recherche sans résultat.
+À 390 × 844 : liste des projets sans débordement de page, modale projet et retour
+du focus vérifiés sans sauvegarde. Le header sur deux lignes a été compacté en masquant
+le nom de marque sur mobile uniquement (logo et nom accessible conservés).
+Cette correction doit être vérifiée sur le prochain déploiement.
+Accès /admin refusé au compte standard ; contrôles admin connecté encore requis.
+
 À terminer : harmonisation des autres boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.

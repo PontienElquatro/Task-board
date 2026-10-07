@@ -15,7 +15,7 @@ import { ThemeService } from '../services/theme.service';
 <app-sync-conflict *ngIf="cloud.conflict()" />
 <header class="sticky top-0 z-50 border-b border-gray-200 bg-white px-4 py-2 text-gray-900 transition-colors duration-200 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 sm:px-6 motion-reduce:transition-none" aria-label="Compte et sauvegarde">
   <div class="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-2">
-    <a routerLink="/board" class="flex min-h-11 items-center gap-2 rounded-lg font-semibold" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /> Ma’at</a>
+    <a routerLink="/board" class="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-lg font-semibold" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /><span class="hidden sm:inline">Ma’at</span></a>
     <div class="flex min-w-0 items-center gap-1 sm:gap-2">
       <button type="button" class="group/theme inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 transition-colors duration-200 hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-indigo-950 dark:text-blue-200 dark:hover:bg-indigo-900 motion-reduce:transition-none" (click)="theme.toggleDarkMode()" [attr.aria-label]="theme.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'" [title]="theme.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'"><app-icon [name]="theme.darkMode() ? 'sun' : 'moon'" class="transition-transform duration-200 group-hover/theme:-rotate-12 motion-reduce:transform-none motion-reduce:transition-none" /></button>
       <app-notifications />
