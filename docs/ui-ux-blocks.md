@@ -47,6 +47,11 @@ désactivée si vide (personnel/équipe), action Annuler pour le projet partagé
 focus initial et défilement de la fenêtre personnelle sur écran court.
 Appels de création et permissions inchangés ; validation live du lot à faire.
 
+Huitième lot : suppression personnelle et abandon de saisie personnel/équipe
+avec actions sûres explicites, actions destructives rouges, focus visible et boutons
+adaptés au mobile ; avertissements lisibles en sombre. Logique inchangée.
+Validation visuelle des confirmations encore requise, sans suppression réelle.
+
 À terminer : harmonisation des autres boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.
