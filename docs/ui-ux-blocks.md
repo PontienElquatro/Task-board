@@ -17,7 +17,12 @@ Troisième lot : en-têtes avec variantes sombres explicites et déconnexion com
 (icône accessible, cible 44 × 44 px, traitement neutre et rouge au survol).
 La logique de déconnexion reste inchangée. Validation visuelle après déploiement.
 
-À terminer : harmonisation des boutons et états vides ; vérification complète
+Quatrième lot : sélecteur de thème dans le header global ; états vides du tableau
+avec hiérarchie des actions et focus visibles ; recherche de projets réinitialisable ;
+actions du formulaire de projet adaptées au mobile et libellés création/modification.
+Ces changements restent à valider visuellement sur le prochain déploiement.
+
+À terminer : harmonisation des autres boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.
 La compilation Angular seule ne constitue pas une validation visuelle.
