@@ -36,6 +36,12 @@ le nom de marque sur mobile uniquement (logo et nom accessible conservés).
 Cette correction doit être vérifiée sur le prochain déploiement.
 Accès /admin refusé au compte standard ; contrôles admin connecté encore requis.
 
+Sixième lot : fenêtres admin au-dessus du header fixe, confirmation imbriquée au-dessus
+de la fiche ; statut actif/suspendu lisible en sombre ; titres longs cassables ;
+confirmation de suspension rouge et libellé explicite ; actions adaptées au mobile.
+Permissions, motif obligatoire et appels de suspension/réactivation inchangés.
+Validation visuelle du lot encore requise.
+
 À terminer : harmonisation des autres boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.
