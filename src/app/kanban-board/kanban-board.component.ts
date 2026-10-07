@@ -4,7 +4,6 @@ import { IconComponent } from '../shared/icon.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TaskService } from '../services/task.service';
-import { ThemeService } from '../services/theme.service';
 import { Task, Status } from '../models';
 import { TaskColumnComponent } from '../task-column/task-column.component';
 import { TaskModalComponent } from '../task-modal/task-modal.component';
@@ -54,7 +53,6 @@ export class KanbanBoardComponent {
   saveProject() { this.safely(()=>{const id=this.projectService.save(this.projectDraft,this.editingProjectId); this.openBoard(); this.taskService.filterProject.set(id); this.projectEditor=false; this.projectDraft=''; this.editingProjectId=undefined;}); }
   editProject(id:string) {this.editingProjectId=id; this.projectDraft=this.projectService.projects().find(p=>p.id===id)?.title ?? ''; this.projectEditor=true;}
   archiveProject(id:string) {this.safely(()=>this.projectService.archive(id));}
-  readonly themeService = inject(ThemeService);
   readonly archiveOpen = signal(false);
   readonly importing = signal(false);
   readonly modalError = signal('');

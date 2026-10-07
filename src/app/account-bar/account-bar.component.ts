@@ -10,12 +10,14 @@ import { cloudIndicator } from '../core/cloud-indicator';
 import { NotificationsComponent } from '../shared/notifications.component';
 import { DismissMenuDirective } from '../shared/dismiss-menu.directive';
 import { AvatarComponent } from '../shared/avatar.component';
+import { ThemeService } from '../services/theme.service';
 @Component({selector:'app-account-bar',standalone:true,imports:[DismissMenuDirective,AvatarComponent,IconComponent,CommonModule,RouterLink,SyncConflictComponent,DeviceRestoreComponent,BrandComponent,NotificationsComponent],template: `
 <app-sync-conflict *ngIf="cloud.conflict()" />
 <header class="sticky top-0 z-50 border-b border-gray-200 bg-white px-4 py-2 text-gray-900 transition-colors duration-200 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 sm:px-6 motion-reduce:transition-none" aria-label="Compte et sauvegarde">
   <div class="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-2">
     <a routerLink="/board" class="flex min-h-11 items-center gap-2 rounded-lg font-semibold" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /> Ma’at</a>
     <div class="flex min-w-0 items-center gap-1 sm:gap-2">
+      <button type="button" class="group/theme inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 transition-colors duration-200 hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-indigo-950 dark:text-blue-200 dark:hover:bg-indigo-900 motion-reduce:transition-none" (click)="theme.toggleDarkMode()" [attr.aria-label]="theme.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'" [title]="theme.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'"><app-icon [name]="theme.darkMode() ? 'sun' : 'moon'" class="transition-transform duration-200 group-hover/theme:-rotate-12 motion-reduce:transform-none motion-reduce:transition-none" /></button>
       <app-notifications />
       <span class="flex min-h-11 min-w-11 items-center justify-center rounded-xl transition-colors duration-200 motion-reduce:transition-none" [ngClass]="saveState()==='saved' ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300' : saveState()==='error' ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300' : saveState()==='local' ? 'bg-gray-50 text-gray-500 dark:bg-gray-900 dark:text-gray-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'" role="status" aria-live="polite" [title]="saveLabel()"><app-icon [name]="saveState()==='saved' ? 'cloud-check' : saveState()==='error' ? 'cloud-error' : 'cloud'" /><span class="sr-only">{{saveLabel()}}</span></span>
       <details appDismissMenu class="group/account relative" #accountMenu>
@@ -51,6 +53,7 @@ import { AvatarComponent } from '../shared/avatar.component';
 </header>
 <app-device-restore *ngIf="restoreOpen" />`})
 export class AccountBarComponent {
+  readonly theme=inject(ThemeService);
   readonly cloud=inject(CloudStorageProvider); restoreOpen=false;
   readonly syncNeedsAttention=computed(()=>/indisponible|réessayer|différée|illisible/i.test(this.cloud.status()));
   readonly saveState=computed(()=>cloudIndicator(this.cloud.status(),this.cloud.auth.initializing(),!!this.cloud.auth.user(),!!this.cloud.conflict(),this.cloud.auth.sessionError()));
