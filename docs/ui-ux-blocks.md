@@ -42,6 +42,11 @@ confirmation de suspension rouge et libellé explicite ; actions adaptées au mo
 Permissions, motif obligatoire et appels de suspension/réactivation inchangés.
 Validation visuelle du lot encore requise.
 
+Septième lot : nom de projet obligatoire avec erreur près du champ et création
+désactivée si vide (personnel/équipe), action Annuler pour le projet partagé,
+focus initial et défilement de la fenêtre personnelle sur écran court.
+Appels de création et permissions inchangés ; validation live du lot à faire.
+
 À terminer : harmonisation des autres boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.
