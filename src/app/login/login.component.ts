@@ -1,7 +1,7 @@
 import { UiFieldDirective } from '../shared/ui-field.directive';
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { CloudStorageProvider } from '../providers/cloud-storage.provider';
@@ -10,6 +10,7 @@ import { BrandComponent } from '../shared/brand/brand.component';
 import { IconComponent } from '../shared/icon.component';
 @Component({selector:'app-login',standalone:true,imports:[UiFieldDirective,CommonModule,FormsModule,RouterLink,BrandComponent,IconComponent],templateUrl:'./login.component.html'})
 export class LoginComponent {
+  @ViewChild('accountForm') accountForm?:NgForm;
   readonly auth=inject(AuthService);
   readonly cloud=inject(CloudStorageProvider);
   private readonly router=inject(Router);
@@ -18,7 +19,7 @@ export class LoginComponent {
   firstName='';lastName='';email=''; password=''; confirmation='';
   showPassword=false;showConfirmation=false;
   readonly busy=signal(false); readonly message=signal(''); readonly error=signal('');
-  setMode(mode: 'login'|'signup'|'reset'|'recovery') { this.mode=mode; this.password=''; this.confirmation=''; this.showPassword=false;this.showConfirmation=false; this.error.set(''); this.message.set(''); }
+  setMode(mode: 'login'|'signup'|'reset'|'recovery') { this.mode=mode; this.password=''; this.confirmation=''; this.showPassword=false;this.showConfirmation=false; this.error.set(''); this.message.set('');this.accountForm?.resetForm({email:this.email,firstName:this.firstName,lastName:this.lastName,password:'',confirmation:''}); }
   async submit() {
     if(this.busy()) return;
     this.error.set(''); this.message.set(''); this.busy.set(true);

@@ -9,8 +9,12 @@ tâches partagées et administration ; indication accessible des champs invalide
 messages de titre obligatoire ; verrouillage du défilement des modales admin.
 La logique de validation et les permissions restent inchangées.
 
-À terminer : champs des paramètres, projets et calendrier ; harmonisation des
-boutons et états vides ; vérification complète mobile, sombre, clavier et contraste.
+Deuxième lot : champs communs étendus aux paramètres, équipes, projets et calendrier.
+Les changements de mode de connexion réinitialisent les états touched/dirty/submitted
+sans perdre l’email. Les erreurs redeviennent visibles après interaction.
+
+À terminer : harmonisation des boutons et états vides ; vérification complète
+mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.
 La compilation Angular seule ne constitue pas une validation visuelle.
 

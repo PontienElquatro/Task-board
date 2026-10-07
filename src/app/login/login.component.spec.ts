@@ -27,6 +27,17 @@ describe('LoginComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+  it('réinitialise la validation au changement de mode sans perdre l’email',async()=>{
+    await fixture.whenStable();
+    const email=fixture.nativeElement.querySelector('#account-email') as HTMLInputElement;
+    email.value='adresse-invalide';email.dispatchEvent(new Event('input'));email.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();await fixture.whenStable();fixture.detectChanges();
+    expect(email.getAttribute('aria-invalid')).toBe('true');
+    component.setMode('signup');fixture.detectChanges();await fixture.whenStable();fixture.detectChanges();
+    expect(component.email).toBe('adresse-invalide');
+    expect(email.getAttribute('aria-invalid')).toBeNull();
+    expect(component.accountForm?.touched).toBeFalse();
+  });
   it('affiche des champs nommés et le lien de récupération',()=>{
     const element=fixture.nativeElement as HTMLElement;
     expect(element.querySelector('label[for="account-email"]')).toBeTruthy();
