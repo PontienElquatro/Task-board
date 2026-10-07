@@ -75,9 +75,9 @@ export class AuthService {
     if (!this.user()) return false;
     const accountId=this.user()!.id;
     try {
-      const {data,error}=await this.client.functions.invoke('taskboard-admin',{body:{page:1}});
+      const {data,error}=await this.client.functions.invoke('taskboard-admin',{body:{action:'check_access'}});
       if(this.user()?.id!==accountId) return false;
-      const allowed=!error && !!data && !data.error;
+      const allowed=!error && data?.isAdmin===true;
       this.adminAccess.set(allowed);
       return allowed;
     } catch {

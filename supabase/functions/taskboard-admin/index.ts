@@ -31,9 +31,11 @@ Deno.serve(async (req:Request) => {
     if ((recent ?? 0)>=30) return reply(429,{error:'Too many requests'});
     const raw=await req.text();
     if (raw.length>1024) return reply(413,{error:'Payload too large'});
-    let body: {page?:number};
+    let body: {page?:number;action?:string};
     try { body=raw ? JSON.parse(raw) : {}; } catch { return reply(400,{error:'Invalid JSON'}); }
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>key!=='page')) return reply(400,{error:'Invalid request'});
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action'].includes(key))) return reply(400,{error:'Invalid request'});
+    if(body.action!==undefined && body.action!=='check_access') return reply(400,{error:'Invalid action'});
+    if(body.action==='check_access') return reply(200,{isAdmin:true});
     const page=body?.page ?? 1;
     if (!Number.isSafeInteger(page) || page<1 || page>10000) return reply(400,{error:'Invalid page'});
     const [accounts, countResult, roles]=await Promise.all([
@@ -58,7 +60,9 @@ Deno.serve(async (req:Request) => {
     if (auditError) throw auditError;
     const {data:events,error:eventsError}=await backend.from('taskboard_admin_audit').select('id,actor_id,action,created_at').order('created_at',{ascending:false}).limit(30);
     if (eventsError) throw eventsError;
-    return reply(200,{users,total:accounts.data.total,page,workspaces:countResult.count ?? 0,events});
+    const {data:metrics,error:metricsError}=await backend.rpc('taskboard_admin_metrics');
+    if(metricsError) throw metricsError;
+    return reply(200,{users,total:accounts.data.total,page,workspaces:countResult.count ?? 0,events,metrics,generatedAt:new Date().toISOString()});
   } catch {
     return reply(503,{error:'Admin service unavailable'});
   }

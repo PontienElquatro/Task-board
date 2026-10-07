@@ -14,6 +14,17 @@ describe('AdminComponent',()=>{
     fixture=TestBed.createComponent(AdminComponent);fixture.detectChanges();
   });
   it('does not query administration for a guest',()=>{expect(invoke).not.toHaveBeenCalled();expect(fixture.nativeElement.textContent).toContain('Connexion nécessaire');});
+  it('combines account filters and keeps page indicators scoped',()=>{
+    const c=fixture.componentInstance;
+    c.snapshot.set({total:75,page:1,workspaces:1,events:[],users:[
+      {id:'a',email:'admin@example.invalid',createdAt:'2026-01-01',lastSignIn:new Date().toISOString(),confirmed:true,admin:true,updatedAt:'2026-01-02'},
+      {id:'b',email:'new@example.invalid',createdAt:'2026-02-01',lastSignIn:null,confirmed:false,admin:false,updatedAt:null}
+    ]});
+    c.roleFilter='user';c.confirmationFilter='pending';c.syncFilter='none';
+    expect(c.filteredUsers().map(u=>u.id)).toEqual(['b']);
+    expect(c.confirmedCount()).toBe(1);expect(c.activeCount()).toBe(1);expect(c.pageCount()).toBe(2);
+    c.resetFilters();expect(c.filteredUsers().length).toBe(2);
+  });
   it('clears data when access is denied',async()=>{user.set({id:'user'});fixture.detectChanges();await fixture.whenStable();expect(fixture.componentInstance.snapshot()).toBeNull();expect(fixture.componentInstance.error()).toContain('Accès réservé');});
   it('ignores a delayed admin reply after logout',async()=>{
     let finish!:(value:unknown)=>void;
