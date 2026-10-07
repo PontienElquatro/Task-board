@@ -6,7 +6,8 @@ La console admin supervise les comptes et l’adoption. Les tableaux des projets
 
 - Vue d’ensemble : comptes, espaces cloud, équipes et projets partagés.
 - Adoption : confirmations et connexions sur 30 jours sur tous les comptes. L’annuaire est récupéré intégralement côté serveur puis projeté en champs sûrs ; recherche, tri et pagination de 50 comptes opèrent sur cet annuaire complet.
-- Utilisateurs : recherche par email/ID, filtres par rôle/confirmation/synchronisation, tri, pagination, fiche et copie d’identifiant.
+- Utilisateurs : recherche par email/ID, filtres par statut actif/suspendu, rôle/confirmation/synchronisation, tri, pagination, fiche modale accessible et copie d’identifiant. Le statut actif désigne l’absence de suspension, pas une présence en ligne.
+- Fiche : statut visible et raccourci vers les événements du compte. Le journal filtre par cible et par action sur la page courante ; parcourir les pages pour retrouver les événements anciens. Ce raccourci n’est pas un historique exhaustif chargé en une seule requête.
 - Collaboration : compteurs globaux des invitations acceptées, en attente et expirées. Une invitation annulée est supprimée et ne figure pas dans ces totaux.
 - Journal : historique paginé par 30 consultations, recherche et export CSV de la page filtrée affichée. Les contrôles de rôle et la navigation vers les anciennes pages n’écrivent pas une nouvelle consultation.
 - Paramètres : accès au profil et au mot de passe de l’administrateur.
