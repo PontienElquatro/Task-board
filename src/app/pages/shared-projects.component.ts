@@ -1,3 +1,4 @@
+import { UiFieldDirective } from '../shared/ui-field.directive';
 import { HostListener, Component, effect, inject, signal, untracked, DestroyRef, afterNextRender, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +24,7 @@ interface Subtask {id:string;task_id:string;team_id:string;title:string;complete
 interface Project {id:string;team_id:string;title:string;}
 interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;start_date?:string|null;end_date?:string|null;}
 
-@Component({standalone:true,imports:[ModalScrollLockDirective,AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
+@Component({standalone:true,imports:[UiFieldDirective,ModalScrollLockDirective,AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
 export class SharedProjectsComponent {
  startDate='';endDate='';
  readonly validSchedule=validSchedule;

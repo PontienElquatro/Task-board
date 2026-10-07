@@ -1,3 +1,4 @@
+import { UiFieldDirective } from '../shared/ui-field.directive';
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +8,7 @@ import { CloudStorageProvider } from '../providers/cloud-storage.provider';
 import { normalizeTasks } from '../models/task-utils';
 import { BrandComponent } from '../shared/brand/brand.component';
 import { IconComponent } from '../shared/icon.component';
-@Component({selector:'app-login',standalone:true,imports:[CommonModule,FormsModule,RouterLink,BrandComponent,IconComponent],templateUrl:'./login.component.html'})
+@Component({selector:'app-login',standalone:true,imports:[UiFieldDirective,CommonModule,FormsModule,RouterLink,BrandComponent,IconComponent],templateUrl:'./login.component.html'})
 export class LoginComponent {
   readonly auth=inject(AuthService);
   readonly cloud=inject(CloudStorageProvider);

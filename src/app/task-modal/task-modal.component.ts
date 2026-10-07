@@ -1,3 +1,4 @@
+import { UiFieldDirective } from '../shared/ui-field.directive';
 import { Component, Input, Output, EventEmitter, OnChanges, inject, ChangeDetectionStrategy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,7 @@ import { GoalService } from '../services/goal.service';
 import { dayKey } from '../models/task-utils';
 import { ProjectService } from '../services/project.service';
 import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
-@Component({ selector: 'app-task-modal', standalone: true, imports: [ModalScrollLockDirective, IconComponent, CommonModule, FormsModule, A11yModule], templateUrl: './task-modal.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
+@Component({ selector: 'app-task-modal', standalone: true, imports: [UiFieldDirective,ModalScrollLockDirective, IconComponent, CommonModule, FormsModule, A11yModule], templateUrl: './task-modal.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskModalComponent implements OnChanges {
   @Input() task: Task | null = null;
   @Input() mode: 'view' | 'edit' | 'delete' = 'view';

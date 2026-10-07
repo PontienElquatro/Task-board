@@ -6,6 +6,8 @@ import { AuthService } from '../services/auth.service';
 import { IconComponent } from '../shared/icon.component';
 import { AvatarComponent } from '../shared/avatar.component';
 import { A11yModule } from '@angular/cdk/a11y';
+import { UiFieldDirective } from '../shared/ui-field.directive';
+import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
 
 interface AdminUser { id:string; email:string; createdAt:string; lastSignIn:string|null; confirmed:boolean; admin:boolean; updatedAt:string|null; suspended?:boolean; }
 interface AuditEvent { id:number; action:string; created_at:string; actor_id:string; target_id?:string|null;reason?:string|null;auth_sync?:string|null; }
@@ -13,7 +15,7 @@ interface AdminTeam {id:string;name:string;owner_id:string;created_at:string;}
 interface TeamDetail {team:AdminTeam;members:number;projects:number;accepted:number;pending:number;expired:number;}
 interface AdminSnapshot { users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; auditPage?:number;auditTotal?:number;generatedAt?:string; metrics?:{teams:number;sharedProjects:number;pendingInvitations:number;expiredInvitations:number;acceptedInvitations:number}; }
 
-@Component({selector:'app-admin',standalone:true,imports:[CommonModule,FormsModule,RouterLink,IconComponent,AvatarComponent,A11yModule],templateUrl:'./admin.component.html'})
+@Component({selector:'app-admin',standalone:true,imports:[UiFieldDirective,ModalScrollLockDirective,CommonModule,FormsModule,RouterLink,IconComponent,AvatarComponent,A11yModule],templateUrl:'./admin.component.html'})
 export class AdminComponent {
   readonly auth=inject(AuthService);
   readonly snapshot=signal<AdminSnapshot|null>(null);
