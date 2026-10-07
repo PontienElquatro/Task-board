@@ -31,7 +31,7 @@
     </ng-container>
     <ng-template #archives>
       <div class="toolbar-actions archive-tools"><button class="quiet" [disabled]="!taskService.canUndo()" (click)="taskService.undo()"><app-icon name="undo" class="text-blue-600 dark:text-blue-300" /> Annuler</button><button class="quiet" (click)="exportBackup()">Exporter les tâches</button></div>
-      <div class="welcome" *ngIf="!taskService.archivedTasks().length"><h2>Aucune tâche archivée.</h2><p>Les tâches archivées apparaîtront ici et pourront être restaurées.</p></div>
+      <section *ngIf="!taskService.archivedTasks().length" class="rounded-2xl border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-900"><span class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300"><app-icon name="archive" /></span><h2 class="text-lg font-semibold">Aucune tâche archivée</h2><p class="mx-auto mt-2 max-w-md text-sm leading-6 text-gray-600 dark:text-gray-300">Archivez les tâches à conserver sans encombrer votre tableau. Vous pourrez les restaurer ici.</p><button class="secondary mt-5 min-h-11 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600" (click)="openBoard()">Retour au tableau</button></section>
       <article class="archive-row" *ngFor="let task of taskService.archivedTasks()"><div><h2>{{ task.title }}</h2><p>{{ task.description }}</p></div><div class="toolbar-actions"><button class="secondary" (click)="restore(task)">Restaurer</button><button class="quiet danger-text" (click)="handleTaskDelete(task)">Supprimer</button></div></article>
     </ng-template>
   </main>

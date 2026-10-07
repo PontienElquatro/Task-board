@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PageShellComponent } from './page-shell.component';
 import { AuthService } from '../services/auth.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { IconComponent } from '../shared/icon.component';
 import { ToastService } from '../services/toast.service';
@@ -24,7 +24,7 @@ interface Subtask {id:string;task_id:string;team_id:string;title:string;complete
 interface Project {id:string;team_id:string;title:string;}
 interface SharedTask {id:string;project_id:string;team_id:string;title:string;description:string;status:string;assignee_id:string|null;start_date?:string|null;end_date?:string|null;}
 
-@Component({standalone:true,imports:[UiFieldDirective,ModalScrollLockDirective,AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
+@Component({standalone:true,imports:[RouterLink,UiFieldDirective,ModalScrollLockDirective,AvatarComponent,A11yModule,TaskCardComponent,IconComponent,CommonModule,FormsModule,PageShellComponent],templateUrl:'./shared-projects.component.html'})
 export class SharedProjectsComponent {
  startDate='';endDate='';
  readonly validSchedule=validSchedule;

@@ -22,6 +22,12 @@ avec hiérarchie des actions et focus visibles ; recherche de projets réinitial
 actions du formulaire de projet adaptées au mobile et libellés création/modification.
 Ces changements restent à valider visuellement sur le prochain déploiement.
 
+Cinquième lot : états vides des projets partagés selon le rôle, accès connexion/équipes,
+messages distincts par colonne et par filtres ; retour au tableau depuis les archives ;
+actions de création de tâches personnelles/partagées adaptées au mobile.
+Les états vides ne masquent pas un chargement ou une erreur de projets partagés.
+Validation visuelle sur déploiement encore requise.
+
 À terminer : harmonisation des autres boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.
