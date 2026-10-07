@@ -8,7 +8,7 @@ import { AvatarComponent } from '../shared/avatar.component';
 
 interface AdminUser { id:string; email:string; createdAt:string; lastSignIn:string|null; confirmed:boolean; admin:boolean; updatedAt:string|null; }
 interface AuditEvent { id:number; action:string; created_at:string; actor_id:string; }
-interface AdminSnapshot { users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; generatedAt?:string; metrics?:{teams:number;sharedProjects:number;pendingInvitations:number;expiredInvitations:number;acceptedInvitations:number}; }
+interface AdminSnapshot { users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; auditPage?:number;auditTotal?:number;generatedAt?:string; metrics?:{teams:number;sharedProjects:number;pendingInvitations:number;expiredInvitations:number;acceptedInvitations:number}; }
 
 @Component({selector:'app-admin',standalone:true,imports:[CommonModule,FormsModule,RouterLink,IconComponent,AvatarComponent],templateUrl:'./admin.component.html'})
 export class AdminComponent {
@@ -17,6 +17,7 @@ export class AdminComponent {
   readonly loading=signal(false);
   readonly error=signal('');
   search='';
+  userPage=1;
   section='overview';
   roleFilter='';confirmationFilter='';syncFilter='';auditSearch='';sort='recent';selectedUser:AdminUser|null=null;notice='';
   readonly sections=[{id:'overview',label:'Vue d’ensemble',icon:'chart'},{id:'users',label:'Utilisateurs',icon:'user'},{id:'collaboration',label:'Collaboration',icon:'team'},{id:'audit',label:'Journal',icon:'shield'},{id:'settings',label:'Paramètres',icon:'settings'}];
@@ -31,16 +32,19 @@ export class AdminComponent {
       });
     });
   }
-  filteredUsers() {
+  matchingUsers() {
     const query=this.search.trim().toLocaleLowerCase();
     return (this.snapshot()?.users??[]).filter(u=>(u.email.toLocaleLowerCase().includes(query)||u.id.includes(query))&&(!this.roleFilter||(this.roleFilter==='admin'?u.admin:!u.admin))&&(!this.confirmationFilter||(this.confirmationFilter==='confirmed'?u.confirmed:!u.confirmed))&&(!this.syncFilter||(this.syncFilter==='cloud'?!!u.updatedAt:!u.updatedAt))).sort((a,b)=>this.sort==='email'?a.email.localeCompare(b.email):this.sort==='activity'?(b.lastSignIn??'').localeCompare(a.lastSignIn??''):b.createdAt.localeCompare(a.createdAt));
   }
-  pageCount(){return Math.max(1,Math.ceil((this.snapshot()?.total??0)/50));}
+  filteredUsers(){return this.matchingUsers().slice((this.userPage-1)*50,this.userPage*50);}
+  pageCount(){return Math.max(1,Math.ceil(this.matchingUsers().length/50));}
+  auditPageCount(){return Math.max(1,Math.ceil((this.snapshot()?.auditTotal??0)/30));}
+  filtersChanged(){this.userPage=1;this.selectedUser=null;}
   confirmedCount(){return this.snapshot()?.users.filter(u=>u.confirmed).length??0;}
   activeCount(){const cutoff=Date.now()-30*86400000;return this.snapshot()?.users.filter(u=>u.lastSignIn&&new Date(u.lastSignIn).getTime()>=cutoff).length??0;}
   auditEvents(){const q=this.auditSearch.trim().toLowerCase();return this.snapshot()?.events.filter(e=>(e.actor_id+' '+this.actorLabel(e.actor_id)+' '+e.action).toLowerCase().includes(q))??[];}
   actorLabel(id:string){return this.snapshot()?.users.find(u=>u.id===id)?.email??id;}
-  resetFilters(){this.search='';this.roleFilter='';this.confirmationFilter='';this.syncFilter='';}
+  resetFilters(){this.search='';this.roleFilter='';this.confirmationFilter='';this.syncFilter='';this.filtersChanged();}
   async copyId(id:string){try{await navigator.clipboard.writeText(id);this.notice='Identifiant copié.';}catch{this.notice='Copie indisponible. Sélectionnez l’identifiant dans la fiche.';}}
   exportAudit(){
     const rows=[['Date UTC','Action','Compte'],...this.auditEvents().map(e=>[e.created_at,e.action,this.actorLabel(e.actor_id)])];
@@ -48,15 +52,16 @@ export class AdminComponent {
     const url=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
     const link=document.createElement('a');link.href=url;link.download='maat-journal-admin.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
-  async load(page=1) {
+  async load(page=1,auditPage=this.snapshot()?.auditPage??1) {
     if (!this.auth.user()) return;
     const generation=++this.generation;
     this.loading.set(true); this.error.set('');
     try {
-      const {data,error}=await this.auth.client.functions.invoke('taskboard-admin',{body:{page}});
+      const {data,error}=await this.auth.client.functions.invoke('taskboard-admin',{body:{page,auditPage}});
       if (generation!==this.generation) return;
       if (error || !data || data.error) throw new Error('Accès réservé aux administrateurs confirmés. Si vous êtes autorisé, vérifiez votre connexion puis réessayez.');
       this.snapshot.set(data);
+      this.filtersChanged();
       this.auth.adminAccess.set(true);
     } catch (error) {
       if (generation===this.generation) { this.snapshot.set(null); this.error.set(error instanceof Error ? error.message : 'Service indisponible.'); }

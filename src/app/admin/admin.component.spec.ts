@@ -22,7 +22,7 @@ describe('AdminComponent',()=>{
     ]});
     c.roleFilter='user';c.confirmationFilter='pending';c.syncFilter='none';
     expect(c.filteredUsers().map(u=>u.id)).toEqual(['b']);
-    expect(c.confirmedCount()).toBe(1);expect(c.activeCount()).toBe(1);expect(c.pageCount()).toBe(2);
+    expect(c.confirmedCount()).toBe(1);expect(c.activeCount()).toBe(1);expect(c.pageCount()).toBe(1);
     c.resetFilters();expect(c.filteredUsers().length).toBe(2);
   });
   it('clears data when access is denied',async()=>{user.set({id:'user'});fixture.detectChanges();await fixture.whenStable();expect(fixture.componentInstance.snapshot()).toBeNull();expect(fixture.componentInstance.error()).toContain('Accès réservé');});

@@ -12,6 +12,9 @@ let permissionFailure=false;
 let auditFailure=false;
 let auditWrites=0;
 let metricsFailure=false;
+let directory=null;
+const directoryPages=[];
+const auditRanges=[];
 const selections=[];
 class Query {
   constructor(table){this.table=table;this.filters={};}
@@ -21,6 +24,7 @@ class Query {
   in(){return this;}
   order(){return this;}
   limit(){return this;}
+  range(start,end){auditRanges.push([start,end]);return this;}
   insert(){if(this.table==='taskboard_admin_audit')auditWrites++;return this;}
   result(){
     if(this.table==='taskboard_admin_allowlist')return {data:this.filters.email ? (allow ? {email:this.filters.email}:null) : [{email:'admin@example.invalid'}],error:permissionFailure ? {message:'lookup failed'}:null};
@@ -33,6 +37,11 @@ class Query {
 const client={auth:{getUser:async()=>({data:{user:currentUser},error:authError}),admin:{listUsers:async()=>({data:{users:[{...currentUser,created_at:'2026-01-01',user_metadata:{role:'admin'},identities:['PRIVATE'],password:'PRIVATE'}],total:1},error:null})}},from:table=>new Query(table)};
 const source=await readFile(new URL('../supabase/functions/taskboard-admin/index.ts',import.meta.url),'utf8');
 client.rpc=async()=>({data:{teams:1,sharedProjects:1,pendingInvitations:0,expiredInvitations:0,acceptedInvitations:1},error:metricsFailure?new Error('Unavailable'):null});
+const originalList=client.auth.admin.listUsers;
+client.auth.admin.listUsers=async({page,perPage})=>{
+  directoryPages.push(page);
+  return directory?{data:{users:directory.slice((page-1)*perPage,page*perPage),total:directory.length},error:null}:originalList();
+};
 vm.runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;\s*/,'')),{createClient:()=>client,Deno:{env:{get:name=>name==='SUPABASE_SECRET_KEYS' ? '{"default":"test-only-key"}':'https://test.invalid'},serve:fn=>handler=fn},Response,Request,Date,Set,Map,JSON,Number,Error});
 const request=(body={},token='valid')=>new Request('https://test.invalid',{method:'POST',headers:token ? {Authorization:'Bearer '+token}: {},body:JSON.stringify(body)});
 assert.equal((await handler(request({},null))).status,401);
@@ -62,5 +71,15 @@ assert.equal(snapshot.users[0].admin,true);
 assert.equal(snapshot.workspaces,1);
 assert.equal(snapshot.metrics.teams,1);
 assert.ok(snapshot.generatedAt);
+directory=Array.from({length:1051},(_,i)=>({...currentUser,id:'account-'+i,email:'account'+i+'@example.invalid',created_at:'2026-01-01'}));
+directoryPages.length=0;
+const globalSnapshot=await (await handler(request({auditPage:2}))).json();
+assert.equal(globalSnapshot.users.length,1051);
+assert.equal(globalSnapshot.total,1051);
+assert.deepEqual(directoryPages,[1,2]);
+assert.deepEqual(auditRanges.at(-1),[30,59]);
+assert.equal(globalSnapshot.auditPage,2);
+assert.equal((await handler(request({auditPage:0}))).status,400);
+directory=null;
 assert.ok(!selections.some(([table,fields])=>table==='taskboard_workspaces' && /data|\*/.test(fields)));
 console.log('Admin Edge: checks passed (authentication, permissions, role probe without audit, metrics failures, pagination, rate limit, private data).');
