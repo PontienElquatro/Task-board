@@ -9,6 +9,8 @@ import { A11yModule } from '@angular/cdk/a11y';
 
 interface AdminUser { id:string; email:string; createdAt:string; lastSignIn:string|null; confirmed:boolean; admin:boolean; updatedAt:string|null; suspended?:boolean; }
 interface AuditEvent { id:number; action:string; created_at:string; actor_id:string; target_id?:string|null;reason?:string|null;auth_sync?:string|null; }
+interface AdminTeam {id:string;name:string;owner_id:string;created_at:string;}
+interface TeamDetail {team:AdminTeam;members:number;projects:number;accepted:number;pending:number;expired:number;}
 interface AdminSnapshot { users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; auditPage?:number;auditTotal?:number;generatedAt?:string; metrics?:{teams:number;sharedProjects:number;pendingInvitations:number;expiredInvitations:number;acceptedInvitations:number}; }
 
 @Component({selector:'app-admin',standalone:true,imports:[CommonModule,FormsModule,RouterLink,IconComponent,AvatarComponent,A11yModule],templateUrl:'./admin.component.html'})
@@ -18,6 +20,10 @@ export class AdminComponent {
   readonly loading=signal(false);
   readonly error=signal('');
   search='';
+  readonly teamDirectory=signal<{teams:AdminTeam[];total:number;page:number}|null>(null);
+  readonly teamDetail=signal<TeamDetail|null>(null);
+  readonly teamLoading=signal(false);readonly teamError=signal('');teamSearch='';
+  private teamRequest=0;
   statusFilter='';auditAction='';auditTarget='';
   userPage=1;
   pendingAccount:AdminUser|null=null;
@@ -34,6 +40,7 @@ export class AdminComponent {
       const initializing=this.auth.initializing();
       untracked(() => {
         this.generation++; this.snapshot.set(null); this.error.set(''); this.resetFilters();this.auditSearch='';this.auditAction='';this.auditTarget='';this.selectedUser=null;this.notice=''; this.loading.set(false);this.pendingAccount=null;this.actionReason='';this.actionError.set('');
+        this.teamRequest++;this.teamDirectory.set(null);this.teamDetail.set(null);this.teamLoading.set(false);this.teamError.set('');this.teamSearch='';
         if (!initializing && user) void this.load(1);
       });
     });
@@ -41,6 +48,18 @@ export class AdminComponent {
   matchingUsers() {
     const query=this.search.trim().toLocaleLowerCase();
     return (this.snapshot()?.users??[]).filter(u=>(u.email.toLocaleLowerCase().includes(query)||u.id.includes(query))&&(!this.statusFilter||(this.statusFilter==='suspended'?!!u.suspended:!u.suspended))&&(!this.roleFilter||(this.roleFilter==='admin'?u.admin:!u.admin))&&(!this.confirmationFilter||(this.confirmationFilter==='confirmed'?u.confirmed:!u.confirmed))&&(!this.syncFilter||(this.syncFilter==='cloud'?!!u.updatedAt:!u.updatedAt))).sort((a,b)=>this.sort==='email'?a.email.localeCompare(b.email):this.sort==='activity'?(b.lastSignIn??'').localeCompare(a.lastSignIn??''):b.createdAt.localeCompare(a.createdAt));
+  }
+  visibleTeams(){const q=this.teamSearch.trim().toLowerCase();return this.teamDirectory()?.teams.filter(t=>(t.name+' '+this.actorLabel(t.owner_id)+' '+t.id).toLowerCase().includes(q))??[];}
+  async loadTeams(page=1,teamId?:string){
+    const actor=this.auth.user()?.id;if(!actor)return;
+    const request=++this.teamRequest;this.teamLoading.set(true);this.teamError.set('');this.teamDetail.set(null);
+    try{
+      const {data,error}=await this.auth.client.functions.invoke('taskboard-admin',{body:teamId?{action:'team_detail',teamId}:{action:'collaboration',page}});
+      if(request!==this.teamRequest||actor!==this.auth.user()?.id)return;
+      if(error||!data||data.error)throw new Error('Supervision indisponible. Réessayez.');
+      if(teamId)this.teamDetail.set(data);else this.teamDirectory.set(data);
+    }catch(error){if(request===this.teamRequest)this.teamError.set(error instanceof Error?error.message:'Supervision indisponible.');}
+    finally{if(request===this.teamRequest)this.teamLoading.set(false);}
   }
   filteredUsers(){return this.matchingUsers().slice((this.userPage-1)*50,this.userPage*50);}
   pageCount(){return Math.max(1,Math.ceil(this.matchingUsers().length/50));}

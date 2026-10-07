@@ -34,11 +34,37 @@ Deno.serve(async (req:Request) => {
     if ((recent ?? 0)>=30) return reply(429,{error:'Too many requests'});
     const raw=await req.text();
     if (raw.length>1024) return reply(413,{error:'Payload too large'});
-    let body: {page?:number;action?:string;auditPage?:number;targetId?:string;reason?:string;expectedSuspended?:boolean};
+    let body: {page?:number;action?:string;auditPage?:number;targetId?:string;reason?:string;expectedSuspended?:boolean;teamId?:string};
     try { body=raw ? JSON.parse(raw) : {}; } catch { return reply(400,{error:'Invalid JSON'}); }
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage','targetId','reason','expectedSuspended'].includes(key))) return reply(400,{error:'Invalid request'});
-    if(body.action!==undefined && !['check_access','suspend','reactivate'].includes(body.action)) return reply(400,{error:'Invalid action'});
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage','targetId','reason','expectedSuspended','teamId'].includes(key))) return reply(400,{error:'Invalid request'});
+    if(body.action!==undefined && !['check_access','suspend','reactivate','collaboration','team_detail'].includes(body.action)) return reply(400,{error:'Invalid action'});
     if(body.action==='check_access') return reply(200,{isAdmin:true});
+    if(body.action==='collaboration'||body.action==='team_detail'){
+      const page=body.page??1;
+      if(!Number.isSafeInteger(page)||page<1||page>10000)return reply(400,{error:'Invalid page'});
+      const {error:consultationError}=await backend.from('taskboard_admin_audit').insert({actor_id:user.id,action:'dashboard_view'});
+      if(consultationError)throw consultationError;
+      if(body.action==='collaboration'){
+        const result=await backend.from('taskboard_teams').select('id,name,owner_id,created_at',{count:'exact'}).order('created_at',{ascending:false}).order('id',{ascending:false}).range((page-1)*50,page*50-1);
+        if(result.error)throw result.error;
+        return reply(200,{teams:result.data??[],total:result.count??0,page});
+      }
+      if(typeof body.teamId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.teamId))return reply(400,{error:'Invalid team'});
+      const team=await backend.from('taskboard_teams').select('id,name,owner_id,created_at').eq('id',body.teamId).maybeSingle();
+      if(team.error)throw team.error;
+      if(!team.data)return reply(404,{error:'Team not found'});
+      const now=new Date().toISOString();
+      const invitations=()=>backend.from('taskboard_team_invitations').select('id',{count:'exact',head:true}).eq('team_id',body.teamId);
+      const counts=await Promise.all([
+        backend.from('taskboard_team_members').select('user_id',{count:'exact',head:true}).eq('team_id',body.teamId),
+        backend.from('taskboard_shared_projects').select('id',{count:'exact',head:true}).eq('team_id',body.teamId),
+        invitations().not('accepted_at','is',null),
+        invitations().is('accepted_at',null).gt('expires_at',now),
+        invitations().is('accepted_at',null).lte('expires_at',now)
+      ]);
+      if(counts.some(result=>result.error))throw new Error('Incomplete team detail');
+      return reply(200,{team:team.data,members:counts[0].count??0,projects:counts[1].count??0,accepted:counts[2].count??0,pending:counts[3].count??0,expired:counts[4].count??0});
+    }
     if(body.action==='suspend'||body.action==='reactivate'){
       if(typeof body.targetId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.targetId)
         ||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.trim().length>500

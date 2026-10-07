@@ -26,6 +26,10 @@ class Query {
   select(fields){selections.push([this.table,fields]);return this;}
   eq(field,value){this.filters[field]=value;return this;}
   gte(){return this;}
+  gt(){return this;}
+  lte(){return this;}
+  is(){return this;}
+  not(){return this;}
   in(){return this;}
   order(){return this;}
   limit(){return this;}
@@ -33,6 +37,7 @@ class Query {
   insert(){if(this.table==='taskboard_admin_audit')auditWrites++;return this;}
   update(){return this;}
   result(){
+    if(this.table==='taskboard_teams')return {data:this.filters.id?{id:this.filters.id,name:'Team',owner_id:'owner',created_at:'2026-01-01'}:[{id:'team',name:'Team',owner_id:'owner',created_at:'2026-01-01'}],count:1,error:null};
     if(this.table==='taskboard_account_status')return {data:this.filters.user_id?{suspended:actorSuspended}:[],error:null};
     if(this.table==='taskboard_admin_allowlist')return {data:this.filters.email ? (allow && this.filters.email===currentUser.email ? {email:this.filters.email}:null) : [{email:'admin@example.invalid'}],error:permissionFailure ? {message:'lookup failed'}:null};
     if(this.table==='taskboard_admin_audit')return {data:[],count:rate,error:auditFailure ? {message:'audit failed'}:null};
@@ -81,6 +86,14 @@ assert.equal(auditWrites,beforeCheck);
 metricsFailure=true;assert.equal((await handler(request())).status,503);metricsFailure=false;
 assert.equal((await handler(request({action:'suspend'}))).status,400);
 const snapshot=await result.json();
+const collaboration=await handler(request({action:'collaboration'}));assert.equal(collaboration.status,200);
+const teamPage=await collaboration.json();assert.equal(teamPage.teams[0].name,'Team');
+assert.equal((await handler(request({action:'team_detail',teamId:'invalid'}))).status,400);
+assert.equal((await handler(request({action:'collaboration',page:0}))).status,400);
+allow=false;assert.equal((await handler(request({action:'collaboration'}))).status,403);allow=true;
+const detail=await handler(request({action:'team_detail',teamId:'00000000-0000-4000-8000-000000000061'}));assert.equal(detail.status,200);
+assert.equal((await detail.json()).members,1);
+assert.ok(!selections.some(([table,fields])=>table==='taskboard_team_invitations'&&(fields.includes('email')||fields.includes('token'))));
 assert.deepEqual(Object.keys(snapshot.users[0]).sort(),['admin','confirmed','createdAt','email','id','lastSignIn','updatedAt','suspended'].sort());
 assert.equal(snapshot.users[0].admin,true);
 assert.equal(snapshot.workspaces,1);
