@@ -52,6 +52,11 @@ avec actions sûres explicites, actions destructives rouges, focus visible et bo
 adaptés au mobile ; avertissements lisibles en sombre. Logique inchangée.
 Validation visuelle des confirmations encore requise, sans suppression réelle.
 
+Neuvième lot : calendrier vide avec explication et réinitialisation des filtres,
+indication des tâches sans dates, notifications vides différenciées selon le filtre,
+confirmation d’effacement explicite et focus clavier des boutons concernés.
+Validation visuelle sur déploiement encore requise.
+
 À terminer : harmonisation des autres boutons et états vides ; vérification complète
 mobile, sombre, clavier et contraste ; validation des formulaires personnels/équipe.
 Le test UiField est ajouté et compilé, mais son exécution navigateur reste à faire.
