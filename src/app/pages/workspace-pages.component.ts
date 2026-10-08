@@ -104,8 +104,14 @@ export class CalendarComponent {
 }
 
 @Component({standalone:true,imports:[UiFieldDirective,...imports,FormsModule,AvatarComponent],template:`
-<app-page-shell title="Profil et paramètres" description="Votre compte, votre apparence et vos préférences Ma’at.">
- <div class="mb-6 flex flex-wrap items-center gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-900 dark:from-gray-950 dark:to-indigo-950 p-6 text-white"><app-avatar class="h-16 w-16" [name]="auth.displayName()" [url]="auth.avatarUrl()" /><div><p class="text-xs text-blue-100">VOTRE ESPACE MA’AT</p><h2 class="mt-1 text-xl font-semibold">{{auth.displayName()}}</h2><p class="mt-1 text-sm text-blue-100">Un profil reconnaissable. Un espace à votre image.</p></div></div>
+<app-page-shell
+    [title]="adminContext ? 'Mon profil administrateur' : 'Mon compte et paramètres'"
+    [description]="adminContext ? 'Les informations et la sécurité de votre compte administrateur.' : 'Votre profil, votre sécurité et les préférences de cet appareil.'">
+    <a *ngIf="adminContext" routerLink="/admin"
+      class="mb-4 inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-blue-700 focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-blue-300">
+      ← Retour à la console d’administration
+    </a>
+ <div class="mb-6 flex flex-wrap items-center gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-900 dark:from-gray-950 dark:to-indigo-950 p-6 text-white"><app-avatar class="h-16 w-16" [name]="auth.displayName()" [url]="auth.avatarUrl()" /><div><p class="text-xs text-blue-100">{{adminContext ? 'VOTRE COMPTE ADMINISTRATEUR' : 'VOTRE COMPTE MA’AT'}}</p><h2 class="mt-1 text-xl font-semibold">{{auth.displayName()}}</h2><p class="mt-1 text-sm text-blue-100">Un profil reconnaissable. Un espace à votre image.</p></div></div>
  <nav aria-label="Sections des paramètres" class="mb-6 flex flex-wrap gap-2"><button *ngFor="let item of settingSections" class="min-h-11 rounded-xl border border-blue-100 px-4 py-2 text-sm font-medium dark:border-indigo-900" [class.bg-blue-600]="section===item.id" [class.text-white]="section===item.id" [attr.aria-pressed]="section===item.id" (click)="section=item.id">{{item.label}}</button></nav>
  <p *ngIf="!auth.user()" class="mb-4 rounded-xl bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">Connectez-vous pour modifier votre profil et votre photo. L’apparence reste accessible sans compte.</p>
  <section class="grid gap-4">
@@ -117,7 +123,9 @@ export class CalendarComponent {
  </section>
  <section *ngIf="section==='backup'" class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900"><h2 class="font-semibold">Sauvegarde et récupération</h2><p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">Ouvrez le menu de votre compte pour exporter vos copies ou résoudre un problème de synchronisation. Ne supprimez pas vos données navigateur avant d’avoir téléchargé une sauvegarde.</p><a routerLink="/help" class="secondary mt-4 min-h-11">Comprendre les sauvegardes</a></section>
 </app-page-shell>`})
-export class SettingsComponent {section='profile';readonly settingSections=[{id:'profile',label:'Profil'},{id:'appearance',label:'Apparence'},{id:'security',label:'Sécurité'},{id:'backup',label:'Sauvegardes'}];firstName='';lastName='';readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly theme=inject(ThemeService); readonly auth=inject(AuthService); displayName=''; email=''; busy=false; message='';newPassword='';confirmPassword='';showNewPassword=false;showConfirmPassword=false;passwordMessage='';passwordSuccess='';
+export class SettingsComponent {
+ readonly adminContext = inject(Router).url.split(/[?#]/)[0] === '/admin/settings';
+section='profile';readonly settingSections=[{id:'profile',label:'Profil'},{id:'appearance',label:'Apparence'},{id:'security',label:'Sécurité'},{id:'backup',label:'Sauvegardes'}];firstName='';lastName='';readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly theme=inject(ThemeService); readonly auth=inject(AuthService); displayName=''; email=''; busy=false; message='';newPassword='';confirmPassword='';showNewPassword=false;showConfirmPassword=false;passwordMessage='';passwordSuccess='';
  constructor(){effect(()=>{const user=this.auth.user(); this.email=user?.email??'';this.firstName=String(user?.user_metadata?.['first_name']??'');this.lastName=String(user?.user_metadata?.['last_name']??''); this.displayName=String(user?.user_metadata?.['full_name']??user?.user_metadata?.['name']??'');});}
  async saveProfile(){if(this.busy)return; this.busy=true; this.message=''; try{await this.auth.updateProfile({displayName:this.displayName,firstName:this.firstName,lastName:this.lastName,email:this.email});this.toast.success('Profil enregistré.');}catch(e){this.message=e instanceof Error?e.message:'Mise à jour impossible.';}finally{this.busy=false;}}
  async uploadAvatar(event:Event){const file=(event.target as HTMLInputElement).files?.[0];if(!file)return;this.busy=true;this.message='';try{await this.auth.uploadAvatar(file);this.toast.success('Photo de profil enregistrée.');}catch(e){this.message=e instanceof Error?e.message:'Import impossible.';}finally{this.busy=false;(event.target as HTMLInputElement).value='';}}
@@ -135,10 +143,70 @@ export class SettingsComponent {section='profile';readonly settingSections=[{id:
 export class TeamComponent {readonly toast=inject(ToastService);readonly teams=inject(TeamService);readonly auth=inject(AuthService);private readonly route=inject(ActivatedRoute);private readonly router=inject(Router);removalId='';teamName='';inviteEmails:Record<string,string>={};inviteRoles:Record<string,Exclude<TeamRole,'owner'>>={};busy=false;message='';constructor(){effect(()=>{if(!this.auth.initializing())untracked(()=>void this.load());});}async load(){try{const invitation=this.route.snapshot.queryParamMap.get('invitation'),token=this.route.snapshot.queryParamMap.get('token');if(invitation&&token&&this.auth.user()){this.busy=true;await this.teams.accept(invitation,token);this.message='';this.toast.success('Invitation acceptée. Bienvenue dans l’équipe.');await this.router.navigate(['/team']);}if(!this.auth.user()){this.message=invitation?'Connectez-vous avec l’adresse invitée, puis rouvrez ce lien pour rejoindre l’équipe.':'Connectez-vous pour consulter vos équipes.';return;}await this.teams.load();}catch(e){this.message=e instanceof Error?e.message:'Invitation ou chargement impossible.';}finally{this.busy=false;}}async create(){if(this.busy)return;this.busy=true;this.message='';try{await this.teams.create(this.teamName);this.teamName='';this.message='';this.toast.success('Équipe créée.');}catch(e){this.message=e instanceof Error?e.message:'Création impossible.';}finally{this.busy=false;}}async invite(teamId:string){if(this.busy)return;this.busy=true;this.message='';try{await this.teams.invite(teamId,this.inviteEmails[teamId]??'',this.inviteRoles[teamId]??'member');this.inviteEmails[teamId]='';this.message='';this.toast.success('Invitation envoyée.');}catch(e){this.message=e instanceof Error?e.message:'Invitation impossible.';}finally{this.busy=false;}}async cancelInvitation(id:string){if(this.busy)return;this.busy=true;try{await this.teams.cancel(id);this.message='';this.toast.success('Invitation annulée. Son lien ne permet plus de rejoindre l’équipe.');}catch(e){this.message=e instanceof Error?e.message:'Annulation impossible.';}finally{this.busy=false;}}async manageMember(teamId:string,userId:string,role:string|null){if(this.busy)return;this.busy=true;this.message='';try{await this.teams.manageMember(teamId,userId,role);this.removalId='';this.toast.success(role?'Rôle mis à jour.':'Membre retiré.');}catch(e){this.message=e instanceof Error?e.message:'Modification impossible.';}finally{this.busy=false;}}}
 
 @Component({standalone:true,imports:[...imports,GettingStartedComponent],template:`
-<app-page-shell title="Aide et démarrage" description="Les premiers pas pour garder un espace simple et fiable."><app-getting-started [force]="true" /><section class="grid gap-4 sm:grid-cols-3"><article *ngFor="let step of steps; let i=index" class="rounded-xl border border-gray-200 p-4 dark:border-gray-700"><p class="text-xs text-blue-700 dark:text-blue-300">Étape {{i+1}}</p><h2 class="mt-2 font-semibold">{{step.title}}</h2><p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{step.text}}</p><a [routerLink]="step.link" class="secondary mt-4 min-h-11">{{step.action}}</a></article></section><section class="mt-8"><h2 class="mb-4 text-lg font-semibold">Questions fréquentes</h2><details *ngFor="let item of faq" class="mb-2 rounded-xl border border-gray-200 p-4 dark:border-gray-700"><summary class="min-h-11 cursor-pointer py-2 font-semibold">{{item.q}}</summary><p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{item.a}}</p></details></section><p class="mt-8 text-sm text-gray-600 dark:text-gray-300">Raccourcis dans le tableau : N pour créer une tâche, / pour rechercher. Ils sont désactivés pendant la saisie d’un champ.</p></app-page-shell>`})
+<app-page-shell title="Aide et démarrage" description="Les premiers pas pour garder un espace simple et fiable."><app-getting-started [force]="true" /><section class="grid gap-4 sm:grid-cols-3"><article *ngFor="let step of steps; let i=index" class="rounded-xl border border-gray-200 p-4 dark:border-gray-700"><p class="text-xs text-blue-700 dark:text-blue-300">Étape {{i+1}}</p><h2 class="mt-2 font-semibold">{{step.title}}</h2><p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{step.text}}</p><a [routerLink]="step.link" class="secondary mt-4 min-h-11">{{step.action}}</a></article></section><section class="mt-8 rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:border-indigo-900 dark:from-blue-950 dark:to-indigo-950 sm:p-6">
+    <p class="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Besoin d’un repère ?</p>
+    <h2 class="mt-2 text-2xl font-semibold">Questions fréquentes</h2>
+    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+      Compte, sauvegarde, tâches et collaboration : retrouvez les réponses essentielles.
+    </p>
+    <div class="mt-6 grid gap-3">
+      <details *ngFor="let item of faq"
+        class="group rounded-2xl border border-blue-100 bg-white p-4 shadow-sm open:border-blue-300 dark:border-indigo-800 dark:bg-gray-900 sm:p-5">
+        <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
+          <span class="min-w-0">
+            <span class="mb-2 block text-xs font-medium text-blue-700 dark:text-blue-300">{{item.category}}</span>
+            <span class="block text-sm font-semibold sm:text-base">{{item.q}}</span>
+          </span>
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700 transition-transform group-open:rotate-45 dark:bg-blue-950 dark:text-blue-300 motion-reduce:transition-none" aria-hidden="true">+</span>
+        </summary>
+        <p class="mt-4 border-t border-blue-100 pt-4 text-sm leading-7 text-gray-600 dark:border-indigo-900 dark:text-gray-300">{{item.a}}</p>
+      </details>
+    </div>
+  </section><p class="mt-8 text-sm text-gray-600 dark:text-gray-300">Raccourcis dans le tableau : N pour créer une tâche, / pour rechercher. Ils sont désactivés pendant la saisie d’un champ.</p></app-page-shell>`})
 export class HelpComponent {
- readonly steps=[{title:'Créez une tâche',text:'Ajoutez un titre, une priorité et, si utile, une échéance.',link:'/board',action:'Ouvrir le tableau'},{title:'Structurez un projet',text:'Créez un projet puis associez vos tâches depuis leurs détails.',link:'/projects',action:'Mes projets'},{title:'Vérifiez la sauvegarde',text:'Connectez-vous et attendez la confirmation de synchronisation.',link:'/login',action:'Mon compte'}];
- readonly faq=[{q:'Où sont mes tâches sans compte ?',a:'Sur cet appareil. Elles ne sont pas automatiquement disponibles sur un autre navigateur. Exportez une sauvegarde avant de vider les données du navigateur.'},{q:'Que signifie « Sauvegardé » ?',a:'La synchronisation avec le compte est confirmée. Si un message de conflit ou d’erreur apparaît, utilisez les outils de récupération du menu compte avant de quitter la session.'},{q:'Pourquoi une tâche n’apparaît-elle pas ?',a:'Vérifiez les filtres de statut, de projet et les filtres avancés. Effacez les filtres et consultez les archives.'},{q:'Comment utiliser le calendrier ?',a:'Renseignez une échéance dans les détails de la tâche. Le calendrier affiche les échéances des tâches actives ; les tâches archivées n’y figurent pas.'},{q:'Puis-je inviter une équipe ?',a:'Oui. Ouvrez Équipe pour créer votre équipe et inviter un membre par email. Les projets partagés se trouvent dans Projets d’équipe.'}];
+ readonly steps=[{title:'Créez une tâche',text:'Ajoutez un titre, une priorité et, si utile, une échéance.',link:'/board',action:'Ouvrir le tableau'},{title:'Structurez un projet',text:'Créez un projet puis associez vos tâches depuis leurs détails.',link:'/projects',action:'Mes projets'},{title:'Vérifiez la sauvegarde',text:'Connectez-vous et attendez la confirmation de synchronisation.',link:'/settings',action:'Mon compte'}];
+ readonly faq=[
+  {
+    "category": "Compte",
+    "q": "Où modifier mon profil et mon mot de passe ?",
+    "a": "Ouvrez Mon compte depuis le menu de votre avatar. La section Profil contient votre nom, votre email et votre photo. La section Sécurité permet de modifier votre mot de passe."
+  },
+  {
+    "category": "Sauvegarde",
+    "q": "Où sont mes tâches lorsque je travaille sans compte ?",
+    "a": "Elles sont conservées dans ce navigateur, sur cet appareil. Elles ne suivent pas automatiquement sur un autre appareil. Exportez une copie avant de vider les données du navigateur."
+  },
+  {
+    "category": "Sauvegarde",
+    "q": "Que signifie la couleur du nuage dans le header ?",
+    "a": "Le nuage vert confirme la sauvegarde cloud. Le rouge indique un problème à résoudre. Le gris correspond au mode local. Consultez les messages de sauvegarde avant de quitter votre session."
+  },
+  {
+    "category": "Tâches",
+    "q": "Pourquoi une tâche ne se trouve plus dans mon tableau ?",
+    "a": "Vérifiez le projet sélectionné, la recherche, les filtres et les archives. Une tâche terminée se trouve dans la colonne Terminé. Réinitialisez les filtres avant de conclure à une disparition."
+  },
+  {
+    "category": "Calendrier",
+    "q": "Comment planifier le début et la fin d’une tâche ?",
+    "a": "Renseignez sa date de début et sa fin prévue. Les vues Mois, Semaine et Agenda permettent de consulter sa période. Le panneau À planifier rassemble les tâches sans dates."
+  },
+  {
+    "category": "Calendrier",
+    "q": "Pourquoi certaines tâches apparaissent en retard ?",
+    "a": "Une tâche non terminée est signalée en retard lorsque sa fin prévue est dépassée. Terminez la tâche si le travail est fait, ou modifiez sa planification. Les tâches terminées peuvent être affichées avec Inclure les terminées."
+  },
+  {
+    "category": "Collaboration",
+    "q": "Comment créer un projet avec mon équipe ?",
+    "a": "Créez votre équipe et invitez ses membres depuis Équipe. Ouvrez ensuite Projets d’équipe, choisissez une équipe et créez un projet si votre rôle vous y autorise."
+  },
+  {
+    "category": "Collaboration",
+    "q": "Comment attribuer une tâche à un membre ?",
+    "a": "Ouvrez une tâche du projet partagé et choisissez son responsable parmi les membres. Les actions disponibles dépendent de votre rôle. Consultez la cloche pour les notifications de collaboration."
+  }
+];
 }
 
 @Component({standalone:true,imports:[CommonModule,PageShellComponent],template:`
