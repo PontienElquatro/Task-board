@@ -1,0 +1,227 @@
+import { Component, computed, effect, inject, signal, untracked, DestroyRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { UiFieldDirective } from '../shared/ui-field.directive';
+import { A11yModule } from '@angular/cdk/a11y';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { PageShellComponent } from './page-shell.component';
+import { BrandComponent } from '../shared/brand/brand.component';
+import { ProjectService } from '../services/project.service';
+import { TaskService } from '../services/task.service';
+import { IconComponent } from '../shared/icon.component';
+import { DismissMenuDirective } from '../shared/dismiss-menu.directive';
+import { GettingStartedComponent } from '../shared/getting-started.component';
+import { AvatarComponent } from '../shared/avatar.component';
+import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
+import { ToastService } from '../services/toast.service';
+import { CardAppearanceService } from '../services/card-appearance.service';
+import { ThemeService } from '../services/theme.service';
+import { TaskModalComponent } from '../task-modal/task-modal.component';
+import { Task } from '../models';
+import { STORAGE_PROVIDER } from '../providers/storage.provider';
+import { AuthService } from '../services/auth.service';
+import { TeamService, TeamRole } from '../services/team.service';
+import { NotificationPreferencesComponent } from '../shared/notification-preferences.component';
+import { SessionSecurityComponent } from '../shared/session-security.component';
+
+import {localDayKey,calendarDays,calendarWeek,scheduledOn,validSchedule} from '../core/calendar';
+import { CalendarTeamService, CalendarTask } from '../services/calendar-team.service';
+import {isOverdue} from '../models/task-utils';
+const imports=[CommonModule,RouterLink,PageShellComponent];
+
+@Component({standalone:true,imports:[...imports,BrandComponent],template:`
+<app-page-shell title="Moins de dispersion. Plus d’équilibre." description="Ma’at vous aide à transformer vos idées en actions, dans un espace clair et personnel.">
+ <section class="grid items-center gap-8 rounded-2xl border border-blue-100 bg-blue-50 p-8 dark:border-blue-900 dark:bg-blue-950 sm:grid-cols-2">
+  <div><app-brand /><h2 class="mt-4 text-2xl font-semibold">Une tâche après l’autre.</h2><p class="my-4 leading-7 text-gray-600 dark:text-gray-300">Inspirée de l’équilibre associé à Ma’at, l’application rassemble vos tâches, projets et échéances. Gardez une vue simple de ce qui compte.</p><div class="flex flex-wrap gap-4"><a class="primary min-h-11" routerLink="/board">Ouvrir mon tableau</a><a class="secondary min-h-11" routerLink="/login">Connexion / Inscription</a></div></div>
+  <div class="grid gap-4" aria-label="Fonctionnement du tableau"><div *ngFor="let step of steps; let i=index" class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"><p class="text-xs text-blue-700 dark:text-blue-300">0{{i+1}}</p><h3 class="mt-2 font-semibold">{{step.title}}</h3><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{step.text}}</p></div></div>
+ </section>
+ <section class="mt-8 grid gap-4 sm:grid-cols-3"><article *ngFor="let benefit of benefits" class="rounded-xl border border-gray-200 p-4 dark:border-gray-700"><h2 class="font-semibold">{{benefit.title}}</h2><p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{benefit.text}}</p></article></section>
+ <p class="mt-8 text-sm text-gray-600 dark:text-gray-300">Sans compte, vos données restent sur cet appareil. Connectez-vous pour utiliser la sauvegarde cloud. Créez une équipe pour partager des projets et répartir les tâches.</p>
+</app-page-shell>`})
+export class PresentationComponent {
+ readonly steps=[{title:'À faire',text:'Capturez une idée et choisissez sa priorité.'},{title:'En cours',text:'Concentrez-vous sur votre prochaine action.'},{title:'Terminé',text:'Visualisez vos avancées et archivez si nécessaire.'}];
+ readonly benefits=[{title:'Organisez vos projets',text:'Regroupez les tâches sans multiplier les outils.'},{title:'Anticipez les échéances',text:'Retrouvez les tâches datées dans votre calendrier.'},{title:'Gardez le contrôle',text:'Filtres, sous-tâches, sauvegardes et thème sombre : choisissez votre rythme.'}];
+}
+
+@Component({standalone:true,imports:[UiFieldDirective,...imports,ModalScrollLockDirective,A11yModule,FormsModule,IconComponent,DismissMenuDirective],templateUrl:'./projects.component.html'})
+export class ProjectsComponent {
+ private readonly router=inject(Router);
+ guidedCreation=false;
+ constructor(){this.guidedCreation=inject(ActivatedRoute).snapshot.queryParamMap.get('create')==='project';this.projectForm=this.guidedCreation;}
+ readonly toast=inject(ToastService);
+ readonly projects=inject(ProjectService); readonly tasks=inject(TaskService);
+ projectForm=false;search='';
+ draft=''; editing:string|undefined; showArchived=false; readonly message=signal('');
+ visibleProjects(){return this.projects.projects().filter(p=>(this.showArchived||!p.archived)&&p.title.toLocaleLowerCase('fr').includes(this.search.trim().toLocaleLowerCase('fr')));}
+ projectProgress(id:string){const total=this.count(id);return total?Math.round(100*this.count(id,true)/total):0;}
+ count(id:string,done=false){return this.tasks.activeTasks().filter(t=>t.projectId===id&&(!done||t.status==='done')).length;}
+ cancel(){this.draft='';this.editing=undefined;this.guidedCreation=false;}
+ save(){this.run(()=>{
+  const continueGuide=this.guidedCreation&&!this.editing;
+  const id=this.projects.save(this.draft,this.editing);
+  this.cancel();this.projectForm=false;
+  this.toast.success(continueGuide?'Projet créé. Ajoutez votre première tâche.':'Projet enregistré.');
+  if(continueGuide)void this.router.navigate(['/board'],{queryParams:{project:id,create:'task'}});
+ });}
+ archive(id:string){this.run(()=>this.projects.archive(id));}
+ private run(action:()=>void){this.message.set('');try{action();}catch(e){this.message.set(e instanceof Error?e.message:'Action impossible.');}}
+}
+
+export {localDayKey,calendarDays} from '../core/calendar';
+@Component({standalone:true,providers:[CalendarTeamService],imports:[UiFieldDirective,...imports,A11yModule,ModalScrollLockDirective,AvatarComponent,FormsModule,IconComponent,TaskModalComponent],templateUrl:'./calendar.component.html'})
+export class CalendarComponent {
+ private readonly storage=inject(STORAGE_PROVIDER);
+ readonly projects=inject(ProjectService); readonly view=signal<'month'|'week'|'agenda'>('month');readonly query=signal('');readonly project=signal('');readonly includeDone=signal(false);readonly selectedDay=signal(localDayKey(new Date()));
+ readonly teamCalendar=inject(CalendarTeamService); readonly scope=signal('');readonly statusFilter=signal('');readonly assigneeFilter=signal('');
+ readonly allTasks=computed<CalendarTask[]>(()=>[...this.tasks.activeTasks(),...this.teamCalendar.tasks()]);
+ readonly projectOptions=computed(()=>[...this.projects.projects().filter(p=>!p.archived).map(p=>({id:p.id,title:p.title+' · Personnel'})),...this.teamCalendar.projects().map(p=>({id:'team:'+p.id,title:p.title+' · Équipe'}))]);
+ readonly memberOptions=computed(()=>[...new Map(this.teamCalendar.teams.members().map(m=>[m.user_id,m])).values()]);
+ readonly filtered=computed(()=>this.allTasks().filter(t=>(this.includeDone()||t.status!=='done')&&(!this.scope()||(this.scope()==='team'?!!t.teamId:!t.teamId))&&(!this.project()||t.projectId===this.project())&&(!this.statusFilter()||t.status===this.statusFilter())&&(!this.assigneeFilter()||(this.assigneeFilter()==='none'?!!t.teamId&&!t.assigneeId:t.assigneeId===this.assigneeFilter()))&&t.title.toLocaleLowerCase('fr').includes(this.query().trim().toLocaleLowerCase('fr'))));
+ sharedSelected:CalendarTask|null=null;startText='';endText='';readonly saving=signal(false);readonly toast=inject(ToastService);
+ get invalidSchedule(){return !validSchedule(this.startText,this.endText);}
+ readonly overdue=computed(()=>this.filtered().filter(t=>isOverdue(t)));
+ readonly week=computed(()=>calendarWeek(this.cursor()));
+ readonly tasks=inject(TaskService); readonly cursor=signal(new Date()); readonly error=signal(''); selected:Task|null=null; mode:'view'|'edit'='edit';
+ readonly weekdays=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+ readonly days=computed(()=>calendarDays(this.cursor().getFullYear(),this.cursor().getMonth()));
+ readonly monthLabel=computed(()=>this.cursor().toLocaleDateString('fr-FR',{month:'long',year:'numeric'}));
+ readonly agenda=computed(()=>this.filtered().filter(t=>(this.view()==='week'?this.week():this.days().filter((d):d is Date=>!!d)).some(d=>scheduledOn(t,d))).sort((a,b)=>(a.startDate??a.dueDate)!.getTime()-(b.startDate??b.dueDate)!.getTime()));
+ readonly undated=computed(()=>this.filtered().filter(t=>!t.dueDate&&!t.startDate));
+ readonly dayTasks=computed(()=>this.filtered().filter(t=>scheduledOn(t,new Date(this.selectedDay()+'T12:00:00'))));
+ selectDay(day:Date){this.selectedDay.set(localDayKey(day));}
+ projectName(task:CalendarTask){return task.teamId?(this.teamCalendar.projects().find(p=>p.id===task.sharedProjectId)?.title??'Projet d’équipe'):(this.projects.projects().find(p=>p.id===task.projectId)?.title||'Sans projet');}
+ memberName(task:CalendarTask){return this.teamCalendar.teams.members().find(m=>m.team_id===task.teamId&&m.user_id===task.assigneeId)?.display_name??'Non assignée';}
+ memberAvatar(task:CalendarTask){return this.teamCalendar.teams.members().find(m=>m.team_id===task.teamId&&m.user_id===task.assigneeId)?.avatar_url??'';}
+ status(task:Task){return task.status==='done'?'Terminé':task.status==='in-progress'?'En cours':'À faire';}
+ constructor(){effect(()=>{const user=this.teamCalendar.auth.user();const initializing=this.teamCalendar.auth.initializing();untracked(()=>{this.teamCalendar.reset();this.sharedSelected=null;this.selected=null;if(user&&!initializing)void this.teamCalendar.load();});});if(this.storage.contextVersion)effect(()=>{this.storage.contextVersion!();untracked(()=>{this.selected=null;this.sharedSelected=null;this.error.set('');this.project.set('');this.query.set('');this.assigneeFilter.set('');});});inject(DestroyRef).onDestroy(()=>this.teamCalendar.reset());}
+ tasksFor(day:Date){return this.filtered().filter(t=>scheduledOn(t,day));}
+ late(task:Task){return isOverdue(task);}
+ isToday(day:Date){return localDayKey(day)===localDayKey(new Date());}
+ move(delta:number){this.cursor.update(d=>this.view()==='week'?new Date(d.getFullYear(),d.getMonth(),d.getDate()+delta*7):new Date(d.getFullYear(),d.getMonth()+delta,1));} today(){const now=new Date();this.cursor.set(now);this.selectDay(now);}
+ open(task:CalendarTask){this.error.set('');if(task.teamId){this.sharedSelected=task;const d=this.teamCalendar.dates(task);this.startText=d.start;this.endText=d.end;}else this.selected=task;}
+ async saveSharedDates(){if(!this.sharedSelected||this.saving()||this.invalidSchedule)return;this.saving.set(true);try{await this.teamCalendar.saveDates(this.sharedSelected,this.startText,this.endText);this.sharedSelected=null;this.toast.success('Planification enregistrée.');}catch(e){this.error.set(e instanceof Error?e.message:'Enregistrement impossible.');}finally{this.saving.set(false);}}
+ resetFilters(){this.scope.set('');this.project.set('');this.query.set('');this.statusFilter.set('');this.assigneeFilter.set('');}
+ save(task:Task){try{this.tasks.updateTask(task);this.selected=null;}catch(e){this.error.set(e instanceof Error?e.message:'Enregistrement impossible.');}}
+ toggleSubTask(id:string){if(!this.selected)return;try{this.tasks.toggleSubTask(this.selected.id,id);this.selected=this.tasks.tasks().find(t=>t.id===this.selected!.id)??null;}catch(e){this.error.set(e instanceof Error?e.message:'Modification impossible.');}}
+}
+
+@Component({standalone:true,imports:[UiFieldDirective,...imports,FormsModule,AvatarComponent,NotificationPreferencesComponent,SessionSecurityComponent],template:`
+<app-page-shell
+    [title]="adminContext ? 'Mon profil administrateur' : 'Mon compte et paramètres'"
+    [description]="adminContext ? 'Les informations et la sécurité de votre compte administrateur.' : 'Votre profil, votre sécurité et les préférences de cet appareil.'">
+    <a *ngIf="adminContext" routerLink="/admin"
+      class="mb-4 inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold text-blue-700 focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-blue-300">
+      ← Retour à la console d’administration
+    </a>
+ <div class="mb-6 flex flex-wrap items-center gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-900 dark:from-gray-950 dark:to-indigo-950 p-6 text-white"><app-avatar class="h-16 w-16" [name]="auth.displayName()" [url]="auth.avatarUrl()" /><div><p class="text-xs text-blue-100">{{adminContext ? 'VOTRE COMPTE ADMINISTRATEUR' : 'VOTRE COMPTE MA’AT'}}</p><h2 class="mt-1 text-xl font-semibold">{{auth.displayName()}}</h2><p class="mt-1 text-sm text-blue-100">Un profil reconnaissable. Un espace à votre image.</p></div></div>
+ <nav aria-label="Sections des paramètres" class="mb-6 flex flex-wrap gap-2"><button *ngFor="let item of settingSections.concat([notificationSection])" class="min-h-11 rounded-xl border border-blue-100 px-4 py-2 text-sm font-medium dark:border-indigo-900" [class.bg-blue-600]="section===item.id" [class.text-white]="section===item.id" [attr.aria-pressed]="section===item.id" (click)="section=item.id">{{item.label}}</button></nav>
+ <p *ngIf="!auth.user()" class="mb-4 rounded-xl bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">Connectez-vous pour modifier votre profil et votre photo. L’apparence reste accessible sans compte.</p>
+ <section class="grid gap-4">
+  <app-notification-preferences *ngIf="section==='notifications'" />
+  <app-session-security *ngIf="section==='security'" />
+  <article *ngIf="section==='profile'" class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900"><h2 class="text-lg font-semibold">Mon profil</h2><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Votre nom et votre photo vous identifient dans votre espace et vos équipes.</p>
+<form #profileForm="ngForm" class="mt-6 grid max-w-3xl gap-4" [attr.aria-busy]="busy" (ngSubmit)="profileForm.valid && saveProfile()"><div class="grid gap-4 sm:grid-cols-2"><label class="grid gap-2 text-sm font-medium" for="profile-first">Prénom<input appUiField id="profile-first" name="firstName" [(ngModel)]="firstName" maxlength="80" autocomplete="given-name" class="min-h-11 rounded-xl border border-blue-100 bg-white p-3 dark:border-indigo-900 dark:bg-gray-800" /></label><label class="grid gap-2 text-sm font-medium" for="profile-last">Nom<input appUiField id="profile-last" name="lastName" [(ngModel)]="lastName" maxlength="80" autocomplete="family-name" class="min-h-11 rounded-xl border border-blue-100 bg-white p-3 dark:border-indigo-900 dark:bg-gray-800" /></label></div><p class="text-xs text-gray-500 dark:text-gray-400">Votre prénom et votre nom identifient votre profil dans les équipes. Sans changement, votre nom actuel est conservé.</p><label *ngIf="!firstName.trim() && !lastName.trim()" class="grid gap-2 text-sm font-medium" for="profile-name">Nom d’affichage<input appUiField id="profile-name" name="displayName" [(ngModel)]="displayName" maxlength="80" class="min-h-11 rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800" placeholder="Votre nom" /></label><label class="grid gap-2 text-sm font-medium" for="profile-email">Adresse email (confirmation requise après modification)<input appUiField id="profile-email" name="email" #profileEmail="ngModel" [(ngModel)]="email" type="email" required [disabled]="busy || !auth.user()" class="min-h-11 rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800" /></label><p *ngIf="profileEmail.invalid && profileEmail.touched" role="alert" class="text-sm text-red-700 dark:text-red-300">Saisissez une adresse email valide.</p><div class="flex flex-wrap items-center gap-3"><button class="primary min-h-11 w-full sm:w-auto" type="submit" [disabled]="busy || !auth.user() || profileForm.invalid">{{busy ? 'Enregistrement…' : 'Enregistrer le profil'}}</button><span *ngIf="message" role="alert" class="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">{{message}}</span></div></form>
+   <div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700"><h3 class="font-semibold">Photo de profil</h3><div class="mt-3 flex flex-wrap items-center gap-4"><img *ngIf="auth.avatarUrl(); else initials" [src]="auth.avatarUrl()" alt="Photo de profil" class="h-16 w-16 rounded-full object-cover" /><ng-template #initials><span class="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-lg font-semibold text-blue-700 dark:bg-blue-900 dark:text-blue-200">{{auth.initials()}}</span></ng-template><div class="grid gap-2"><label for="avatar-file" class="secondary min-h-11 cursor-pointer">Choisir une image<input id="avatar-file" [disabled]="busy || !auth.user()" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" (change)="uploadAvatar($event)" /></label><details *ngIf="auth.avatarUrl()" #photoRemoval class="rounded-xl border border-red-100 p-3 dark:border-red-900"><summary class="min-h-11 cursor-pointer py-3 text-sm font-medium text-red-700 focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-red-300">Supprimer la photo</summary><p class="mt-2 text-sm">Votre photo sera remplacee par vos initiales.</p><div class="mt-3 flex flex-wrap gap-2"><button type="button" class="secondary min-h-11" [disabled]="busy" (click)="photoRemoval.open=false">Conserver la photo</button><button type="button" class="min-h-11 rounded-xl bg-red-700 px-4 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-blue-600 disabled:opacity-50" [disabled]="busy" (click)="removeAvatar()">{{busy ? 'Suppression…' : 'Confirmer la suppression'}}</button></div></details></div></div><p class="mt-2 text-xs text-gray-600 dark:text-gray-300">JPG, PNG ou WebP, 2 Mo maximum.</p></div>
+  </article>
+ <article *ngIf="section==='appearance'" class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900"><h2 class="text-lg font-semibold">Apparence</h2><p class="my-4 text-sm leading-6 text-gray-600 dark:text-gray-300">Préférence conservée sur cet appareil. Personnalisez les cartes sans changer la typographie ni les couleurs de navigation Ma’at.</p><button class="secondary min-h-11" [attr.aria-pressed]="theme.darkMode()" (click)="theme.toggleDarkMode()">{{theme.darkMode() ? 'Passer au thème clair' : 'Passer au thème sombre'}}</button><section class="mt-6 grid gap-4" aria-label="Personnalisation des cartes"><h3 class="font-semibold">Couleurs des tâches</h3><fieldset><legend class="mb-3 text-sm font-semibold">Choisissez votre ambiance</legend><div class="grid gap-3 sm:grid-cols-3"><button *ngFor="let palette of appearance.palettes" type="button" class="min-h-24 rounded-2xl border border-gray-200 bg-white p-4 text-left transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-gray-700 dark:bg-gray-800 motion-reduce:transform-none" [class.ring-2]="appearance.palette()===palette.id" [class.ring-blue-500]="appearance.palette()===palette.id" [attr.aria-pressed]="appearance.palette()===palette.id" (click)="appearance.setPalette(palette.id)"><span class="mb-3 flex gap-2" aria-hidden="true"><span *ngFor="let swatch of palette.swatches" class="h-5 w-5 rounded-full" [ngClass]="swatch"></span></span><span class="block text-sm font-semibold">{{palette.label}}</span><span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">{{palette.family}} {{appearance.palette()===palette.id?'· Sélectionnée':''}}</span></button></div></fieldset><label class="grid gap-2 text-sm">Style<select appUiField [ngModel]="appearance.style()" (ngModelChange)="appearance.setStyle($event)" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="accent">Bande colorée discrète</option><option value="tinted">Fond légèrement teinté</option></select></label><div class="grid gap-4 sm:grid-cols-3" aria-label="Aperçu des cartes"><div *ngFor="let item of [{id:'todo',label:'À faire'},{id:'in-progress',label:'En cours'},{id:'done',label:'Terminé'}]" [ngClass]="appearance.classes(item.id)" class="rounded-lg border border-gray-200 p-4 text-sm text-gray-900 dark:border-gray-700 dark:text-gray-100">☐ {{item.label}}</div></div><p class="text-xs text-gray-500 dark:text-gray-400">Appliqué aux cartes personnelles et d’équipe, sur cet appareil. Les statuts restent identifiables sans les couleurs.</p></section></article><article *ngIf="section==='security'" class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900"><h2 class="text-lg font-semibold">Sécurité</h2><p class="my-4 text-sm leading-6 text-gray-600 dark:text-gray-300">Modifiez directement votre mot de passe depuis votre session sécurisée.</p><form #passwordForm="ngForm" class="grid max-w-xl gap-4" [attr.aria-busy]="busy" (ngSubmit)="passwordForm.valid && changePassword()"><label class="grid gap-2 text-sm font-medium">Nouveau mot de passe<div class="flex gap-2"><input appUiField name="newPassword" [disabled]="busy || !auth.user()" [type]="showNewPassword?'text':'password'" [(ngModel)]="newPassword" minlength="12" required autocomplete="new-password" class="min-h-11 min-w-0 flex-1 rounded-xl border border-blue-100 bg-white p-3 dark:border-indigo-900 dark:bg-gray-800" placeholder="12 caractères minimum" /><button type="button" class="secondary min-h-11" (click)="showNewPassword=!showNewPassword">{{showNewPassword?'Masquer':'Afficher'}}</button></div></label><label class="grid gap-2 text-sm font-medium">Confirmer le nouveau mot de passe<input appUiField name="confirmPassword" [disabled]="busy || !auth.user()" [type]="showConfirmPassword?'text':'password'" [(ngModel)]="confirmPassword" minlength="12" required autocomplete="new-password" class="min-h-11 rounded-xl border border-blue-100 bg-white p-3 dark:border-indigo-900 dark:bg-gray-800" placeholder="Répétez le mot de passe" /></label><p *ngIf="passwordMessage" role="alert" class="text-sm text-red-700 dark:text-red-300">{{passwordMessage}}</p><p *ngIf="passwordSuccess" role="status" class="text-sm text-green-700 dark:text-green-300">{{passwordSuccess}}</p><button class="primary min-h-11 justify-self-start" type="submit" [disabled]="busy || !auth.user() || passwordForm.invalid || newPassword!==confirmPassword">{{busy ? 'Enregistrement…' : 'Modifier mon mot de passe'}}</button></form><div class="mt-6 border-t border-gray-200 pt-4 dark:border-gray-700"><a routerLink="/login" [queryParams]="{mode:'reset'}" class="secondary mt-3 inline-flex min-h-11">Mot de passe oublié ? Recevoir un lien</a></div></article>
+ </section>
+ <section *ngIf="section==='backup'" class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900"><h2 class="font-semibold">Sauvegarde et récupération</h2><p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">Ouvrez le menu de votre compte pour exporter vos copies ou résoudre un problème de synchronisation. Ne supprimez pas vos données navigateur avant d’avoir téléchargé une sauvegarde.</p><a routerLink="/help" class="secondary mt-4 min-h-11">Comprendre les sauvegardes</a></section>
+</app-page-shell>`})
+export class SettingsComponent {
+ readonly notificationSection = {id:'notifications',label:'Notifications'};
+ readonly adminContext = inject(Router).url.split(/[?#]/)[0] === '/admin/settings';
+section='profile';readonly settingSections=[{id:'profile',label:'Profil'},{id:'appearance',label:'Apparence'},{id:'security',label:'Sécurité'},{id:'backup',label:'Sauvegardes'}];firstName='';lastName='';readonly toast=inject(ToastService);readonly appearance=inject(CardAppearanceService);readonly theme=inject(ThemeService); readonly auth=inject(AuthService); displayName=''; email=''; busy=false; message='';newPassword='';confirmPassword='';showNewPassword=false;showConfirmPassword=false;passwordMessage='';passwordSuccess='';
+ constructor(){effect(()=>{const user=this.auth.user(); this.email=user?.email??'';this.firstName=String(user?.user_metadata?.['first_name']??'');this.lastName=String(user?.user_metadata?.['last_name']??''); this.displayName=String(user?.user_metadata?.['full_name']??user?.user_metadata?.['name']??'');});}
+ async saveProfile(){if(this.busy)return; this.busy=true; this.message=''; try{await this.auth.updateProfile({displayName:this.displayName,firstName:this.firstName,lastName:this.lastName,email:this.email});this.toast.success('Profil enregistré.');}catch(e){this.message=e instanceof Error?e.message:'Mise à jour impossible.';}finally{this.busy=false;}}
+ async uploadAvatar(event:Event){const file=(event.target as HTMLInputElement).files?.[0];if(!file)return;this.busy=true;this.message='';try{await this.auth.uploadAvatar(file);this.toast.success('Photo de profil enregistrée.');}catch(e){this.message=e instanceof Error?e.message:'Import impossible.';}finally{this.busy=false;(event.target as HTMLInputElement).value='';}}
+ async removeAvatar(){this.busy=true;this.message='';try{await this.auth.removeAvatar();this.toast.success('Photo supprimée.');}catch(e){this.message=e instanceof Error?e.message:'Suppression impossible.';}finally{this.busy=false;}}
+ async changePassword(){if(this.busy||!this.auth.user())return;this.passwordMessage='';this.passwordSuccess='';if(this.newPassword.length<12){this.passwordMessage='Le mot de passe doit contenir au moins 12 caractères.';return;}if(this.newPassword!==this.confirmPassword){this.passwordMessage='Les mots de passe ne correspondent pas.';return;}this.busy=true;try{await this.auth.changePassword(this.newPassword);this.newPassword='';this.confirmPassword='';this.showNewPassword=false;this.showConfirmPassword=false;this.passwordSuccess='Mot de passe modifié avec succès.';this.toast.success('Mot de passe modifié.');}catch(e){this.passwordMessage=e instanceof Error?e.message:'Modification impossible.';}finally{this.busy=false;}}
+}
+
+@Component({standalone:true,imports:[UiFieldDirective,AvatarComponent,CommonModule,PageShellComponent,FormsModule],template:`
+<app-page-shell title="Équipe et invitations" description="Travaillez ensemble sans mélanger vos tâches personnelles.">
+ <p *ngIf="message" role="status" class="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">{{message}}</p>
+ <section class="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]"><article class="rounded-xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6"><h2 class="text-lg font-semibold">Créer une équipe</h2><p class="mt-2 text-sm text-gray-600 dark:text-gray-300">Les membres ne verront que les projets qui leur seront partagés.</p><form class="mt-6 grid gap-3" (ngSubmit)="create()"><label for="team-name" class="grid gap-2 text-sm font-medium">Nom de l’équipe<input appUiField id="team-name" name="teamName" [(ngModel)]="teamName" required maxlength="100" class="min-h-11 rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800" placeholder="Mon équipe" /></label><button class="primary min-h-11" type="submit" [disabled]="busy">Créer l’équipe</button></form></article>
+ <article class="rounded-xl border border-gray-200 p-4 dark:border-gray-700 sm:p-6"><h2 class="text-lg font-semibold">Mes équipes</h2><p *ngIf="!teams.teams().length" class="mt-4 text-sm text-gray-600 dark:text-gray-300">Aucune équipe pour le moment.</p><div *ngFor="let team of teams.teams()" class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"><div class="flex flex-wrap items-start justify-between gap-3"><div><h3 class="font-semibold">{{team.name}}</h3><p class="mt-1 text-xs text-gray-600 dark:text-gray-300">{{teams.roleLabel(teams.role(team))}} · créée le {{team.created_at | date:'dd/MM/yyyy'}}</p></div><span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-200">{{teams.roleLabel(teams.role(team))}}</span></div><section class="mt-4 grid gap-2"><h4 class="mb-3 text-sm font-semibold">Membres</h4><ng-container *ngFor="let member of teams.members()"><div *ngIf="member.team_id === team.id" class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-white p-3 text-sm dark:border-indigo-900 dark:bg-gray-800"><div class="flex min-w-0 flex-1 items-center gap-3"><app-avatar class="h-10 w-10" [name]="member.display_name" [url]="member.avatar_url" /><div class="min-w-0"><p class="truncate font-semibold text-indigo-950 dark:text-gray-100">{{member.display_name==='Membre'?'Profil à compléter':member.display_name}}</p><p *ngIf="member.display_name==='Membre'" class="mt-1 text-xs text-gray-500 dark:text-gray-400">Ce membre peut renseigner son prénom et son nom dans Paramètres.</p><p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{teams.roleLabel(member.role)}}</p></div></div><details *ngIf="teams.canEditMember(team,member)" class="group/role w-full"><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 text-xs font-medium text-blue-700 dark:text-blue-300 [&::-webkit-details-marker]:hidden">Gérer ce membre</summary><div class="flex flex-wrap gap-2"><select appUiField #memberRole [value]="member.role" [attr.aria-label]="'Rôle de '+member.display_name" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 dark:bg-gray-800"><option value="member">Membre</option><option value="viewer">Lecteur</option><option *ngIf="teams.role(team)==='owner'" value="admin">Administrateur</option></select><button class="secondary min-h-11" [disabled]="busy" (click)="manageMember(team.id,member.user_id,memberRole.value)">Enregistrer</button><button class="secondary min-h-11" [disabled]="busy" (click)="removalId=member.user_id">Retirer</button><div *ngIf="removalId===member.user_id" class="w-full rounded-lg bg-red-50 p-3 dark:bg-red-950"><p>Retirer {{member.display_name}} de l’équipe ?</p><button class="secondary min-h-11" [disabled]="busy" (click)="manageMember(team.id,member.user_id,null)">Confirmer le retrait</button><button class="secondary min-h-11" (click)="removalId=''">Annuler</button></div></div></details></div></ng-container></section><form *ngIf="teams.canManage(team)" class="mt-4 flex flex-wrap items-end gap-2" (ngSubmit)="invite(team.id)"><label class="grid min-w-48 flex-1 gap-1 text-xs font-medium" [for]="'invite-'+team.id">Inviter par email<input appUiField [id]="'invite-'+team.id" [name]="'invite-'+team.id" [(ngModel)]="inviteEmails[team.id]" type="email" required placeholder="membre@exemple.com" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 text-sm dark:border-gray-600 dark:bg-gray-800" /></label><label class="grid gap-1 text-xs font-medium">Rôle<select appUiField [name]="'role-'+team.id" [ngModel]="inviteRoles[team.id] || 'member'" (ngModelChange)="inviteRoles[team.id]=$event" class="min-h-11 rounded-lg border border-gray-300 bg-white p-2 text-sm dark:border-gray-600 dark:bg-gray-800"><option value="member">Membre</option><option *ngIf="teams.role(team)==='owner'" value="admin">Administrateur</option><option value="viewer">Lecteur</option></select></label><button class="primary min-h-11" type="submit" [disabled]="busy">Inviter</button></form></div></article></section>
+ <section *ngIf="teams.invitations().length" class="mt-4 rounded-xl border border-gray-200 p-4 dark:border-gray-700"><h2 class="font-semibold">Historique des invitations</h2><div *ngFor="let invitation of teams.invitations()" class="flex flex-wrap justify-between gap-2 border-b border-gray-200 py-3 text-sm last:border-0 dark:border-gray-700"><span>{{invitation.email}}</span><span class="text-gray-600 dark:text-gray-300">{{teams.roleLabel(invitation.role)}} · {{teams.status(invitation)}} · expire le {{invitation.expires_at | date:'dd/MM/yyyy'}}</span><span *ngIf="invitation.accepted_at" class="text-xs">Acceptée le {{invitation.accepted_at | date:'dd/MM/yyyy HH:mm'}}</span><button *ngIf="!invitation.accepted_at" class="secondary min-h-11" [disabled]="busy" (click)="cancelInvitation(invitation.id)">Annuler l’invitation</button></div></section>
+</app-page-shell>`})
+export class TeamComponent {readonly toast=inject(ToastService);readonly teams=inject(TeamService);readonly auth=inject(AuthService);private readonly route=inject(ActivatedRoute);private readonly router=inject(Router);removalId='';teamName='';inviteEmails:Record<string,string>={};inviteRoles:Record<string,Exclude<TeamRole,'owner'>>={};busy=false;message='';constructor(){effect(()=>{if(!this.auth.initializing())untracked(()=>void this.load());});}async load(){try{const invitation=this.route.snapshot.queryParamMap.get('invitation'),token=this.route.snapshot.queryParamMap.get('token');if(invitation&&token&&this.auth.user()){this.busy=true;await this.teams.accept(invitation,token);this.message='';this.toast.success('Invitation acceptée. Bienvenue dans l’équipe.');await this.router.navigate(['/team']);}if(!this.auth.user()){this.message=invitation?'Connectez-vous avec l’adresse invitée, puis rouvrez ce lien pour rejoindre l’équipe.':'Connectez-vous pour consulter vos équipes.';return;}await this.teams.load();}catch(e){this.message=e instanceof Error?e.message:'Invitation ou chargement impossible.';}finally{this.busy=false;}}async create(){if(this.busy)return;this.busy=true;this.message='';try{await this.teams.create(this.teamName);this.teamName='';this.message='';this.toast.success('Équipe créée.');}catch(e){this.message=e instanceof Error?e.message:'Création impossible.';}finally{this.busy=false;}}async invite(teamId:string){if(this.busy)return;this.busy=true;this.message='';try{await this.teams.invite(teamId,this.inviteEmails[teamId]??'',this.inviteRoles[teamId]??'member');this.inviteEmails[teamId]='';this.message='';this.toast.success('Invitation envoyée.');}catch(e){this.message=e instanceof Error?e.message:'Invitation impossible.';}finally{this.busy=false;}}async cancelInvitation(id:string){if(this.busy)return;this.busy=true;try{await this.teams.cancel(id);this.message='';this.toast.success('Invitation annulée. Son lien ne permet plus de rejoindre l’équipe.');}catch(e){this.message=e instanceof Error?e.message:'Annulation impossible.';}finally{this.busy=false;}}async manageMember(teamId:string,userId:string,role:string|null){if(this.busy)return;this.busy=true;this.message='';try{await this.teams.manageMember(teamId,userId,role);this.removalId='';this.toast.success(role?'Rôle mis à jour.':'Membre retiré.');}catch(e){this.message=e instanceof Error?e.message:'Modification impossible.';}finally{this.busy=false;}}}
+
+@Component({standalone:true,imports:[...imports,GettingStartedComponent],template:`
+<app-page-shell title="Aide et démarrage" description="Les premiers pas pour garder un espace simple et fiable."><app-getting-started [force]="true" /><section class="grid gap-4 sm:grid-cols-3"><article *ngFor="let step of steps; let i=index" class="rounded-xl border border-gray-200 p-4 dark:border-gray-700"><p class="text-xs text-blue-700 dark:text-blue-300">Étape {{i+1}}</p><h2 class="mt-2 font-semibold">{{step.title}}</h2><p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{step.text}}</p><a [routerLink]="step.link" class="secondary mt-4 min-h-11">{{step.action}}</a></article></section><section class="mt-8 rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-4 dark:border-indigo-900 dark:from-blue-950 dark:to-indigo-950 sm:p-6">
+    <p class="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">Besoin d’un repère ?</p>
+    <h2 class="mt-2 text-2xl font-semibold">Questions fréquentes</h2>
+    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
+      Compte, sauvegarde, tâches et collaboration : retrouvez les réponses essentielles.
+    </p>
+    <div class="mt-6 grid gap-3">
+      <details *ngFor="let item of faq"
+        class="group rounded-2xl border border-blue-100 bg-white p-4 shadow-sm open:border-blue-300 dark:border-indigo-800 dark:bg-gray-900 sm:p-5">
+        <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 [&::-webkit-details-marker]:hidden">
+          <span class="min-w-0">
+            <span class="mb-2 block text-xs font-medium text-blue-700 dark:text-blue-300">{{item.category}}</span>
+            <span class="block text-sm font-semibold sm:text-base">{{item.q}}</span>
+          </span>
+          <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700 transition-transform group-open:rotate-45 dark:bg-blue-950 dark:text-blue-300 motion-reduce:transition-none" aria-hidden="true">+</span>
+        </summary>
+        <p class="mt-4 border-t border-blue-100 pt-4 text-sm leading-7 text-gray-600 dark:border-indigo-900 dark:text-gray-300">{{item.a}}</p>
+      </details>
+    </div>
+  </section><p class="mt-8 text-sm text-gray-600 dark:text-gray-300">Raccourcis dans le tableau : N pour créer une tâche, / pour rechercher. Ils sont désactivés pendant la saisie d’un champ.</p></app-page-shell>`})
+export class HelpComponent {
+ readonly steps=[{title:'Créez une tâche',text:'Ajoutez un titre, une priorité et, si utile, une échéance.',link:'/board',action:'Ouvrir le tableau'},{title:'Structurez un projet',text:'Créez un projet puis associez vos tâches depuis leurs détails.',link:'/projects',action:'Mes projets'},{title:'Vérifiez la sauvegarde',text:'Connectez-vous et attendez la confirmation de synchronisation.',link:'/settings',action:'Mon compte'}];
+ readonly faq=[
+  {
+    "category": "Compte",
+    "q": "Où modifier mon profil et mon mot de passe ?",
+    "a": "Ouvrez Mon compte depuis le menu de votre avatar. La section Profil contient votre nom, votre email et votre photo. La section Sécurité permet de modifier votre mot de passe."
+  },
+  {
+    "category": "Sauvegarde",
+    "q": "Où sont mes tâches lorsque je travaille sans compte ?",
+    "a": "Elles sont conservées dans ce navigateur, sur cet appareil. Elles ne suivent pas automatiquement sur un autre appareil. Exportez une copie avant de vider les données du navigateur."
+  },
+  {
+    "category": "Sauvegarde",
+    "q": "Que signifie la couleur du nuage dans le header ?",
+    "a": "Le nuage vert confirme la sauvegarde cloud. Le rouge indique un problème à résoudre. Le gris correspond au mode local. Consultez les messages de sauvegarde avant de quitter votre session."
+  },
+  {
+    "category": "Tâches",
+    "q": "Pourquoi une tâche ne se trouve plus dans mon tableau ?",
+    "a": "Vérifiez le projet sélectionné, la recherche, les filtres et les archives. Une tâche terminée se trouve dans la colonne Terminé. Réinitialisez les filtres avant de conclure à une disparition."
+  },
+  {
+    "category": "Calendrier",
+    "q": "Comment planifier le début et la fin d’une tâche ?",
+    "a": "Renseignez sa date de début et sa fin prévue. Les vues Mois, Semaine et Agenda permettent de consulter sa période. Le panneau À planifier rassemble les tâches sans dates."
+  },
+  {
+    "category": "Calendrier",
+    "q": "Pourquoi certaines tâches apparaissent en retard ?",
+    "a": "Une tâche non terminée est signalée en retard lorsque sa fin prévue est dépassée. Terminez la tâche si le travail est fait, ou modifiez sa planification. Les tâches terminées peuvent être affichées avec Inclure les terminées."
+  },
+  {
+    "category": "Collaboration",
+    "q": "Comment créer un projet avec mon équipe ?",
+    "a": "Créez votre équipe et invitez ses membres depuis Équipe. Ouvrez ensuite Projets d’équipe, choisissez une équipe et créez un projet si votre rôle vous y autorise."
+  },
+  {
+    "category": "Collaboration",
+    "q": "Comment attribuer une tâche à un membre ?",
+    "a": "Ouvrez une tâche du projet partagé et choisissez son responsable parmi les membres. Les actions disponibles dépendent de votre rôle. Consultez la cloche pour les notifications de collaboration."
+  }
+];
+}
+
+@Component({standalone:true,imports:[CommonModule,PageShellComponent],template:`
+<app-page-shell title="Confidentialité" description="Informations sur les données utilisées par Ma’at."><p role="note" class="mb-8 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">Document provisoire : l’identité de l’éditeur, le contact confidentialité, les durées de conservation et la procédure d’exercice des droits doivent être renseignés et validés avant une ouverture publique.</p><section *ngFor="let section of sections" class="mb-8 max-w-3xl"><h2 class="text-lg font-semibold">{{section.title}}</h2><p class="mt-2 text-sm leading-7 text-gray-600 dark:text-gray-300">{{section.text}}</p></section></app-page-shell>`})
+export class PrivacyComponent {readonly sections=[{title:'Données traitées',text:'L’application utilise vos informations de compte et le contenu que vous saisissez : tâches, sous-tâches, projets, objectifs et échéances. Ne saisissez pas de données sensibles inutiles à votre organisation.'},{title:'Stockage et services techniques',text:'Le mode local conserve les données dans votre navigateur. Le mode connecté utilise Supabase pour le compte et la sauvegarde cloud. L’application est hébergée sur Vercel. La préférence de thème est conservée sur votre appareil.'},{title:'Accès et partage',text:'Les projets actuels sont personnels. La collaboration n’est pas activée. L’administration sert à la gestion de l’application et ne doit pas donner accès aux tâches privées par défaut.'},{title:'Copies et suppression',text:'Les fonctions d’export permettent de conserver une copie de vos tâches. Une procédure de suppression complète du compte, des données cloud et des sauvegardes doit encore être définie ; vider le navigateur ne supprime pas les données cloud.'},{title:'Contact et droits',text:'Le responsable du traitement et son adresse de contact restent à préciser. Cette page ne constitue pas une déclaration de conformité juridique.'}];}
+
+@Component({standalone:true,imports,template:`
+<app-page-shell title="Conditions d’utilisation" description="Cadre provisoire d’utilisation de Ma’at."><p class="mb-8 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200">Projet de conditions à compléter et faire valider avant une ouverture publique. L’éditeur et le contact de support ne sont pas encore renseignés.</p><section *ngFor="let section of sections" class="mb-8 max-w-3xl"><h2 class="text-lg font-semibold">{{section.title}}</h2><p class="mt-2 text-sm leading-7 text-gray-600 dark:text-gray-300">{{section.text}}</p></section><a routerLink="/privacy" class="secondary min-h-11">Lire la page confidentialité</a></app-page-shell>`})
+export class TermsComponent {readonly sections=[{title:'Objet du service',text:'Ma’at est un gestionnaire de tâches personnel en cours de développement. Certaines fonctions, notamment la collaboration et les invitations, ne sont pas disponibles.'},{title:'Votre compte',text:'Protégez vos identifiants et utilisez les fonctions de déconnexion. Vous restez responsable du contenu que vous saisissez et ne devez pas utiliser l’application pour des activités illicites.'},{title:'Disponibilité et sauvegardes',text:'L’application ne propose pas de garantie de disponibilité. Vérifiez les confirmations de synchronisation et conservez régulièrement des exports, particulièrement avant de supprimer des données locales.'},{title:'Fonctions en évolution',text:'Les fonctionnalités peuvent évoluer. Les règles de suspension, de suppression du compte, les responsabilités de l’éditeur et le droit applicable restent à définir dans la version définitive des conditions.'}];}
+
+@Component({standalone:true,imports,template:`
+<app-page-shell title="Cette page n’existe pas" description="Le lien est peut-être ancien ou l’adresse contient une erreur."><section class="rounded-2xl border border-gray-200 p-8 text-center dark:border-gray-700"><p class="text-6xl font-semibold text-blue-600 dark:text-blue-300">404</p><h2 class="mt-4 text-xl font-semibold">Retrouvons votre chemin.</h2><div class="mt-8 flex flex-wrap justify-center gap-4"><a routerLink="/board" class="primary min-h-11">Mon tableau</a><a routerLink="/presentation" class="secondary min-h-11">Découvrir Ma’at</a><a routerLink="/help" class="secondary min-h-11">Aide</a></div></section></app-page-shell>`})
+export class NotFoundComponent {}

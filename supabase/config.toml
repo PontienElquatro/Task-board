@@ -1,0 +1,3 @@
+[functions.taskboard-admin]
+# The function validates the session with Auth.getUser and checks the server-only allowlist.
+verify_jwt = false

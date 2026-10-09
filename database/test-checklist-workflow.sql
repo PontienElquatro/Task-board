@@ -1,0 +1,43 @@
+begin;
+do $$
+declare tid uuid;owner uuid;worker uuid;pid uuid;parent uuid;s1 uuid;s2 uuid;other uuid;denied boolean;
+begin
+ select t.id,t.owner_id,m.user_id into tid,owner,worker from public.taskboard_teams t
+ join public.taskboard_team_members m on m.team_id=t.id and m.role='viewer' limit 1;
+ if tid is null then raise exception 'Requires a team with an assigned reader';end if;
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ insert into public.taskboard_shared_projects(team_id,title) values(tid,'__checklist_rollback__') returning id into pid;
+ insert into public.taskboard_shared_tasks(project_id,team_id,title,assignee_id) values(pid,tid,'Workflow test',worker) returning id into parent;
+ insert into public.taskboard_shared_subtasks(task_id,team_id,title,assignee_id) values(parent,tid,'Step 1',worker) returning id into s1;
+ insert into public.taskboard_shared_subtasks(task_id,team_id,title,assignee_id) values(parent,tid,'Step 2',worker) returning id into s2;
+ perform set_config('request.jwt.claim.sub',worker::text,true);
+ perform public.progress_taskboard_work(s1,true,'done');
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'in-progress' then raise exception 'First step must start parent';end if;
+ perform public.progress_taskboard_work(s2,true,'done');
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'done' then raise exception 'Last step must close parent';end if;
+ if (select count(*) from public.taskboard_notifications where project_id=pid and title='Tâche terminée : Workflow test')<>1 then raise exception 'Completion notification missing';end if;
+ perform public.progress_taskboard_work(s2,true,'done');
+ if (select count(*) from public.taskboard_notifications where project_id=pid and title='Tâche terminée : Workflow test')<>1 then raise exception 'Duplicate completion notification';end if;
+ perform public.progress_taskboard_work(s1,true,'todo');
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'in-progress' then raise exception 'Reopen must reopen parent';end if;
+ perform public.progress_taskboard_work(s2,true,'todo');
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'in-progress' then raise exception 'Must not reset progress';end if;
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ update public.taskboard_shared_tasks set status='done' where id=parent;
+ update public.taskboard_shared_subtasks set title='Renamed' where id=s1;
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'done' then raise exception 'Title edit must preserve manual status';end if;
+ insert into public.taskboard_shared_subtasks(task_id,team_id,title,assignee_id) values(parent,tid,'Owner step',owner) returning id into other;
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'in-progress' then raise exception 'Adding work must reopen parent';end if;
+ perform set_config('request.jwt.claim.sub',worker::text,true);
+ denied:=false;
+ begin perform public.progress_taskboard_work(other,true,'done');exception when others then denied:=true;end;
+ if not denied then raise exception 'Reader changed someone else work';end if;
+ perform set_config('request.jwt.claim.sub','',true);
+ denied:=false;
+ begin perform public.progress_taskboard_work(s1,true,'done');exception when others then denied:=true;end;
+ if not denied then raise exception 'Unauthenticated progress allowed';end if;
+ perform set_config('request.jwt.claim.sub',worker::text,true);
+ if has_function_privilege('authenticated','maat_private.sync_checklist_parent()','EXECUTE') then raise exception 'Private trigger exposed';end if;
+end;$$;
+rollback;
+select 'workflow, completion deduplication and reader restrictions passed; fixtures rolled back' as result;

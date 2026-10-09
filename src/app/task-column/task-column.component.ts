@@ -1,31 +1,22 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../shared/icon.component';
 import { Task, Status } from '../models';
 import { TaskCardComponent } from '../task-card/task-card.component';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
-
-@Component({
-  selector: 'app-task-column',
-  standalone: true,
-  imports: [CommonModule, TaskCardComponent, DragDropModule],
-  templateUrl: './task-column.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
+@Component({ selector: 'app-task-column', standalone: true, imports: [IconComponent, CommonModule, TaskCardComponent, DragDropModule], templateUrl: './task-column.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskColumnComponent {
-  @Input() label!: string;
-  @Input() status!: Status;
+  @Input() label = '';
+  @Input() status: Status = 'todo';
   @Input() tasks: Task[] = [];
-
+  @Input() dragDisabled = false;
   @Output() taskSelected = new EventEmitter<Task>();
   @Output() taskEdit = new EventEmitter<Task>();
   @Output() taskDelete = new EventEmitter<Task>();
+  @Output() taskArchive = new EventEmitter<Task>();
+  @Output() taskDuplicate = new EventEmitter<Task>();
+  @Output() taskStatus = new EventEmitter<{task: Task; status: Status}>();
+  @Output() taskAdd = new EventEmitter<void>();
   @Output() taskDropped = new EventEmitter<CdkDragDrop<Task[]>>();
-
-  drop(event: CdkDragDrop<Task[]>) {
-    this.taskDropped.emit(event);
-  }
-
-  trackById(index: number, task: Task) {
-    return task.id;
-  }
+  trackById(_index: number, task: Task) { return task.id; }
 }

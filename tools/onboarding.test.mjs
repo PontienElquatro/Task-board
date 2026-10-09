@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import ts from 'typescript';
+const source=await readFile(new URL('../src/app/core/onboarding.ts',import.meta.url),'utf8');
+const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ES2022}}).outputText;
+const {guideAlreadySeen}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+test('new account without local history receives the guide',()=>assert.equal(guideAlreadySeen({},false),false));
+test('account flag hides the guide on a different device',()=>assert.equal(guideAlreadySeen({maat_guide_seen:true},false),true));
+test('existing local dismissal remains compatible',()=>assert.equal(guideAlreadySeen({},true),true));
+test('only a boolean account preference counts as seen',()=>assert.equal(guideAlreadySeen({maat_guide_seen:'true'},false),false));
+test('another account does not inherit the previous account flag',()=>assert.equal(guideAlreadySeen(undefined,false),false));
