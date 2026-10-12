@@ -22,9 +22,14 @@ Deno.serve(async (req:Request) => {
     const {data:{user},error:authError}=await backend.auth.getUser(token);
     if (authError || !user) return reply(401,{error:'Invalid session'});
     if (!user.email_confirmed_at || !user.email) return reply(403,{error:'Confirmed administrator required'});
-    const {data:allowed,error:permissionError}=await backend.from('taskboard_admin_allowlist').select('email').eq('email',user.email.toLowerCase()).maybeSingle();
-    if (permissionError) throw permissionError;
-    if (!allowed) return reply(403,{error:'Administrator required'});
+    // Decode only after Auth validates the token; also check the live session in SQL.
+    let sessionId:string;
+    try {sessionId=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).session_id;} catch {return reply(401,{error:'Invalid session'});}
+    if(typeof sessionId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionId))return reply(401,{error:'Invalid session'});
+    const {data:access,error:permissionError}=await backend.rpc('taskboard_admin_access',{actor:user.id,session:sessionId,operation:'identity'});
+    if(permissionError && permissionError.code!=='42501' && permissionError.code!=='PT401')throw permissionError;
+    if (permissionError || !access?.isAdmin) return reply(403,{error:'Administrator required'});
+    const can=(scope:string)=>access.isPrincipal||access.permissions.includes(scope);
     const {data:actorStatus,error:statusError}=await backend.from('taskboard_account_status').select('suspended').eq('user_id',user.id).maybeSingle();
     if(statusError) throw statusError;
     if(actorStatus?.suspended) return reply(403,{error:'Account suspended'});
@@ -33,21 +38,46 @@ Deno.serve(async (req:Request) => {
     if (rateError) throw rateError;
     if ((recent ?? 0)>=30) return reply(429,{error:'Too many requests'});
     const raw=await req.text();
-    if (raw.length>1024) return reply(413,{error:'Payload too large'});
-    let body: {page?:number;action?:string;auditPage?:number;targetId?:string;reason?:string;expectedSuspended?:boolean;teamId?:string};
+    if (raw.length>3072) return reply(413,{error:'Payload too large'});
+    let body: {page?:number;action?:string;auditPage?:number;auditTarget?:string;auditAction?:string;targetId?:string;reason?:string;expectedSuspended?:boolean;teamId?:string;teamSearch?:string;permissions?:string[];expectedVersion?:number|null;supportEmail?:string;announcement?:string};
     try { body=raw ? JSON.parse(raw) : {}; } catch { return reply(400,{error:'Invalid JSON'}); }
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage','targetId','reason','expectedSuspended','teamId'].includes(key))) return reply(400,{error:'Invalid request'});
-    if(body.action!==undefined && !['check_access','suspend','reactivate','collaboration','team_detail'].includes(body.action)) return reply(400,{error:'Invalid action'});
-    if(body.action==='check_access') return reply(200,{isAdmin:true});
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage','auditTarget','auditAction','targetId','reason','expectedSuspended','teamId','teamSearch','permissions','expectedVersion','supportEmail','announcement'].includes(key))) return reply(400,{error:'Invalid request'});
+    if(body.teamSearch!==undefined && (body.action!=='collaboration'||typeof body.teamSearch!=='string'||body.teamSearch.trim().length>120)) return reply(400,{error:'Invalid team search'});
+    if(body.auditTarget!==undefined && (typeof body.auditTarget!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.auditTarget))) return reply(400,{error:'Invalid audit target'});
+    if(body.auditAction!==undefined && !['dashboard_view','account_suspend','account_reactivate'].includes(body.auditAction)) return reply(400,{error:'Invalid audit action'});
+    if(body.action!==undefined && !['check_access','suspend','reactivate','collaboration','team_detail','access_directory','access_grant','access_revoke','access_transfer_request','access_transfer_cancel','access_transfer_accept','platform_settings','platform_settings_update'].includes(body.action)) return reply(400,{error:'Invalid action'});
+    if(body.action==='check_access') return reply(200,access);
+    if(body.action==='platform_settings'||body.action==='platform_settings_update'){
+      if(!can(body.action==='platform_settings'?'settings_read':'settings_manage'))return reply(403,{error:'Permission required'});
+      if(body.action==='platform_settings'){
+        const result=await backend.from('taskboard_platform_settings').select('support_email,announcement,version,updated_at').eq('singleton',true).single();
+        if(result.error)throw result.error;return reply(200,result.data);
+      }
+      if(typeof body.supportEmail!=='string'||body.supportEmail.length>254||typeof body.announcement!=='string'||body.announcement.length>500||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.length>500||!Number.isSafeInteger(body.expectedVersion)||(body.expectedVersion??0)<1)return reply(400,{error:'Invalid settings'});
+      const result=await backend.rpc('taskboard_update_platform_settings',{actor:user.id,session:sessionId,contact_email:body.supportEmail.trim(),notice:body.announcement.trim(),expected_version:body.expectedVersion,action_reason:body.reason.trim()});
+      if(result.error)return reply(result.error.code==='PT409'?409:result.error.code==='PT401'?401:403,{error:'Settings change rejected'});
+      return reply(200,result.data);
+    }
+    if(body.action?.startsWith('access_')){
+      if(!access.isPrincipal && body.action!=='access_transfer_accept') return reply(403,{error:'Principal required'});
+      if(body.targetId!==undefined && (typeof body.targetId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.targetId))) return reply(400,{error:'Invalid target'});
+      if(body.expectedVersion!==undefined && body.expectedVersion!==null && (!Number.isSafeInteger(body.expectedVersion)||body.expectedVersion<1))return reply(400,{error:'Invalid version'});
+      if(body.permissions!==undefined && (!Array.isArray(body.permissions)||body.permissions.length>7||body.permissions.some(p=>typeof p!=='string')))return reply(400,{error:'Invalid permissions'});
+      if(body.reason!==undefined && typeof body.reason!=='string')return reply(400,{error:'Invalid reason'});
+      const result=await backend.rpc('taskboard_admin_access',{actor:user.id,session:sessionId,operation:body.action.slice(7),target:body.targetId??null,requested_permissions:body.permissions??null,expected_version:body.expectedVersion??null,action_reason:body.reason??null});
+      if(result.error)return reply(result.error.code==='PT409'?409:result.error.code==='PT401'?401:result.error.code==='42501'?403:400,{error:result.error.code==='PT401'?'Recent sign-in required':'Access change rejected'});
+      return reply(200,result.data);
+    }
     if(body.action==='collaboration'||body.action==='team_detail'){
+      if(!can('teams_read'))return reply(403,{error:'Permission required'});
       const page=body.page??1;
       if(!Number.isSafeInteger(page)||page<1||page>10000)return reply(400,{error:'Invalid page'});
       const {error:consultationError}=await backend.from('taskboard_admin_audit').insert({actor_id:user.id,action:'dashboard_view'});
       if(consultationError)throw consultationError;
       if(body.action==='collaboration'){
-        const result=await backend.from('taskboard_teams').select('id,name,owner_id,created_at',{count:'exact'}).order('created_at',{ascending:false}).order('id',{ascending:false}).range((page-1)*50,page*50-1);
+        const result=await backend.rpc('taskboard_admin_team_directory',{search_query:body.teamSearch?.trim()??'',requested_page:page});
         if(result.error)throw result.error;
-        return reply(200,{teams:result.data??[],total:result.count??0,page});
+        return reply(200,result.data);
       }
       if(typeof body.teamId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.teamId))return reply(400,{error:'Invalid team'});
       const team=await backend.from('taskboard_teams').select('id,name,owner_id,created_at').eq('id',body.teamId).maybeSingle();
@@ -66,6 +96,7 @@ Deno.serve(async (req:Request) => {
       return reply(200,{team:team.data,members:counts[0].count??0,projects:counts[1].count??0,accepted:counts[2].count??0,pending:counts[3].count??0,expired:counts[4].count??0});
     }
     if(body.action==='suspend'||body.action==='reactivate'){
+      if(!can('users_manage'))return reply(403,{error:'Permission required'});
       if(typeof body.targetId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.targetId)
         ||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.trim().length>500
         ||typeof body.expectedSuspended!=='boolean') return reply(400,{error:'Invalid account action'});
@@ -130,11 +161,14 @@ Deno.serve(async (req:Request) => {
       const {error:auditError}=await backend.from('taskboard_admin_audit').insert({actor_id:user.id,action:'dashboard_view'});
       if (auditError) throw auditError;
     }
-    const {data:events,count:auditTotal,error:eventsError}=await backend.from('taskboard_admin_audit').select('id,actor_id,action,created_at,target_id,reason,auth_sync',{count:'exact'}).order('created_at',{ascending:false}).order('id',{ascending:false}).range((auditPage-1)*30,auditPage*30-1);
+    let auditQuery=backend.from('taskboard_admin_audit').select('id,actor_id,action,created_at,target_id,reason,auth_sync',{count:'exact'});
+    if(body.auditTarget)auditQuery=auditQuery.eq('target_id',body.auditTarget);
+    if(body.auditAction)auditQuery=auditQuery.eq('action',body.auditAction);
+    const {data:events,count:auditTotal,error:eventsError}=await auditQuery.order('created_at',{ascending:false}).order('id',{ascending:false}).range((auditPage-1)*30,auditPage*30-1);
     if (eventsError) throw eventsError;
     const {data:metrics,error:metricsError}=await backend.rpc('taskboard_admin_metrics');
     if(metricsError) throw metricsError;
-    return reply(200,{users,total:users.length,page:1,workspaces:countResult.count ?? 0,events,auditPage,auditTotal:auditTotal??0,metrics,generatedAt:new Date().toISOString()});
+    return reply(200,{access,users:can('users_read')?users:[],total:can('overview')?users.length:0,page:1,workspaces:can('overview')?countResult.count??0:0,events:can('audit_read')?events:[],auditPage,auditTotal:can('audit_read')?auditTotal??0:0,metrics:can('overview')||can('teams_read')?metrics:null,generatedAt:new Date().toISOString()});
   } catch {
     return reply(503,{error:'Admin service unavailable'});
   }

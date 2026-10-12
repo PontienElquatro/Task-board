@@ -12,6 +12,7 @@ import { NotificationsComponent } from '../shared/notifications.component';
 import { DismissMenuDirective } from '../shared/dismiss-menu.directive';
 import { AvatarComponent } from '../shared/avatar.component';
 import { ThemeService } from '../services/theme.service';
+import { PlatformSettingsService } from '../services/platform-settings.service';
 @Component({selector:'app-account-bar',standalone:true,imports:[DismissMenuDirective,AvatarComponent,IconComponent,CommonModule,RouterLink,SyncConflictComponent,DeviceRestoreComponent,BrandComponent,NotificationsComponent],template: `
 <app-sync-conflict *ngIf="cloud.conflict()" />
 <header class="sticky top-0 z-50 border-b border-gray-200 bg-white px-4 py-2 text-gray-900 transition-colors duration-200 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 sm:px-6 motion-reduce:transition-none" aria-label="Compte et sauvegarde">
@@ -24,6 +25,7 @@ import { ThemeService } from '../services/theme.service';
     aria-label="Ouvrir ou fermer les actions du compte"
     aria-controls="header-mobile-actions"
     [attr.aria-expanded]="mobileMenuOpen()"
+    (keydown.escape)="mobileMenuOpen.set(false)"
     (click)="mobileMenuOpen.set(!mobileMenuOpen())">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -76,6 +78,7 @@ import { ThemeService } from '../services/theme.service';
   </div>
   <p *ngIf="cloud.auth.sessionError() || logoutError()" role="alert" class="mx-auto mt-2 max-w-screen-2xl rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{cloud.auth.sessionError() || logoutError()}}</p>
   <div *ngIf="syncNeedsAttention()" role="alert" class="mx-auto mt-2 flex max-w-screen-2xl flex-wrap items-center justify-between gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200"><span>{{cloud.status()}}</span><button class="secondary min-h-11" (click)="cloud.sync()">Réessayer</button></div>
+  <div *ngIf="platform.settings() as info" class="mx-auto max-w-screen-2xl text-sm"><p *ngIf="info.announcement" role="status" class="mt-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-950">{{info.announcement}}</p><a *ngIf="info.support_email" class="mt-2 inline-flex min-h-11 items-center text-blue-700 dark:text-blue-300" [href]="'mailto:'+info.support_email">Contacter l’assistance</a></div>
 </header>
 <app-device-restore *ngIf="restoreOpen" />`})
 export class AccountBarComponent {
@@ -96,6 +99,7 @@ export class AccountBarComponent {
     });
   }
 
+  readonly platform=inject(PlatformSettingsService);
   readonly theme=inject(ThemeService);
   readonly cloud=inject(CloudStorageProvider); restoreOpen=false;
   readonly syncNeedsAttention=computed(()=>/indisponible|réessayer|différée|illisible/i.test(this.cloud.status()));

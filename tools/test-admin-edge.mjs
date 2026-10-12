@@ -21,6 +21,11 @@ let bannedTarget='';
 const directoryPages=[];
 const auditRanges=[];
 const selections=[];
+const auditFilters=[];
+const teamQueries=[];
+let scopes=['overview','users_read','users_manage','teams_read','audit_read','settings_read','settings_manage'];
+let principal=true;
+let liveSession=true;
 class Query {
   constructor(table){this.table=table;this.filters={};}
   select(fields){selections.push([this.table,fields]);return this;}
@@ -33,7 +38,7 @@ class Query {
   in(){return this;}
   order(){return this;}
   limit(){return this;}
-  range(start,end){auditRanges.push([start,end]);return this;}
+  range(start,end){auditRanges.push([start,end]);if(this.table==='taskboard_admin_audit')auditFilters.push({...this.filters});return this;}
   insert(){if(this.table==='taskboard_admin_audit')auditWrites++;return this;}
   update(){return this;}
   result(){
@@ -51,6 +56,11 @@ const source=await readFile(new URL('../supabase/functions/taskboard-admin/index
 client.rpc=async()=>({data:{teams:1,sharedProjects:1,pendingInvitations:0,expiredInvitations:0,acceptedInvitations:1},error:metricsFailure?new Error('Unavailable'):null});
 const metricsRpc=client.rpc;
 client.rpc=async(name,args)=>{
+ if(name==='taskboard_admin_access')return {data:allow&&liveSession?{isAdmin:true,isPrincipal:principal,permissions:scopes}:null,error:permissionFailure?{code:'XX000'}:null};
+ if(name==='taskboard_admin_team_directory'){
+   teamQueries.push(args);
+   return {data:{teams:[{id:'team',name:'Team',owner_id:'owner',created_at:'2026-01-01'}],total:1,page:args.requested_page},error:null};
+ }
  if(name!=='taskboard_set_account_status')return metricsRpc();
  mutationCalls++;
  return {data:42,error:mutationFailure?{code:'PT409'}:null};
@@ -62,16 +72,17 @@ client.auth.admin.listUsers=async({page,perPage})=>{
   directoryPages.push(page);
   return directory?{data:{users:directory.slice((page-1)*perPage,page*perPage),total:directory.length},error:null}:originalList();
 };
-vm.runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;\s*/,'')),{createClient:()=>client,Deno:{env:{get:name=>name==='SUPABASE_SECRET_KEYS' ? '{"default":"test-only-key"}':'https://test.invalid'},serve:fn=>handler=fn},Response,Request,Date,Set,Map,JSON,Number,Error});
-const request=(body={},token='valid')=>new Request('https://test.invalid',{method:'POST',headers:token ? {Authorization:'Bearer '+token}: {},body:JSON.stringify(body)});
+vm.runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;\s*/,'')),{createClient:()=>client,Deno:{env:{get:name=>name==='SUPABASE_SECRET_KEYS' ? '{"default":"test-only-key"}':'https://test.invalid'},serve:fn=>handler=fn},Response,Request,Date,Set,Map,JSON,Number,Error,atob});
+const validToken='header.'+Buffer.from(JSON.stringify({session_id:'00000000-0000-4000-8000-000000000001'})).toString('base64url')+'.signature';
+const request=(body={},token=validToken)=>new Request('https://test.invalid',{method:'POST',headers:token ? {Authorization:'Bearer '+token}: {},body:JSON.stringify(body)});
 assert.equal((await handler(request({},null))).status,401);
 authError={message:'expired'};assert.equal((await handler(request())).status,401);authError=null;
 currentUser.email_confirmed_at=null;assert.equal((await handler(request())).status,403);currentUser.email_confirmed_at='2026-01-01';
 allow=false;assert.equal((await handler(request())).status,403);allow=true;
 assert.equal((await handler(request({page:0}))).status,400);
 for(const invalid of [null,[],true,'admin',{page:1,role:'admin'},{page:1.5},{page:10001}]) assert.equal((await handler(request(invalid))).status,400);
-assert.equal((await handler(request({padding:'x'.repeat(1100)}))).status,413);
-assert.equal((await handler(new Request('https://test.invalid',{method:'POST',headers:{Authorization:'Bearer valid'},body:'{broken'}))).status,400);
+assert.equal((await handler(request({padding:'x'.repeat(3100)}))).status,413);
+assert.equal((await handler(new Request('https://test.invalid',{method:'POST',headers:{Authorization:'Bearer '+validToken},body:'{broken'}))).status,400);
 permissionFailure=true;assert.equal((await handler(request())).status,503);permissionFailure=false;
 auditFailure=true;assert.equal((await handler(request())).status,503);auditFailure=false;
 currentUser.user_metadata={role:'admin',email:'admin@example.invalid'};allow=false;
@@ -81,12 +92,25 @@ assert.equal((await handler(new Request('https://test.invalid',{method:'OPTIONS'
 rate=30;assert.equal((await handler(request())).status,429);rate=0;
 const result=await handler(request());assert.equal(result.status,200);
 const beforeCheck=auditWrites;
-const check=await handler(request({action:'check_access'}));assert.equal(check.status,200);assert.deepEqual(await check.json(),{isAdmin:true});
+const check=await handler(request({action:'check_access'}));assert.equal(check.status,200);assert.equal((await check.json()).isAdmin,true);
 assert.equal(auditWrites,beforeCheck);
+liveSession=false;assert.equal((await handler(request())).status,403);liveSession=true;
+principal=false;scopes=['teams_read'];
+assert.equal((await handler(request({action:'suspend'}))).status,403);
+assert.equal((await handler(request({action:'access_directory'}))).status,403);
+const scoped=await (await handler(request())).json();assert.deepEqual(scoped.users,[]);assert.deepEqual(scoped.events,[]);assert.equal(scoped.total,0);
+scopes=['audit_read'];assert.equal((await handler(request({action:'collaboration'}))).status,403);
+principal=true;scopes=['overview','users_read','users_manage','teams_read','audit_read','settings_read','settings_manage'];
 metricsFailure=true;assert.equal((await handler(request())).status,503);metricsFailure=false;
 assert.equal((await handler(request({action:'suspend'}))).status,400);
 const snapshot=await result.json();
 const collaboration=await handler(request({action:'collaboration'}));assert.equal(collaboration.status,200);
+assert.deepEqual(JSON.parse(JSON.stringify(teamQueries.at(-1))),{search_query:'',requested_page:1});
+assert.equal((await handler(request({action:'collaboration',page:2,teamSearch:'  owner@example.invalid  '}))).status,200);
+assert.deepEqual(JSON.parse(JSON.stringify(teamQueries.at(-1))),{search_query:'owner@example.invalid',requested_page:2});
+assert.equal((await handler(request({action:'collaboration',teamSearch:'x'.repeat(121)}))).status,400);
+assert.equal((await handler(request({action:'collaboration',teamSearch:42}))).status,400);
+assert.equal((await handler(request({action:'check_access',teamSearch:'abc'}))).status,400);
 const teamPage=await collaboration.json();assert.equal(teamPage.teams[0].name,'Team');
 assert.equal((await handler(request({action:'team_detail',teamId:'invalid'}))).status,400);
 assert.equal((await handler(request({action:'collaboration',page:0}))).status,400);
@@ -108,6 +132,13 @@ assert.deepEqual(directoryPages,[1,2]);
 assert.deepEqual(auditRanges.at(-1),[30,59]);
 assert.equal(globalSnapshot.auditPage,2);
 assert.equal((await handler(request({auditPage:0}))).status,400);
+for(const invalid of [{auditTarget:'invalid'},{auditTarget:null},{auditAction:'delete_user'},{auditAction:null}])assert.equal((await handler(request(invalid))).status,400);
+const auditTarget='00000000-0000-4000-8000-000000000001';
+assert.equal((await handler(request({auditPage:2,auditTarget,auditAction:'account_suspend'}))).status,200);
+assert.deepEqual(auditFilters.at(-1),{target_id:auditTarget,action:'account_suspend'});
+assert.deepEqual(auditRanges.at(-1),[30,59]);
+assert.equal((await handler(request({auditPage:2}))).status,200);
+assert.deepEqual(auditFilters.at(-1),{});
 directory=null;
 actorSuspended=true;assert.equal((await handler(request())).status,403);actorSuspended=false;
 const accountAction={action:'suspend',targetId:'00000000-0000-4000-8000-000000000001',reason:'Motif de test uniquement',expectedSuspended:false};

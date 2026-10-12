@@ -29,6 +29,44 @@ describe('AdminComponent',()=>{
     await c.confirmAccountAction();
     expect(invoke).not.toHaveBeenCalled();
   });
+  it('sends account and action audit filters on every requested page',async()=>{
+    invoke.and.resolveTo({data:{users:[],total:0,page:1,workspaces:0,events:[],auditPage:2,auditTotal:31},error:null});
+    user.set({id:'admin'});fixture.detectChanges();await fixture.whenStable();
+    const c=fixture.componentInstance;
+    c.auditTarget='00000000-0000-4000-8000-000000000001';c.auditAction='account_suspend';
+    await c.load(1,2);
+    expect(invoke.calls.mostRecent().args[1].body).toEqual({page:1,auditPage:2,auditTarget:c.auditTarget,auditAction:'account_suspend'});
+    expect(c.auditPageCount()).toBe(2);
+  });
+  it('preserves user filters and page during refresh',async()=>{
+    const users=Array.from({length:60},(_,i)=>({id:String(i),email:'user'+i+'@example.invalid',createdAt:'2026-01-01',lastSignIn:null,confirmed:true,admin:false,updatedAt:null}));
+    invoke.and.resolveTo({data:{users,total:60,page:1,workspaces:0,events:[]},error:null});
+    user.set({id:'admin'});fixture.detectChanges();await fixture.whenStable();
+    const c=fixture.componentInstance;c.roleFilter='user';c.userPage=2;
+    await c.load();
+    expect(c.roleFilter).toBe('user');expect(c.userPage).toBe(2);expect(c.filteredUsers().length).toBe(10);
+  });
+  it('clears stale events and restarts audit pagination when filters change',async()=>{
+    invoke.and.resolveTo({data:{users:[],total:0,page:1,workspaces:0,events:[],auditPage:1,auditTotal:0},error:null});
+    user.set({id:'admin'});fixture.detectChanges();await fixture.whenStable();
+    const c=fixture.componentInstance;c.auditTarget='00000000-0000-4000-8000-000000000001';c.auditSearch='old';
+    c.clearAuditTarget();
+    expect(c.auditTarget).toBe('');expect(c.auditSearch).toBe('');
+    expect(invoke.calls.mostRecent().args[1].body).toEqual({page:1,auditPage:1});
+    await fixture.whenStable();
+  });
+  it('keeps a downloadable CSV and a copyable fallback until dismissed',()=>{
+    const create=spyOn(URL,'createObjectURL').and.returnValue('blob:admin-test');
+    const revoke=spyOn(URL,'revokeObjectURL');
+    spyOn(HTMLAnchorElement.prototype,'click').and.stub();
+    const c=fixture.componentInstance;
+    c.snapshot.set({users:[],total:0,page:1,workspaces:0,events:[{id:1,actor_id:'admin',action:'=SUM(1)',created_at:'2026-10-11'}]});
+    c.exportAudit();
+    expect(create).toHaveBeenCalled();expect(c.auditExportUrl()).toBe('blob:admin-test');
+    expect(c.auditExport()).toContain("\"'=SUM(1)\"");expect(revoke).not.toHaveBeenCalled();
+    c.clearAuditExport();expect(revoke).toHaveBeenCalledWith('blob:admin-test');
+    expect(c.auditExport()).toBe('');expect(c.auditExportUrl()).toBe('');
+  });
   it('combines account filters and keeps page indicators scoped',()=>{
     const c=fixture.componentInstance;
     c.snapshot.set({total:75,page:1,workspaces:1,events:[],users:[

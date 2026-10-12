@@ -10,10 +10,13 @@ let download;
 const context={
   Blob,
   URL:{createObjectURL:blob=>{exported=blob;return 'blob:test';},revokeObjectURL:()=>{}},
-  document:{createElement:()=>({set download(value){download=value;},click(){clicked=true;}})},
+  document:{body:{appendChild:()=>{}},createElement:()=>({set download(value){download=value;},click(){clicked=true;},remove(){}})},
   setTimeout:fn=>fn()
 };
 const exporter=vm.runInNewContext('({'+method('exportAudit')+'})',context);
+const state=value=>{const read=()=>value;read.set=next=>value=next;return read;};
+exporter.auditExport=state('');exporter.auditExportUrl=state('');
+exporter.clearAuditExport=()=>{exporter.auditExport.set('');exporter.auditExportUrl.set('');};
 exporter.auditEvents=()=>[{created_at:'2026-10-07',action:'=SUM(1)',actor_id:'user'}];
 exporter.actorLabel=()=>'+unsafe;"quoted"';
 exporter.exportAudit();

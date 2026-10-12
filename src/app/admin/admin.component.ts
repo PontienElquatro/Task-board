@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal, untracked } from '@angular/core';
+import { Component, DestroyRef, Injector, afterNextRender, computed, effect, inject, signal, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -8,24 +8,31 @@ import { AvatarComponent } from '../shared/avatar.component';
 import { A11yModule } from '@angular/cdk/a11y';
 import { UiFieldDirective } from '../shared/ui-field.directive';
 import { ModalScrollLockDirective } from '../shared/modal-scroll-lock.directive';
+import { AdminAccess, AdminAccessComponent } from './admin-access.component';
+import { AdminPlatformSettingsComponent } from './admin-platform-settings.component';
 
 interface AdminUser { id:string; email:string; createdAt:string; lastSignIn:string|null; confirmed:boolean; admin:boolean; updatedAt:string|null; suspended?:boolean; }
 interface AuditEvent { id:number; action:string; created_at:string; actor_id:string; target_id?:string|null;reason?:string|null;auth_sync?:string|null; }
-interface AdminTeam {id:string;name:string;owner_id:string;created_at:string;}
+interface AdminTeam {id:string;name:string;owner_id:string;created_at:string;owner_email?:string;}
 interface TeamDetail {team:AdminTeam;members:number;projects:number;accepted:number;pending:number;expired:number;}
-interface AdminSnapshot { users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; auditPage?:number;auditTotal?:number;generatedAt?:string; metrics?:{teams:number;sharedProjects:number;pendingInvitations:number;expiredInvitations:number;acceptedInvitations:number}; }
+interface AdminSnapshot { access?:AdminAccess; users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; auditPage?:number;auditTotal?:number;generatedAt?:string; metrics?:{teams:number;sharedProjects:number;pendingInvitations:number;expiredInvitations:number;acceptedInvitations:number}; }
 
-@Component({selector:'app-admin',standalone:true,imports:[UiFieldDirective,ModalScrollLockDirective,CommonModule,FormsModule,RouterLink,IconComponent,AvatarComponent,A11yModule],templateUrl:'./admin.component.html'})
+@Component({selector:'app-admin',standalone:true,imports:[AdminPlatformSettingsComponent,AdminAccessComponent,UiFieldDirective,ModalScrollLockDirective,CommonModule,FormsModule,RouterLink,IconComponent,AvatarComponent,A11yModule],templateUrl:'./admin.component.html'})
 export class AdminComponent {
   readonly auth=inject(AuthService);
   readonly snapshot=signal<AdminSnapshot|null>(null);
   readonly loading=signal(false);
   readonly error=signal('');
+  readonly auditExport=signal('');
+  readonly auditExportUrl=signal('');
   search='';
   readonly teamDirectory=signal<{teams:AdminTeam[];total:number;page:number}|null>(null);
   readonly teamDetail=signal<TeamDetail|null>(null);
   readonly teamLoading=signal(false);readonly teamError=signal('');teamSearch='';
   private teamRequest=0;
+  private teamOpener:HTMLElement|null=null;
+  private readonly injector=inject(Injector);
+  closeTeamDetail(){this.teamDetail.set(null);afterNextRender(()=>this.teamOpener?.focus(),{injector:this.injector});}
   statusFilter='';auditAction='';auditTarget='';
   userPage=1;
   pendingAccount:AdminUser|null=null;
@@ -34,14 +41,18 @@ export class AdminComponent {
   readonly actionError=signal('');
   section='overview';
   roleFilter='';confirmationFilter='';syncFilter='';auditSearch='';sort='recent';selectedUser:AdminUser|null=null;notice='';
-  readonly sections=[{id:'overview',label:'Vue d’ensemble',icon:'chart'},{id:'users',label:'Utilisateurs',icon:'user'},{id:'collaboration',label:'Collaboration',icon:'team'},{id:'audit',label:'Journal',icon:'shield'},{id:'settings',label:'Paramètres',icon:'settings'}];
+  readonly sections=[{id:'overview',label:'Vue d’ensemble',icon:'chart'},{id:'users',label:'Utilisateurs',icon:'user'},{id:'collaboration',label:'Collaboration',icon:'team'},{id:'audit',label:'Journal',icon:'shield'},{id:'settings',label:'Paramètres',icon:'settings'},{id:'access',label:'Rôles et accès',icon:'shield'}];
   private generation=0;
+  allowedSections(){const access=this.snapshot()?.access;if(!access)return this.sections.filter(s=>s.id!=='access');const scope:Record<string,string>={overview:'overview',users:'users_read',collaboration:'teams_read',audit:'audit_read',settings:'settings_read'};return this.sections.filter(s=>s.id==='access'?true:access.isPrincipal||access.permissions.includes(scope[s.id]));}
+  selectSection(id:string){if(!this.allowedSections().some(s=>s.id===id))return;this.section=id;this.selectedUser=null;if(id==='collaboration'&&!this.teamDirectory())void this.loadTeams(1);}
   constructor() {
+    inject(DestroyRef).onDestroy(()=>this.clearAuditExport());
+    const accountId=computed(()=>this.auth.user()?.id??null);
     effect(() => {
-      const user=this.auth.user();
+      const user=accountId();
       const initializing=this.auth.initializing();
       untracked(() => {
-        this.generation++; this.snapshot.set(null); this.error.set(''); this.resetFilters();this.auditSearch='';this.auditAction='';this.auditTarget='';this.selectedUser=null;this.notice=''; this.loading.set(false);this.pendingAccount=null;this.actionReason='';this.actionError.set('');
+        this.generation++; this.snapshot.set(null); this.error.set(''); this.resetFilters();this.auditSearch='';this.auditAction='';this.auditTarget='';this.selectedUser=null;this.notice='';this.clearAuditExport(); this.loading.set(false);this.pendingAccount=null;this.actionReason='';this.actionError.set('');
         this.teamRequest++;this.teamDirectory.set(null);this.teamDetail.set(null);this.teamLoading.set(false);this.teamError.set('');this.teamSearch='';
         if (!initializing && user) void this.load(1);
       });
@@ -51,12 +62,14 @@ export class AdminComponent {
     const query=this.search.trim().toLocaleLowerCase();
     return (this.snapshot()?.users??[]).filter(u=>(u.email.toLocaleLowerCase().includes(query)||u.id.includes(query))&&(!this.statusFilter||(this.statusFilter==='suspended'?!!u.suspended:!u.suspended))&&(!this.roleFilter||(this.roleFilter==='admin'?u.admin:!u.admin))&&(!this.confirmationFilter||(this.confirmationFilter==='confirmed'?u.confirmed:!u.confirmed))&&(!this.syncFilter||(this.syncFilter==='cloud'?!!u.updatedAt:!u.updatedAt))).sort((a,b)=>this.sort==='email'?a.email.localeCompare(b.email):this.sort==='activity'?(b.lastSignIn??'').localeCompare(a.lastSignIn??''):b.createdAt.localeCompare(a.createdAt));
   }
-  visibleTeams(){const q=this.teamSearch.trim().toLowerCase();return this.teamDirectory()?.teams.filter(t=>(t.name+' '+this.actorLabel(t.owner_id)+' '+t.id).toLowerCase().includes(q))??[];}
-  async loadTeams(page=1,teamId?:string){
+  visibleTeams(){return this.teamDirectory()?.teams??[];}
+  teamSearchChanged(){this.teamDirectory.set(null);void this.loadTeams(1);}
+  async loadTeams(page=1,teamId?:string,event?:Event){
+    if(teamId&&event?.currentTarget instanceof HTMLElement)this.teamOpener=event.currentTarget;
     const actor=this.auth.user()?.id;if(!actor)return;
     const request=++this.teamRequest;this.teamLoading.set(true);this.teamError.set('');this.teamDetail.set(null);
     try{
-      const {data,error}=await this.auth.client.functions.invoke('taskboard-admin',{body:teamId?{action:'team_detail',teamId}:{action:'collaboration',page}});
+      const {data,error}=await this.auth.client.functions.invoke('taskboard-admin',{body:teamId?{action:'team_detail',teamId}:{action:'collaboration',page,teamSearch:this.teamSearch.trim()}});
       if(request!==this.teamRequest||actor!==this.auth.user()?.id)return;
       if(error||!data||data.error)throw new Error('Supervision indisponible. Réessayez.');
       if(teamId)this.teamDetail.set(data);else this.teamDirectory.set(data);
@@ -70,6 +83,8 @@ export class AdminComponent {
   confirmedCount(){return this.snapshot()?.users.filter(u=>u.confirmed).length??0;}
   suspendedCount(){return this.snapshot()?.users.filter(u=>u.suspended).length??0;}
   accountHistory(id:string){this.selectedUser=null;this.auditTarget=id;this.auditAction='';this.auditSearch='';this.section='audit';void this.load(1,1);}
+  auditFiltersChanged(){this.auditSearch='';const current=this.snapshot();if(current)this.snapshot.set({...current,events:[],auditTotal:0,auditPage:1});void this.load(1,1);}
+  clearAuditTarget(){this.auditTarget='';this.auditFiltersChanged();}
   activeCount(){const cutoff=Date.now()-30*86400000;return this.snapshot()?.users.filter(u=>u.lastSignIn&&new Date(u.lastSignIn).getTime()>=cutoff).length??0;}
   auditEvents(){const q=this.auditSearch.trim().toLowerCase();return this.snapshot()?.events.filter(e=>(!this.auditAction||e.action===this.auditAction)&&(!this.auditTarget||e.target_id===this.auditTarget)&&(e.actor_id+' '+this.actorLabel(e.actor_id)+' '+e.action+' '+(e.target_id?this.actorLabel(e.target_id):'')+' '+(e.reason??'')).toLowerCase().includes(q))??[];}
   actorLabel(id:string){return this.snapshot()?.users.find(u=>u.id===id)?.email??id;}
@@ -100,19 +115,27 @@ export class AdminComponent {
   exportAudit(){
     const rows=[['Date UTC','Action','Administrateur','Compte concerné','Motif','Synchronisation Auth'],...this.auditEvents().map(e=>[e.created_at,e.action,this.actorLabel(e.actor_id),e.target_id?this.actorLabel(e.target_id):'',e.reason??'',e.auth_sync??''])];
     const csv=rows.map(row=>row.map(value=>'"'+value.replace(/"/g,'""').replace(/^[\s\u0000-\u001f]*[=+@-]/,prefix=>"'"+prefix)+'"').join(';')).join('\r\n');
-    const url=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-    const link=document.createElement('a');link.href=url;link.download='maat-journal-admin.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    this.clearAuditExport();this.auditExport.set('\uFEFF'+csv);
+    const url=URL.createObjectURL(new Blob([this.auditExport()],{type:'text/csv;charset=utf-8'}));
+    this.auditExportUrl.set(url);
+    const link=document.createElement('a');link.href=url;link.download='maat-journal-admin.csv';link.hidden=true;
+    document.body.appendChild(link);link.click();link.remove();
+    this.notice='CSV préparé. Si le téléchargement ne démarre pas, utilisez le lien Télécharger ou Copier le CSV dans le journal.';
   }
+  clearAuditExport(){const url=this.auditExportUrl();if(url)URL.revokeObjectURL(url);this.auditExportUrl.set('');this.auditExport.set('');}
+  async copyAuditExport(){try{await navigator.clipboard.writeText(this.auditExport());this.notice='CSV copié. Vous pouvez le coller dans un fichier .csv ou un tableur.';}catch{this.notice='Copie automatique indisponible. Sélectionnez le texte CSV affiché pour le copier.';}}
   async load(page=1,auditPage=this.snapshot()?.auditPage??1) {
     if (!this.auth.user()) return;
+    this.clearAuditExport();
     const generation=++this.generation;
     this.loading.set(true); this.error.set('');
     try {
-      const {data,error}=await this.auth.client.functions.invoke('taskboard-admin',{body:{page,auditPage}});
+      const {data,error}=await this.auth.client.functions.invoke('taskboard-admin',{body:{page,auditPage,...(this.auditTarget?{auditTarget:this.auditTarget}:{}),...(this.auditAction?{auditAction:this.auditAction}:{})}});
       if (generation!==this.generation) return;
       if (error || !data || data.error) throw new Error('Accès réservé aux administrateurs confirmés. Si vous êtes autorisé, vérifiez votre connexion puis réessayez.');
       this.snapshot.set(data);
-      this.filtersChanged();
+      if(!this.allowedSections().some(s=>s.id===this.section))this.section=this.allowedSections()[0]?.id??'';
+      this.userPage=Math.min(this.userPage,this.pageCount());
       this.auth.adminAccess.set(true);
     } catch (error) {
       if (generation===this.generation) { this.snapshot.set(null); this.error.set(error instanceof Error ? error.message : 'Service indisponible.'); }

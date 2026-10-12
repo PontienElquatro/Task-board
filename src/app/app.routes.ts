@@ -1,14 +1,17 @@
 import { Routes } from '@angular/router';
 import { BRAND } from './core/brand';
+import { adminRouteGuard } from './admin/admin-route.guard';
 export const routes: Routes = [
   {
     path: 'admin/settings',
+    canActivate: [adminRouteGuard],
     title: 'Mon profil administrateur · Ma’at',
     loadComponent: () => import('./pages/workspace-pages.component')
       .then(m => m.SettingsComponent)
   },
   { path: 'team-projects', title: 'Projets d’équipe · Ma’at', loadComponent: () => import('./pages/shared-projects.component').then(m => m.SharedProjectsComponent) },
-  { path: 'admin', title: 'Administration · ' + BRAND.name, loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent) },
+  { path: 'admin', canActivate:[adminRouteGuard], title: 'Administration · ' + BRAND.name, loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent) },
+  { path: 'access-denied', title: 'Accès refusé · Ma’at', loadComponent: () => import('./admin/admin-access-denied.component').then(m => m.AdminAccessDeniedComponent) },
   { path: '', redirectTo: 'board', pathMatch: 'full' },
   { path: 'login', title: 'Mon compte · ' + BRAND.name, loadComponent: () => import('./login/login.component').then(m => m.LoginComponent) },
   { path: 'board', title: 'Mon tableau · ' + BRAND.name, loadComponent: () => import('./kanban-board/kanban-board.component').then(m => m.KanbanBoardComponent) },
