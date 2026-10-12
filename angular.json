@@ -94,6 +94,22 @@
               "src/styles.css"
             ],
             "scripts": []
+          },
+          "configurations": {
+            "backup-check": {
+              "builderMode": "application",
+              "sourceMap": false,
+              "tsConfig": "tsconfig.backup-spec.json",
+              "assets": [],
+              "styles": [],
+              "include": [
+                "src/app/providers/cloud-storage.provider.spec.ts",
+                "src/app/core/storage/device-restore.spec.ts",
+                "src/app/core/storage/checkpoint-recovery.spec.ts",
+                "src/app/core/storage/workspace-merge.spec.ts",
+                "src/app/account-bar/account-bar.component.spec.ts"
+              ]
+            }
           }
         }
       }

@@ -9,8 +9,10 @@ export function readDeviceArchive(input:unknown,account:string):RestoreCopy[] {
   const result:RestoreCopy[]=[];
   const add=(value:unknown,label:string)=>{
     const envelope=value as {data?:Record<string,unknown>} | null;
-    if(!envelope?.data || !Array.isArray(envelope.data['mytaskboard_tasks'])) throw new Error('Copie sans liste de tâches valide.');
-    result.push({label,tasks:normalizeTasks(envelope.data['mytaskboard_tasks'])});
+    if(!envelope?.data || typeof envelope.data!=='object' || Array.isArray(envelope.data)) throw new Error('Copie sans données valides.');
+    const tasks=envelope.data['mytaskboard_tasks'];
+    if(tasks!==undefined && tasks!==null && !Array.isArray(tasks)) throw new Error('Copie sans liste de tâches valide.');
+    result.push({label,tasks:normalizeTasks(tasks ?? [])});
   };
   archive['copies'].forEach((value:unknown,index:number)=>{
     const copy=value as {account?:unknown;envelope?:unknown};

@@ -3,7 +3,8 @@ import { AuthService } from '../services/auth.service';
 import { StorageProvider } from './storage.provider';
 import { saveRecoveryBackup } from '../core/storage/recovery-backup';
 import { MergeChoice, MergeConflict, Workspace, WorkspaceMerge, mergeWorkspace, resolveWorkspaceMerge } from '../core/storage/workspace-merge';
-import { WorkspaceEnvelope } from '../core/storage/workspace-envelope';
+import { DeviceCheckpoint, WorkspaceEnvelope } from '../core/storage/workspace-envelope';
+import { checkpointRecovery, validEnvelope } from '../core/storage/checkpoint-recovery';
 import { DEVICE_CHECKPOINTS } from '../core/storage/indexed-checkpoints';
 import { WORKSPACE_LOCKS, validNotice, withWorkspaceLock } from '../core/storage/tab-coordinator';
 
@@ -17,6 +18,7 @@ export class CloudStorageProvider implements StorageProvider {
   readonly conflict = signal(false);
   readonly conflictItems = signal<MergeConflict[]>([]);
   readonly localBackupStatus = signal('Copie IndexedDB en préparation');
+  readonly exportDownload = signal<{url:string;filename:string}|null>(null);
   private readonly checkpoints=inject(DEVICE_CHECKPOINTS);
   private readonly locks=inject(WORKSPACE_LOCKS);
   private readonly writer=crypto.randomUUID();
@@ -59,7 +61,7 @@ export class CloudStorageProvider implements StorageProvider {
     window.addEventListener('focus', focus);
     window.addEventListener('storage',changed);
     inject(DestroyRef).onDestroy(() => {
-      this.destroyed = true; clearTimeout(this.timer); clearTimeout(this.retryTimer); clearTimeout(this.peerTimer);
+      this.destroyed = true; this.clearExportDownload(); clearTimeout(this.timer); clearTimeout(this.retryTimer); clearTimeout(this.peerTimer);
       window.removeEventListener('online', online); window.removeEventListener('focus', focus);
       window.removeEventListener('storage',changed); this.channel?.close();
     });
@@ -101,6 +103,7 @@ export class CloudStorageProvider implements StorageProvider {
   }
   private async switchAccount(id: string | null) {
     const generation = ++this.generation;
+    this.clearExportDownload();
     clearTimeout(this.timer);
     clearTimeout(this.retryTimer); this.retryAttempt = 0;
     clearTimeout(this.peerTimer);
@@ -115,15 +118,19 @@ export class CloudStorageProvider implements StorageProvider {
         try {
           const copies=await this.checkpoints.list(id);
           if(generation!==this.generation) return;
-          const saved=copies.find(copy=>copy.envelope.pending) ?? copies[0];
+          const saved=checkpointRecovery(copies,id);
+          if(saved?.ambiguous) {
+            this.envelope=saved.envelope; this.conflict.set(true); this.ready.set(true);
+            this.contextVersion.update(v=>v+1);
+            this.status.set('Plusieurs brouillons différents sont conservés sur cet appareil. Exportez les copies avant de choisir une version à récupérer.');
+            return;
+          }
           if(saved) raw=JSON.stringify(saved.envelope);
         } catch {this.localBackupStatus.set('Copie IndexedDB indisponible · conservez un export');}
       }
       if (raw) {
         const saved = JSON.parse(raw);
-        if (!Number.isSafeInteger(saved.revision) || saved.revision < 0 || typeof saved.pending !== 'boolean' ||
-          !saved.data || typeof saved.data !== 'object' || Array.isArray(saved.data) ||
-          (saved.base !== undefined && (!saved.base || typeof saved.base !== 'object' || Array.isArray(saved.base)))) throw new Error('Cache invalide');
+        if (!validEnvelope(saved)) throw new Error('Cache invalide');
         this.envelope = saved;
         this.contextVersion.update(v => v + 1);
       }
@@ -151,7 +158,7 @@ export class CloudStorageProvider implements StorageProvider {
       const snapshot:Envelope={revision:0,data,pending:false};
       localStorage.setItem(this.journalKey('__local__'),JSON.stringify(snapshot));
       const raw=JSON.stringify(value);
-      localStorage.setItem(key,raw); this.localReads.set(key,raw);
+      localStorage.setItem(key,raw); this.localReads.set(key,raw); this.envelope=snapshot;
       this.mirror('__local__',snapshot);
       return;
     }
@@ -162,7 +169,7 @@ export class CloudStorageProvider implements StorageProvider {
     clearTimeout(this.timer); this.timer = setTimeout(() => void this.sync(), 250);
   }
   removeItem(key: string) {
-    if (!this.userId) { localStorage.removeItem(key); return; }
+    if (!this.userId) { this.setItem(key,null); localStorage.removeItem(key); this.localReads.set(key,null); return; }
     this.setItem(key, null);
   }
   async sync(generation = this.generation) {
@@ -307,31 +314,81 @@ export class CloudStorageProvider implements StorageProvider {
     try {
       const raw = localStorage.getItem('maat_recovery_' + this.userId);
       if (!raw) { this.status.set('Aucune sauvegarde de secours pour ce compte sur cet appareil'); return; }
-      const url = URL.createObjectURL(new Blob([raw], {type:'application/json'}));
-      const link = document.createElement('a'); link.href = url;
-      link.download = 'maat-secours-' + new Date().toISOString().slice(0,10) + '.json'; link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      this.download(new Blob([raw],{type:'application/json'}),'maat-secours-'+new Date().toISOString().slice(0,10)+'.json');
     } catch { this.status.set('Téléchargement de la sauvegarde impossible'); }
+  }
+  private clearExportDownload() {
+    const current=this.exportDownload();
+    this.exportDownload.set(null);
+    if(current) URL.revokeObjectURL(current.url);
+  }
+  private download(blob:Blob,filename:string) {
+    const url=URL.createObjectURL(blob);
+    this.clearExportDownload();
+    this.exportDownload.set({url,filename});
+    const link=document.createElement('a'); link.href=url; link.download=filename; link.click();
+  }
+  private async bounded<T>(operation:Promise<T>):Promise<T> {
+    let timer:ReturnType<typeof setTimeout>|undefined;
+    try {
+      return await Promise.race([operation,new Promise<T>((_,reject)=>{
+        timer=setTimeout(()=>reject(new Error('Storage timeout')),5000);
+      })]);
+    } finally {clearTimeout(timer);}
   }
   async exportDeviceCopies() {
     const id=this.userId ?? '__local__';
     const generation=this.generation;
-    await this.mirrorQueue;
-    try {
-      const copies=await this.checkpoints.list(id).catch(()=>[]);
-      if(generation!==this.generation || id!==(this.userId ?? '__local__')) return;
-      const journals=[];
-      for(let i=0;i<localStorage.length;i++){
-        const key=localStorage.key(i);
-        if(key?.startsWith(this.cacheKey(id)+'_draft_')){
+    const unavailable:string[]=[];
+    const snapshot:Envelope=JSON.parse(JSON.stringify(this.envelope));
+    if(!this.userId) {
+      for(const key of ['mytaskboard_tasks','mytaskboard_projects','mytaskboard_goals']) {
+        try {
           const raw=localStorage.getItem(key);
-          if(raw) {try{journals.push(JSON.parse(raw));}catch{/* Preserve other readable copies. */}}
+          if(raw) snapshot.data[key]=JSON.parse(raw);
+        } catch {
+          unavailable.push(key);
+          try {
+            const raw=this.localReads.get(key);
+            if(raw) snapshot.data[key]=JSON.parse(raw);
+          } catch {/* Keep the displayed readable state. */}
         }
       }
-      const content={app:'Maat',version:3,kind:'device-copies',accountId:id,exportedAt:new Date().toISOString(),copies,journals};
-      const url=URL.createObjectURL(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}));
-      const link=document.createElement('a');link.href=url;link.download='maat-copies-appareil-'+new Date().toISOString().slice(0,10)+'.json';link.click();
-      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    try {
+      try {await this.bounded(this.mirrorQueue);} catch {unavailable.push('attente IndexedDB');}
+      let storedCopies:DeviceCheckpoint[]=[];
+      try {storedCopies=await this.bounded(this.checkpoints.list(id));}
+      catch {unavailable.push('copies IndexedDB');}
+      if(generation!==this.generation || id!==(this.userId ?? '__local__') || this.destroyed) return;
+      const copies:DeviceCheckpoint[]=[];
+      for(const copy of storedCopies) {
+        try {
+          if(!copy || copy.account!==id || !validEnvelope(copy.envelope)) throw new Error('Invalid checkpoint');
+          JSON.stringify(copy);
+          copies.push(copy);
+        } catch {unavailable.push('copie IndexedDB illisible');}
+      }
+      copies.unshift({account:id,writer:this.writer,updatedAt:new Date().toISOString(),envelope:snapshot});
+      const journals:Envelope[]=[];
+      try {
+        for(let i=0;i<localStorage.length;i++) {
+          const key=localStorage.key(i);
+          if(key?.startsWith(this.cacheKey(id)+'_draft_')) {
+            try {
+              const raw=localStorage.getItem(key);
+              if(raw) {
+                const parsed:unknown=JSON.parse(raw);
+                if(!validEnvelope(parsed)) throw new Error('Invalid journal');
+                journals.push(parsed);
+              }
+            } catch {unavailable.push('brouillon local illisible');}
+          }
+        }
+      } catch {unavailable.push('brouillons localStorage');}
+      const content={app:'Maat',version:3,kind:'device-copies',accountId:id,exportedAt:new Date().toISOString(),copies,journals,unavailable};
+      this.download(new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),'maat-copies-appareil-'+new Date().toISOString().slice(0,10)+'.json');
+      if(unavailable.length) this.localBackupStatus.set('Export préparé avec la version ouverte · certaines copies de secours sont indisponibles');
     } catch {this.status.set('Export des copies de cet appareil impossible');}
   }
 }

@@ -11,6 +11,7 @@ describe('Cloud recovery safety', () => {
   let read: jasmine.Spy;
   let write: jasmine.Spy;
   let checkpoint: jasmine.Spy;
+  let list: jasmine.Spy;
   const id = 'maat-unit-test';
   const cacheKey = 'mytaskboard_cloud_' + id;
   const backupKey = 'maat_recovery_' + id;
@@ -21,9 +22,10 @@ describe('Cloud recovery safety', () => {
     read = jasmine.createSpy('read').and.resolveTo({data:{revision:1,data:{items:['original']}},error:null});
     write = jasmine.createSpy('rpc').and.resolveTo({data:3,error:null});
     checkpoint=jasmine.createSpy('checkpoint').and.resolveTo(undefined);
+    list=jasmine.createSpy('list').and.resolveTo([]);
     const query = {select:()=>query,eq:()=>query,maybeSingle:()=>read()};
     TestBed.configureTestingModule({providers:[
-      {provide:DEVICE_CHECKPOINTS,useValue:{put:checkpoint,list:()=>Promise.resolve([])}},
+      {provide:DEVICE_CHECKPOINTS,useValue:{put:checkpoint,list}},
       {provide:WORKSPACE_LOCKS,useValue:null},
       {provide:AuthService,useValue:{
       initializing:signal(false),user,client:{from:()=>query,rpc:write}
@@ -145,5 +147,76 @@ describe('Cloud recovery safety', () => {
     expect(cloud.conflict()).toBeFalse();
     expect(cloud.getItem('mytaskboard_tasks')).toEqual([{...a,title:'Remote'}]);
     expect(JSON.parse(localStorage.getItem(backupKey)!).data.mytaskboard_tasks[0].title).toBe('Local');
+  });
+  async function exportedContent() {
+    const create=spyOn(URL,'createObjectURL').and.returnValue('blob:unit-test');
+    spyOn(HTMLAnchorElement.prototype,'click');
+    await cloud.exportDeviceCopies();
+    expect(create).toHaveBeenCalled();
+    return JSON.parse(await (create.calls.mostRecent().args[0] as Blob).text());
+  }
+  it('blocks automatic upload of different pending recovered drafts',async()=>{
+    user.set(null);TestBed.flushEffects();localStorage.removeItem(cacheKey);
+    list.and.resolveTo([
+      {account:id,writer:'one',updatedAt:'2026-10-12',envelope:{revision:1,data:{items:['one']},pending:true}},
+      {account:id,writer:'two',updatedAt:'2026-10-12',envelope:{revision:1,data:{items:['two']},pending:true}}
+    ]);
+    read.calls.reset();write.calls.reset();
+    user.set({id});TestBed.flushEffects();await settle();
+    expect(cloud.conflict()).toBeTrue();expect(cloud.ready()).toBeTrue();
+    expect(cloud.getItem('items')).toEqual(['one']);expect(read).not.toHaveBeenCalled();expect(write).not.toHaveBeenCalled();
+  });
+  it('exports the displayed workspace even when IndexedDB is unavailable',async()=>{
+    list.and.rejectWith(new Error('offline storage'));
+    const content=await exportedContent();
+    expect(content.copies[0].envelope.data.items).toEqual(['original']);
+    expect(content.unavailable).toContain('copies IndexedDB');
+    expect(cloud.exportDownload()?.filename).toContain('maat-copies-appareil');
+  });
+  it('exports memory when journal enumeration fails',async()=>{
+    spyOn(Storage.prototype,'key').and.throwError('unavailable');
+    const content=await exportedContent();
+    expect(content.copies[0].envelope.data.items).toEqual(['original']);
+    expect(content.unavailable).toContain('brouillons localStorage');
+  });
+  it('ignores malformed checkpoints without dropping the current workspace',async()=>{
+    list.and.resolveTo([{account:id,envelope:{revision:-1,data:{},pending:false}}]);
+    const content=await exportedContent();
+    expect(content.copies.length).toBe(1);
+    expect(content.copies[0].envelope.data.items).toEqual(['original']);
+    expect(content.unavailable).toContain('copie IndexedDB illisible');
+  });
+  it('bounds a stalled IndexedDB read',async()=>{
+    jasmine.clock().install();
+    try {
+      list.and.returnValue(new Promise(()=>{}));
+      const create=spyOn(URL,'createObjectURL').and.returnValue('blob:unit-test');
+      spyOn(HTMLAnchorElement.prototype,'click');
+      const exporting=cloud.exportDeviceCopies();await settle();
+      jasmine.clock().tick(5001);await exporting;
+      expect(create).toHaveBeenCalled();
+      const content=JSON.parse(await (create.calls.mostRecent().args[0] as Blob).text());
+      expect(content.copies[0].envelope.data.items).toEqual(['original']);
+      expect(content.unavailable).toContain('copies IndexedDB');
+    } finally {jasmine.clock().uninstall();}
+  });
+  it('cancels an export when the account changes while reading checkpoints',async()=>{
+    let finish!:(value:unknown)=>void;
+    list.and.returnValue(new Promise(resolve=>finish=resolve));
+    const create=spyOn(URL,'createObjectURL').and.returnValue('blob:unit-test');
+    spyOn(HTMLAnchorElement.prototype,'click');
+    const exporting=cloud.exportDeviceCopies();await settle();
+    user.set(null);TestBed.flushEffects();finish([]);
+    await exporting;expect(create).not.toHaveBeenCalled();expect(cloud.exportDownload()).toBeNull();
+  });
+  it('rejects stale local deletion instead of removing another tab version',()=>{
+    user.set(null);TestBed.flushEffects();
+    const key='maat-local-stale-delete-test';
+    try {
+      localStorage.removeItem(key);cloud.getItem(key);
+      localStorage.setItem(key,JSON.stringify(['other tab']));
+      expect(()=>cloud.removeItem(key)).toThrowError(/autre version/);
+      expect(JSON.parse(localStorage.getItem(key)!)).toEqual(['other tab']);
+    } finally {localStorage.removeItem(key);}
   });
 });

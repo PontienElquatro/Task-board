@@ -77,7 +77,8 @@ import { PlatformSettingsService } from '../services/platform-settings.service';
     </div>
   </div>
   <p *ngIf="cloud.auth.sessionError() || logoutError()" role="alert" class="mx-auto mt-2 max-w-screen-2xl rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{cloud.auth.sessionError() || logoutError()}}</p>
-  <div *ngIf="syncNeedsAttention()" role="alert" class="mx-auto mt-2 flex max-w-screen-2xl flex-wrap items-center justify-between gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200"><span>{{cloud.status()}}</span><button class="secondary min-h-11" (click)="cloud.sync()">Réessayer</button></div>
+  <div *ngIf="syncNeedsAttention()" role="alert" class="mx-auto mt-2 flex max-w-screen-2xl flex-wrap items-center justify-between gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200"><span>{{cloud.status()}}</span><button *ngIf="!cloud.conflict()" class="secondary min-h-11" (click)="cloud.sync()">Réessayer</button><button *ngIf="cloud.conflict()" class="secondary min-h-11" (click)="cloud.exportDeviceCopies()">Exporter toutes les copies</button></div>
+  <div *ngIf="cloud.exportDownload() as download" role="status" class="mx-auto mt-2 flex max-w-screen-2xl flex-wrap items-center gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200"><span>Votre export est prêt.</span><a class="min-h-11 inline-flex items-center underline" [href]="download.url" [download]="download.filename">Télécharger le fichier JSON</a></div>
   <div *ngIf="platform.settings() as info" class="mx-auto max-w-screen-2xl text-sm"><p *ngIf="info.announcement" role="status" class="mt-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-950">{{info.announcement}}</p><a *ngIf="info.support_email" class="mt-2 inline-flex min-h-11 items-center text-blue-700 dark:text-blue-300" [href]="'mailto:'+info.support_email">Contacter l’assistance</a></div>
 </header>
 <app-device-restore *ngIf="restoreOpen" />`})
@@ -102,7 +103,7 @@ export class AccountBarComponent {
   readonly platform=inject(PlatformSettingsService);
   readonly theme=inject(ThemeService);
   readonly cloud=inject(CloudStorageProvider); restoreOpen=false;
-  readonly syncNeedsAttention=computed(()=>/indisponible|réessayer|différée|illisible/i.test(this.cloud.status()));
+  readonly syncNeedsAttention=computed(()=>this.cloud.conflict() || /indisponible|réessayer|différée|illisible/i.test(this.cloud.status()));
   readonly saveState=computed(()=>cloudIndicator(this.cloud.status(),this.cloud.auth.initializing(),!!this.cloud.auth.user(),!!this.cloud.conflict(),this.cloud.auth.sessionError()));
   readonly saveLabel=computed(()=>this.cloud.auth.initializing() ? 'Vérification de la sauvegarde…' : this.cloud.auth.sessionError() || (this.saveState()==='saved' ? 'Sauvegarde cloud confirmée' : this.saveState()==='local' ? 'Mode local — aucune sauvegarde cloud' : this.cloud.status()));
   readonly signingOut=signal(false); readonly logoutError=signal('');

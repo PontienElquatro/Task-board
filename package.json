@@ -20,6 +20,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
+    "pretest:backup": "npm run config:backend",
+    "test:backup": "ng test --configuration backup-check --watch=false --browsers=ChromeHeadless",
     "test:admin": "node tools/test-admin-edge.mjs",
     "test:cloud-browser": "node tools/test-cloud-browser.mjs",
     "test:ux": "node tools/test-ux-browser.mjs",

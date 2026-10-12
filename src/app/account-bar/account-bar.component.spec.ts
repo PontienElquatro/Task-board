@@ -1,26 +1,34 @@
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { AccountBarComponent } from './account-bar.component';
 import { CloudStorageProvider } from '../providers/cloud-storage.provider';
+import { PlatformSettingsService } from '../services/platform-settings.service';
+import { ThemeService } from '../services/theme.service';
+import { NotificationsComponent } from '../shared/notifications.component';
+@Component({selector:'app-notifications',standalone:true,template:''}) class TestNotificationsComponent {}
 
 describe('AccountBarComponent account controls', () => {
   function setup() {
     const cloud = {
       auth: { initializing: signal(true), user: signal<unknown>(null),
-        displayName: () => 'Compte test', sessionError: signal(''), signOut: jasmine.createSpy('signOut').and.resolveTo() },
-      conflict: signal(false), ready: signal(true), status: signal('Synchronisé avec votre compte'),
+        displayName: () => 'Compte test', avatarUrl:()=>null,adminAccess:()=>false,sessionError: signal(''), signOut: jasmine.createSpy('signOut').and.resolveTo() },
+      conflict: signal(false),conflictItems:signal([]), ready: signal(true), status: signal('Synchronisé avec votre compte'),
+      exportDownload:signal<{url:string;filename:string}|null>(null),exportDeviceCopies:jasmine.createSpy('exportDeviceCopies'),
       localBackupStatus: signal('Copie locale'), sync: jasmine.createSpy('sync').and.resolveTo()
     };
     TestBed.configureTestingModule({imports:[AccountBarComponent],
-      providers:[provideRouter([]), {provide:CloudStorageProvider,useValue:cloud}]});
+      providers:[provideRouter([]), {provide:CloudStorageProvider,useValue:cloud},
+      {provide:PlatformSettingsService,useValue:{settings:signal(null)}},
+      {provide:ThemeService,useValue:{darkMode:signal(false),toggleDarkMode:()=>{}}}]});
+    TestBed.overrideComponent(AccountBarComponent,{remove:{imports:[NotificationsComponent]},add:{imports:[TestNotificationsComponent]}});
     const fixture=TestBed.createComponent(AccountBarComponent);
     fixture.detectChanges();
     return {cloud, fixture, component:fixture.componentInstance};
   }
   it('keeps session initialization visible rather than hiding the account bar', () => {
     const {fixture}=setup();
-    expect(fixture.nativeElement.textContent).toContain('Vérification de votre session');
+    expect(fixture.nativeElement.textContent).toContain('Vérification de la sauvegarde');
   });
   it('shows identity and logout for a connected account', () => {
     const {cloud,fixture}=setup();
@@ -51,5 +59,16 @@ describe('AccountBarComponent account controls', () => {
     await component.signOut();
     expect(cloud.auth.signOut).not.toHaveBeenCalled();
     expect(component.logoutError()).toContain('sauvegarde cloud');
+  });
+  it('keeps a direct download link after preparing an export',()=>{
+    const {cloud,fixture}=setup();cloud.exportDownload.set({url:'blob:unit-export',filename:'maat.json'});fixture.detectChanges();
+    const link=fixture.nativeElement.querySelector('a[download="maat.json"]');
+    expect(link.textContent).toContain('Télécharger');expect(link.getAttribute('href')).toBe('blob:unit-export');
+  });
+  it('offers export rather than an ineffective retry for an unresolved conflict',()=>{
+    const {cloud,fixture}=setup();cloud.conflict.set(true);fixture.detectChanges();
+    const alert=fixture.nativeElement.querySelector('[role="alert"]');
+    expect(alert.textContent).toContain('Exporter toutes les copies');
+    expect(alert.textContent).not.toContain('Réessayer');
   });
 });
