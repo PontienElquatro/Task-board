@@ -11,7 +11,7 @@
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:application",
+          "builder": "@angular/build:application",
           "options": {
             "outputPath": "dist/my-task-board",
             "index": "src/index.html",
@@ -57,12 +57,24 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "testing": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": false
+            },
+            "testing-backup": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": false,
+              "styles": [],
+              "assets": []
             }
           },
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "my-task-board:build:production"
@@ -74,34 +86,23 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n"
+          "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
+            "buildTarget": "my-task-board:build:testing",
             "tsConfig": "tsconfig.spec.json",
-            "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
-            ],
-            "styles": [
-              "src/styles.css"
-            ],
-            "scripts": []
+            "runner": "vitest",
+            "runnerConfig": "vitest.config.mjs",
+            "browsers": ["ChromiumHeadless"],
+            "setupFiles": ["src/test-setup.ts"],
+            "providersFile": "src/test-providers.ts"
           },
           "configurations": {
             "backup-check": {
-              "builderMode": "application",
-              "sourceMap": false,
+              "buildTarget": "my-task-board:build:testing-backup",
               "tsConfig": "tsconfig.backup-spec.json",
-              "assets": [],
-              "styles": [],
               "include": [
                 "src/app/providers/cloud-storage.provider.spec.ts",
                 "src/app/core/storage/device-restore.spec.ts",
