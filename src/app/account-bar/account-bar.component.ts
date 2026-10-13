@@ -14,7 +14,15 @@ import { AvatarComponent } from '../shared/avatar.component';
 import { ThemeService } from '../services/theme.service';
 import { PlatformSettingsService } from '../services/platform-settings.service';
 @Component({selector:'app-account-bar',standalone:true,imports:[DismissMenuDirective,AvatarComponent,IconComponent,CommonModule,RouterLink,SyncConflictComponent,DeviceRestoreComponent,BrandComponent,NotificationsComponent],template: `
-<app-sync-conflict *ngIf="cloud.conflict()" />
+@if (cloud.conflict()) {
+  @defer (on immediate) {
+    <app-sync-conflict />
+  } @loading (after 100ms) {
+    <p role="status" class="rounded-xl bg-blue-50 p-4 text-blue-800 dark:bg-blue-950 dark:text-blue-200">Chargement de la résolution du conflit…</p>
+  } @error {
+    <div role="alert" class="rounded-xl bg-red-50 p-4 text-red-800 dark:bg-red-950 dark:text-red-200">La fenêtre de résolution est indisponible. Vos versions restent protégées. <button class="secondary min-h-11" (click)="cloud.exportDeviceCopies()">Exporter toutes les copies</button></div>
+  }
+}
 <header class="sticky top-0 z-50 border-b border-gray-200 bg-white px-4 py-2 text-gray-900 transition-colors duration-200 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 sm:px-6 motion-reduce:transition-none" aria-label="Compte et sauvegarde">
   <div class="mx-auto flex max-w-screen-2xl flex-nowrap items-center justify-between gap-2">
     <a [routerLink]="adminContext() ? '/admin' : '/board'" class="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-lg font-semibold" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /><span class="hidden sm:inline">Ma’at</span></a>
@@ -81,7 +89,15 @@ import { PlatformSettingsService } from '../services/platform-settings.service';
   <div *ngIf="cloud.exportDownload() as download" role="status" class="mx-auto mt-2 flex max-w-screen-2xl flex-wrap items-center gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:text-blue-200"><span>Votre export est prêt.</span><a class="min-h-11 inline-flex items-center underline" [href]="download.url" [download]="download.filename">Télécharger le fichier JSON</a></div>
   <div *ngIf="platform.settings() as info" class="mx-auto max-w-screen-2xl text-sm"><p *ngIf="info.announcement" role="status" class="mt-2 rounded-xl bg-blue-50 p-3 dark:bg-blue-950">{{info.announcement}}</p><a *ngIf="info.support_email" class="mt-2 inline-flex min-h-11 items-center text-blue-700 dark:text-blue-300" [href]="'mailto:'+info.support_email">Contacter l’assistance</a></div>
 </header>
-<app-device-restore *ngIf="restoreOpen" />`})
+@if (restoreOpen) {
+  @defer (on immediate) {
+    <app-device-restore />
+  } @loading (after 100ms) {
+    <p role="status" class="rounded-xl bg-blue-50 p-4 text-blue-800 dark:bg-blue-950 dark:text-blue-200">Chargement de la récupération…</p>
+  } @error {
+    <div role="alert" class="rounded-xl bg-red-50 p-4 text-red-800 dark:bg-red-950 dark:text-red-200">La fenêtre de récupération est indisponible. Aucune donnée n’a été modifiée. <button class="secondary min-h-11" (click)="restoreOpen=false">Fermer</button></div>
+  }
+}`})
 export class AccountBarComponent {
   readonly router = inject(Router);
   readonly mobileMenuOpen = signal(false);

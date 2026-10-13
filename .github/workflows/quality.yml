@@ -24,9 +24,11 @@ jobs:
       - run: npm run audit:security
       - run: npm run test:security-deps
       - run: node --test tools/migrate-tests-to-vitest.test.mjs
+      - run: node --test tools/style-sources.test.mjs
       - run: npm run install:test-browser
       - run: npm run test:config
       - run: npm run test:ci
       - run: npm run test:admin
-      - run: npm run build
+      - run: npm run build -- --stats-json
       - run: node tools/check-built-styles.mjs
+      - run: node tools/test-performance-browser.mjs
