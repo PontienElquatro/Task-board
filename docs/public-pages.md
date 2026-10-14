@@ -125,3 +125,28 @@ Captures Accueil clair/sombre et panneau de travail inspectées. Aucun changemen
 d'authentification, de permissions ou de données. Bundle initial 740,38 kB,
 transfert estimé 178,22 kB ; le budget de 500 kB reste dépassé. Lot validé
 localement, à committer/pousser puis contrôler sur son aperçu dédié.
+
+## Menu visiteur mobile
+
+Sous 1000 px, un hamburger de 44 px remplace les liens permanents ; le logo,
+le thème et le CTA restent dans la barre supérieure. Un menu unique (mêmes
+destinations sur desktop/mobile) expose son état via aria-expanded et
+aria-controls. Échap ferme et restitue le focus, un clic extérieur ferme,
+les liens et la fin de navigation referment le menu. Sans overlay bloquant.
+À 320 px le nom visuel du logo et la flèche du CTA sont masqués, sans modifier
+leurs noms accessibles ; les espacements et titres du contenu sont adaptés.
+
+Tests ajoutés pour ouverture/fermeture, état accessible et focus demandé ;
+le smoke vérifie le vrai focus mobile, la navigation au clavier, le clic
+extérieur et ajoute 320 px. TypeScript et templates compilent. Nouveau build,
+suite navigateur et captures restent à vérifier avant le commit/push.
+
+Validation mobile finale : 179 tests sur 35 fichiers réussis ; build
+`public-mobile-check`, contrôle CSS et quatre smokes réussis (1440 px clair,
+390 px clair, 390 px sombre, 320 px clair). Ouverture du hamburger au clavier,
+état annoncé, Échap avec retour réel du focus, clic extérieur et fermeture
+après navigation passent. Captures menu ouvert à 320 px et accueil sombre à
+390 px inspectées, sans débordement détecté. Le header compact garde les
+actions visibles. Bundle initial 742,74 kB (178,63 kB estimés en transfert) :
+budget de 500 kB toujours dépassé, sans augmentation de seuil. Lot validé
+localement ; commit/push puis contrôle de l'aperçu restent à effectuer.

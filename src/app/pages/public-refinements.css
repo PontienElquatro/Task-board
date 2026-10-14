@@ -17,3 +17,4 @@
 .public-contact .public-feature{padding:32px}
 .public-contact-email{font-size:16px;color:var(--accent)!important}
 @media(max-width:560px){.public-hero{padding-top:16px;gap:28px}.public-feature,.public-contact .public-feature{padding:24px}.public-cta{padding:26px}.public-intro{font-size:16px}.public-section{padding:28px 0}}
+@media(max-width:560px){.public-page{padding-top:20px}.public-page h1{font-size:clamp(2rem,8vw,2.5rem)}.public-grid{gap:14px;margin:24px 0}.public-board{padding:18px}.public-columns article{padding:16px}.public-feature p{font-size:14px;line-height:1.8}.public-steps li{line-height:1.8}.public-cta h2{font-size:1.55rem}}
