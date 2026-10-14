@@ -29,7 +29,7 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 let browser;
 try {
   browser = await chromium.launch({ headless: true, timeout: 60000 });
-  for (const [width, theme] of [[1440, 'light'], [390, 'light'], [390, 'dark']]) {
+  for (const [width, theme] of [[1440, 'light'], [390, 'light'], [390, 'dark'], [320, 'light']]) {
     const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme });
     await context.addInitScript(value => {if(!localStorage.getItem('mytaskboard_theme'))localStorage.setItem('mytaskboard_theme', value);}, theme);
     await context.routeWebSocket('**/*', ws => ws.close());
@@ -85,10 +85,29 @@ try {
     await page.goto(origin + '/');
     await page.getByRole('heading', { name: 'Moins de dispersion. Plus d’équilibre.', exact: true }).waitFor();
     assert.equal(new URL(page.url()).pathname, '/home');
+    if(width<=1000){
+      const hamburger=page.getByRole('button',{name:'Ouvrir le menu',exact:true});
+      assert.equal(await hamburger.getAttribute('aria-expanded'),'false');
+      assert.equal(await page.getByRole('navigation',{name:'Navigation visiteurs'}).isVisible(),false);
+      await hamburger.focus();await page.keyboard.press('Enter');
+      assert.equal(await page.getByRole('button',{name:'Fermer le menu',exact:true}).getAttribute('aria-expanded'),'true');
+      await page.screenshot({path:resolve(screenshots,`menu-${width}-${theme}.png`),fullPage:true});
+      await page.keyboard.press('Escape');
+      assert.equal(await hamburger.getAttribute('aria-expanded'),'false');
+      assert.ok(await hamburger.evaluate(el=>document.activeElement===el));
+      await hamburger.click();await page.locator('main h1').click();
+      assert.equal(await hamburger.getAttribute('aria-expanded'),'false');
+      await hamburger.click();
+    }
     const about = page.getByRole('navigation', { name: 'Navigation visiteurs' }).getByRole('link', { name: 'À propos', exact: true });
     await about.focus(); await page.keyboard.press('Enter');
     await page.getByRole('heading', { name: 'L’équilibre commence par une prochaine action.', exact: true }).waitFor();
+    if(width<=1000){
+      assert.equal(await page.getByRole('button',{name:'Ouvrir le menu',exact:true}).getAttribute('aria-expanded'),'false');
+      await page.getByRole('button',{name:'Ouvrir le menu',exact:true}).click();
+    }
     assert.equal(await page.getByRole('navigation', { name: 'Navigation visiteurs' }).locator('[aria-current="page"]').getAttribute('href'), '/about');
+    if(width<=1000)await page.keyboard.press('Escape');
     await page.getByRole('link', { name: 'Ouvrir le tableau', exact: true }).click();
     await page.getByRole('heading', { name: 'Mon tableau', exact: true }).waitFor();
     assert.equal(await page.locator('app-account-bar').count(), 1);

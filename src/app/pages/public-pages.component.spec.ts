@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { ActivatedRoute, provideRouter } from '@angular/router';
@@ -61,6 +61,29 @@ describe('Pages visiteurs Ma’at', () => {
   it('refuse les adresses et en-têtes injectés dans mailto', () => {
     for(const email of ['', 'javascript:alert(1)', 'x@example.com?bcc=other@example.com', 'x@example.com\r\nBcc:other@example.com'])expect(contactMailto(email)).toBeNull();
     expect(contactMailto(APPROVED_PUBLIC_CONTACT)).toContain('mailto:pontienmisenga93%40gmail.com?subject=');
+  });
+  it('ouvre le hamburger, annonce son état et se ferme avec Échap', async () => {
+    await TestBed.configureTestingModule({imports:[PublicHeaderComponent],providers:[provideRouter([])]}).compileComponents();
+    const fixture=TestBed.createComponent(PublicHeaderComponent);fixture.detectChanges();
+    const el=fixture.nativeElement as HTMLElement;
+    const toggle=el.querySelector<HTMLButtonElement>('.visitor-menu-toggle')!;
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.getAttribute('aria-controls')).toBe(el.querySelector('nav')?.id);
+    toggle.click();fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(el.querySelector('nav')?.classList.contains('visitor-menu-open')).toBe(true);
+    const focus=vi.spyOn(toggle,'focus').mockImplementation(()=>undefined);
+    toggle.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(focus).toHaveBeenCalledOnce();
+  });
+  it('ferme le menu mobile lors d’un clic extérieur', async () => {
+    await TestBed.configureTestingModule({imports:[PublicHeaderComponent],providers:[provideRouter([])]}).compileComponents();
+    const fixture=TestBed.createComponent(PublicHeaderComponent);fixture.detectChanges();
+    fixture.nativeElement.querySelector('.visitor-menu-toggle').click();fixture.detectChanges();
+    expect(fixture.componentInstance.mobileOpen()).toBe(true);
+    document.body.dispatchEvent(new MouseEvent('click',{bubbles:true}));fixture.detectChanges();
+    expect(fixture.componentInstance.mobileOpen()).toBe(false);
   });
   it('utilise le contact autorisé, puis le contact public configuré, sans formulaire factice', async () => {
     const settings=signal<PlatformSettings|null>(null);

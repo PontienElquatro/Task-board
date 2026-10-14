@@ -17,9 +17,12 @@
 .visitor-theme,.visitor-login{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:650}
 .visitor-theme{color:#fff;background:#ffffff12;border:1px solid #ffffff3b;width:44px;height:44px;padding:0;flex-shrink:0}
 .visitor-theme:hover{background:#ffffff26}
+.visitor-menu-toggle{display:none;align-items:center;justify-content:center;width:44px;height:44px;flex-shrink:0;border-radius:10px;border:1px solid #ffffff3b;background:#ffffff12;color:#fff}
+.visitor-menu-toggle:hover{background:#ffffff26}
 .visitor-login{color:#312e81;background:#fff;border:1px solid #fff;box-shadow:0 4px 14px #0002;white-space:nowrap}
 .visitor-login:hover{background:#dbeafe;border-color:#dbeafe}
 .visitor-header :focus-visible,.visitor-footer :focus-visible{outline:3px solid #bfdbfe;outline-offset:4px}
-@media(max-width:1000px){.visitor-shell{grid-template-columns:1fr auto;gap:12px}.visitor-header nav{grid-row:2;grid-column:1/-1;width:100%;justify-content:center;justify-self:stretch}.visitor-header nav a{flex:1;justify-content:center}}
+@media(max-width:1000px){.visitor-shell{grid-template-columns:1fr auto;gap:12px}.visitor-actions{grid-column:2;grid-row:1}.visitor-menu-toggle{display:inline-flex}.visitor-header nav{display:none;grid-row:2;grid-column:1/-1;width:100%;justify-self:stretch;flex-direction:column;padding:8px;background:#ffffff12}.visitor-header nav.visitor-menu-open{display:flex}.visitor-header nav a{width:100%;justify-content:flex-start;padding:0 14px}}
 @media(max-width:560px){.visitor-shell{padding:12px 16px;gap:12px}.visitor-brand{gap:8px;font-size:17px}.visitor-mark{padding:3px}.visitor-header nav a{padding:0 6px;font-size:12px}.visitor-login{padding:10px 12px;font-size:13px}.visitor-actions{gap:8px}}
 @media(prefers-reduced-motion:reduce){.visitor-header nav a{transition:none}}
+@media(max-width:380px){.visitor-shell{padding:10px 12px;gap:8px}.visitor-brand-name{display:none}.visitor-actions{gap:6px}.visitor-login app-icon{display:none}}
