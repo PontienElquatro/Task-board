@@ -31,7 +31,7 @@ try {
   browser = await chromium.launch({ headless: true, timeout: 60000 });
   for (const [width, theme] of [[1440, 'light'], [390, 'light'], [390, 'dark']]) {
     const context = await browser.newContext({ viewport: { width, height: 1000 }, colorScheme: theme });
-    await context.addInitScript(value => localStorage.setItem('mytaskboard_theme', value), theme);
+    await context.addInitScript(value => {if(!localStorage.getItem('mytaskboard_theme'))localStorage.setItem('mytaskboard_theme', value);}, theme);
     await context.routeWebSocket('**/*', ws => ws.close());
     await context.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
     const page = await context.newPage();
@@ -51,6 +51,25 @@ try {
       if (path === 'home') {
         assert.ok(await page.getByText('Exemple illustratif', { exact: true }).isVisible());
         await page.screenshot({ path: resolve(screenshots, `home-${width}-${theme}.png`), fullPage: true });
+        const brandChrome=()=>page.evaluate(()=>({
+          header:getComputedStyle(document.querySelector('.visitor-header')).backgroundImage,
+          footer:getComputedStyle(document.querySelector('.visitor-footer')).backgroundImage,
+          cta:getComputedStyle(document.querySelector('.visitor-login')).backgroundColor,
+          ink:getComputedStyle(document.querySelector('.visitor-login')).color
+        }));
+        const initial=await brandChrome();
+        assert.match(initial.header,/linear-gradient/);assert.match(initial.footer,/linear-gradient/);
+        assert.equal(initial.cta,'rgb(252, 211, 77)');assert.equal(initial.ink,'rgb(23, 37, 84)');
+        const initiallyDark=theme==='dark';
+        const toggle=page.getByRole('button',{name:initiallyDark?'Activer le thème clair':'Activer le thème sombre',exact:true});
+        await toggle.focus();await page.keyboard.press('Enter');
+        await page.waitForFunction(dark=>document.documentElement.classList.contains('dark')===dark,!initiallyDark);
+        assert.deepEqual(await brandChrome(),initial,'Brand chrome and CTA stay fixed after theme toggle');
+        await page.reload();await page.locator('main h1').waitFor();
+        assert.equal(await page.locator('html').evaluate(el=>el.classList.contains('dark')),!initiallyDark,'Theme survives reload');
+        await page.getByRole('button',{name:initiallyDark?'Activer le thème sombre':'Activer le thème clair',exact:true}).click();
+        await page.waitForFunction(dark=>document.documentElement.classList.contains('dark')===dark,initiallyDark);
+        assert.deepEqual(await brandChrome(),initial);
       }
       if (path === 'contact') {
         assert.equal(await page.locator('form').count(), 0);
@@ -73,7 +92,7 @@ try {
     assert.equal(await page.locator('app-account-bar').count(), 1);
     assert.equal(await page.locator('app-public-header').count(), 0);
     assert.deepEqual(errors, []);
-    console.log(`PASS ${width}px ${theme}: six visitor routes + reload, layout separation, safe mailto fallback, keyboard link and board CTA`);
+    console.log(`PASS ${width}px ${theme}: six visitor routes + reload, fixed blue/indigo chrome, amber CTA, keyboard theme toggle + persistence, safe mailto and board CTA`);
     await context.close();
   }
 } finally {

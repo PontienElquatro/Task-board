@@ -7,6 +7,7 @@ import { PublicContactComponent, contactMailto, APPROVED_PUBLIC_CONTACT } from '
 import { PublicHeaderComponent, PublicFooterComponent } from '../shared/public-navigation.component';
 import { PlatformSettingsService, PlatformSettings } from '../services/platform-settings.service';
 import { routes } from '../app.routes';
+import { ThemeService } from '../services/theme.service';
 
 describe('Pages visiteurs Ma’at', () => {
   beforeEach(() => TestBed.resetTestingModule());
@@ -36,6 +37,23 @@ describe('Pages visiteurs Ma’at', () => {
     expect(el.textContent).toContain("Ma'at by El_Quatro Technology");
     expect(el.textContent).toContain(`© ${new Date().getFullYear()} El_Quatro Technology`);
     expect(el.querySelector('a[href="/privacy"]')).toBeTruthy();expect(el.querySelector('a[href="/terms"]')).toBeTruthy();
+  });
+  it('bascule le thème avec un bouton explicite et garde le CTA de connexion', async () => {
+    const darkMode=signal(false);
+    const theme={darkMode,toggleDarkMode:()=>darkMode.update(value=>!value)};
+    await TestBed.configureTestingModule({imports:[PublicHeaderComponent],providers:[provideRouter(routes),{provide:ThemeService,useValue:theme}]}).compileComponents();
+    const fixture=TestBed.createComponent(PublicHeaderComponent);fixture.detectChanges();
+    const el=fixture.nativeElement as HTMLElement;
+    const button=el.querySelector('button')!;
+    expect(button.getAttribute('aria-label')).toBe('Activer le thème sombre');
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    button.click();fixture.detectChanges();
+    expect(darkMode()).toBe(true);
+    expect(button.getAttribute('aria-label')).toBe('Activer le thème clair');
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(el.querySelector('header')?.classList.contains('visitor-header')).toBe(true);
+    expect(el.querySelector('a[href="/login"]')?.classList.contains('visitor-login')).toBe(true);
+    button.click();fixture.detectChanges();expect(darkMode()).toBe(false);
   });
   it('refuse les adresses et en-têtes injectés dans mailto', () => {
     for(const email of ['', 'javascript:alert(1)', 'x@example.com?bcc=other@example.com', 'x@example.com\r\nBcc:other@example.com'])expect(contactMailto(email)).toBeNull();

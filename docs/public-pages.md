@@ -67,3 +67,36 @@ par le test composant. Aucun lien mailto déclenché, aucun message envoyé.
 Les captures de diagnostic restent dans `tmp/public-pages-visual` de la copie
 de vérification, hors Git. La validation du déploiement d'aperçu après push
 reste distincte. Le domaine et les emails de notification ne sont pas inclus.
+
+Lot poussé dans `583c88e7e2da193bcb5e251da0870dedaee4d10f`.
+GitHub Actions « Ma’at quality » #166 a terminé avec succès sur ce commit :
+https://github.com/PontienElquatro/Task-board/actions/runs/38518636427
+L'aperçu Vercel du même commit est READY :
+https://task-board-v1-gegwhvhj0-pontien-misengas-projects.vercel.app/home
+La vérification visuelle de cet aperçu reste à confirmer ; la vérification
+locale du build ne remplace pas l'observation du site déployé.
+
+## Ajustement demandé : thème visiteur et chrome de marque
+
+Le header propose un bouton clair/sombre accessible (`aria-label` et
+`aria-pressed`) réutilisant ThemeService et la préférence locale existante.
+Header et footer conservent leurs dégradés bleu/indigo, indépendamment du thème
+du contenu. Les liens restent blancs et la page active est soulignée en ambre.
+Le CTA « Se connecter » devient ambre `#fcd34d`, texte indigo `#172554` ; aucun
+gain de conversion n'est revendiqué. Le logo est placé sur une pastille blanche.
+
+Le test composant couvre les deux bascules et le CTA. Le smoke du build vérifie
+la bascule au clavier, la conservation après rechargement et l'invariance des
+couleurs du header/footer/CTA, sur ordinateur et mobile. TypeScript et les
+templates Angular ont compilé. Exécution des tests et nouveau build restent
+à confirmer : le résultat des 176 tests du lot précédent ne valide pas cet
+ajustement. Aucun push ni changement de production pour cet ajustement.
+
+Validation utilisateur de l'ajustement : 177 tests sur 35 fichiers réussis,
+build `public-theme-check` et contrôle des styles réussis. Les trois scénarios
+du smoke passent (1440 px clair, 390 px clair, 390 px sombre), y compris la
+bascule au clavier, sa persistance et les couleurs fixes du chrome. Les captures
+Accueil ordinateur clair et mobile sombre ont été inspectées : logo sur fond
+blanc, navigation lisible, CTA ambre et footer bleu/indigo dans les deux modes.
+Bundle initial : 737,40 kB, transfert estimé 177,80 kB ; budget inchangé et
+toujours dépassé. Ajustement prêt à committer/pousser, pas encore publié.

@@ -1,0 +1,19 @@
+:host{display:block}
+/* Brand chrome intentionally stays blue/indigo in both appearance modes. */
+.visitor-header,.visitor-footer{color:#fff;background:linear-gradient(115deg,#1d4ed8,#312e81);color-scheme:dark}
+.visitor-header{border-bottom:1px solid #ffffff26}
+.visitor-footer{border-top:1px solid #ffffff26;background:linear-gradient(115deg,#1e40af,#312e81)}
+.visitor-brand{display:inline-flex;align-items:center;gap:10px;font-size:18px;font-weight:750}
+.visitor-mark{display:inline-flex;background:#fff;border-radius:12px;padding:5px}
+.visitor-header nav a,.visitor-footer nav a{color:#fff;border-bottom:2px solid transparent}
+.visitor-header nav a:hover,.visitor-footer nav a:hover,.visitor-header nav .visitor-active{border-bottom-color:#fcd34d}
+.visitor-active{font-weight:700}
+.visitor-footer-muted{color:#dbeafe}
+.visitor-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.visitor-theme,.visitor-login{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:10px;padding:10px 14px;font-size:14px;font-weight:650}
+.visitor-theme{color:#fff;background:#ffffff12;border:1px solid #ffffff59}
+.visitor-theme:hover{background:#ffffff26}
+.visitor-login{color:#172554;background:#fcd34d;border:1px solid #fcd34d;box-shadow:0 4px 14px #0002}
+.visitor-login:hover{background:#fde68a;border-color:#fde68a}
+.visitor-header :focus-visible,.visitor-footer :focus-visible{outline:3px solid #fde68a;outline-offset:4px}
+@media(max-width:560px){.visitor-actions{width:100%;gap:10px}.visitor-actions>*{flex:1}.visitor-header nav{width:100%;justify-content:space-between;gap:8px}}
