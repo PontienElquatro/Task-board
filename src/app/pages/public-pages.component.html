@@ -1,0 +1,37 @@
+<main id="main-content" class="public-page">
+  @if (page === 'home') {
+    <section class="public-hero" aria-labelledby="public-title">
+      <div>
+        <p class="public-eyebrow">MA’AT · L’ÉQUILIBRE DE VOS PROJETS</p>
+        <h1 id="public-title">Moins de dispersion.<br><span>Plus d’équilibre.</span></h1>
+        <p class="public-intro">De l’idée à la prochaine action, gardez le fil. Ma’at rassemble vos tâches, vos projets et votre équipe dans un espace clair.</p>
+        <div class="public-actions"><a routerLink="/board" class="primary">Commencer sans compte</a><a routerLink="/presentation" class="secondary">Découvrir les fonctionnalités</a></div>
+        <p class="public-note">Sans compte, vos tâches restent sur cet appareil. Connectez-vous pour utiliser la sauvegarde cloud.</p>
+      </div>
+      <div class="public-board" aria-label="Illustration du fonctionnement Kanban">
+        <div class="public-board-heading"><strong>Un projet. Une prochaine action.</strong><span>Exemple illustratif</span></div>
+        <div class="public-columns">
+          <section><h2>À faire <span>01</span></h2><article><p class="public-tag">PRIORITÉ HAUTE</p><h3>Clarifier l’objectif</h3><p>Une direction, puis une première étape.</p><span class="public-card-foot">Projet · Lancement</span></article></section>
+          <section><h2>En cours <span>01</span></h2><article><p class="public-tag">PROCHAINE ACTION</p><h3>Préparer la première version</h3><p>Avancer à votre rythme, une tâche à la fois.</p><span class="public-card-foot">2 sous-tâches</span></article></section>
+          <section><h2>Terminé <span>01</span></h2><article><p class="public-tag">UNE AVANCÉE</p><h3>Partager le plan</h3><p>Une équipe qui sait où elle va.</p><span class="public-card-foot">✓ Terminé</span></article></section>
+        </div>
+      </div>
+    </section>
+    <section class="public-section" aria-labelledby="balance-title">
+      <p class="public-eyebrow">PLUS QU’UNE SUITE DE COLONNES</p><h2 id="balance-title">Le Kanban, relié à votre quotidien.</h2>
+      <p class="public-intro">Le tableau donne une vue de l’action. Les projets, le calendrier et les équipes lui donnent du contexte.</p>
+      <div class="public-grid">@for (feature of features.slice(0, 3); track feature.number) {<article class="public-feature"><span>{{feature.number}}</span><h3>{{feature.title}}</h3><p>{{feature.text}}</p></article>}</div>
+    </section>
+  } @else if (page === 'features') {
+    <section class="public-section"><p class="public-eyebrow">DÉCOUVRIR MA’AT</p><h1>Un espace simple.<br>Des actions qui avancent.</h1><p class="public-intro">Découvrez ce qui est disponible aujourd’hui, puis commencez par ce dont vous avez besoin.</p>
+      <div class="public-grid">@for (feature of features; track feature.number) {<article class="public-feature"><span>{{feature.number}}</span><h2>{{feature.title}}</h2><p>{{feature.text}}</p></article>}</div>
+    </section>
+    <section class="public-section public-steps"><h2>Vos premiers pas</h2><ol><li><strong>Créez un projet.</strong> Donnez un nom à ce que vous voulez accomplir.</li><li><strong>Ajoutez une tâche.</strong> Choisissez une prochaine action, puis sa priorité et ses dates si nécessaire.</li><li><strong>Faites-la avancer.</strong> Changez son statut et retrouvez vos échéances dans le calendrier.</li></ol><a routerLink="/help" class="secondary">Voir le guide de démarrage</a></section>
+  } @else {
+    <section class="public-section"><p class="public-eyebrow">À PROPOS DE MA’AT</p><h1>L’équilibre commence<br>par une prochaine action.</h1><p class="public-intro">Ma’at est une application de gestion de tâches et de projets portée par El_Quatro Technology.</p>
+      <div class="public-grid"><article class="public-feature"><h2>Notre intention</h2><p>Rendre l’organisation lisible : savoir ce qui attend, ce qui avance et ce qui est accompli, sans perdre de vue le projet.</p></article><article class="public-feature"><h2>Pourquoi Ma’at ?</h2><p>Le nom évoque l’équilibre. Il exprime notre intention : donner une place aux idées, aux priorités et aux avancées.</p></article><article class="public-feature"><h2>Seul ou ensemble</h2><p>Commencez dans votre espace personnel. Lorsque le travail se partage, retrouvez les projets d’équipe et leurs responsables.</p></article></div>
+      <p class="public-note">Ma’at évolue. Les fonctionnalités présentées sont celles du produit actuel ; aucune promesse de disponibilité permanente ou de sauvegarde infaillible n’est faite.</p><a routerLink="/contact" class="secondary">Contacter El_Quatro Technology</a>
+    </section>
+  }
+  <section class="public-cta" aria-labelledby="start-title"><p class="public-eyebrow">UNE PREMIÈRE ÉTAPE SUFFIT</p><h2 id="start-title">Votre prochaine action vous attend.</h2><div class="public-actions"><a routerLink="/board" class="primary">Ouvrir le tableau</a><a routerLink="/login" class="secondary">Créer un compte ou se connecter</a></div></section>
+</main>

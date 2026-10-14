@@ -3,14 +3,15 @@ import { calendarDays, localDayKey } from './workspace-pages.component';
 import { routes } from '../app.routes';
 describe('Nouvelles pages Ma’at', () => {
     it('déclare les pages et une vraie page introuvable', () => {
-        for (const path of ['presentation', 'settings', 'projects', 'calendar', 'team', 'help', 'privacy', 'terms']) {
+        for (const path of ['home', 'about', 'contact', 'presentation', 'settings', 'projects', 'calendar', 'team', 'help', 'privacy', 'terms']) {
             expect(routes.find(route => route.path === path)?.loadComponent).toBeDefined();
         }
         expect(routes.at(-1)?.path).toBe('**');
         expect(routes.at(-1)?.redirectTo).toBeUndefined();
     });
-    it('conserve le tableau comme écran d’entrée', () => {
-        expect(routes.find(route => route.path === '')?.redirectTo).toBe('board');
+    it('ouvre un accueil public sans retirer le tableau', () => {
+        expect(routes.find(route => route.path === '')?.redirectTo).toBe('home');
+        expect(routes.find(route => route.path === 'board')?.loadComponent).toBeDefined();
     });
     it('calcule un mois bissextile avec des semaines commençant le lundi', () => {
         const days = calendarDays(2024, 1);

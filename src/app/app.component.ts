@@ -10,11 +10,12 @@ import { ThemeService } from './services/theme.service';
 import { ToastComponent } from './shared/toast.component';
 import { BRAND } from './core/brand';
 import { WorkspaceNavComponent } from './shared/workspace-nav.component';
+import { PublicHeaderComponent, PublicFooterComponent } from './shared/public-navigation.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [ToastComponent, RouterOutlet, CommonModule, AccountBarComponent, LoaderComponent, WorkspaceNavComponent],
+  imports: [PublicHeaderComponent, PublicFooterComponent, ToastComponent, RouterOutlet, CommonModule, AccountBarComponent, LoaderComponent, WorkspaceNavComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -23,9 +24,11 @@ export class AppComponent implements OnDestroy {
   private readonly router = inject(Router);
   readonly workspaceLayout = signal(true);
   readonly authLayout = signal(false);
+  readonly publicLayout = signal(false);
   private updateLayout(url:string) {
     const path=url.split(/[?#]/)[0];
     this.authLayout.set(path==='/login');
+    this.publicLayout.set(['/','/home','/presentation','/about','/contact','/privacy','/terms'].includes(path));
     this.workspaceLayout.set(['/board','/dashboard','/projects','/team-projects','/calendar','/team','/settings'].includes(path));
   }
   private readonly theme = inject(ThemeService);
