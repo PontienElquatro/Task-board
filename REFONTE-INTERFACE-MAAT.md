@@ -1,0 +1,32 @@
+# Reprise globale de l’interface
+
+## Principes
+
+- Une seule navigation dans les espaces Tableau, Projets, Calendrier, Vue d’ensemble, Équipe, Paramètres et Administration.
+- Navigation horizontale défilante sur mobile ; état de page actif et intitulés explicites.
+- Pages publiques hors de l’espace de travail ; authentification sans barre de compte globale.
+- Palette bleu/gris, logos fournis et police système conservés.
+- Densité, panneaux et hiérarchie harmonisés ; actions des cartes regroupées dans un menu natif accessible.
+- Services métier, authentification et synchronisation inchangés.
+
+## Contrôles avant publication
+
+Compiler, puis tester le rendu à 390, 768 et 1440 pixels, en clair et sombre. Vérifier les menus de cartes en bas des colonnes et aux bords de l’écran, les filtres projet, les archives et le passage entre toutes les destinations. Vérifier les écrans login, inscription et récupération.
+
+Les tests unitaires ajoutés couvrent les destinations de navigation et la structure du menu de carte. Ils ne remplacent pas des captures navigateur et une revue visuelle. Aucun nouveau score de qualité n’est attribué avant cette revue.
+
+## Limites fonctionnelles inchangées
+
+## Corrections issues de la revue de fa2600a
+
+- Barre secondaire et ancienne navigation cachée supprimées du tableau.
+- Filtre projet déplacé dans les filtres avancés, avec compteur de filtres actifs.
+- Résumé du tableau déplacé sous les cartes ; filtres masqués lorsque le tableau est vide.
+- Import de sauvegarde et annulation conservés dans l’état vide.
+- Symbole emoji remplacé par le logo Ma’at fourni.
+- Navigation mobile repliable, avec nom de la destination actuelle et fermeture au clic / Échap.
+- Vue d’ensemble sans tâches : invitation à ouvrir le tableau plutôt que des graphiques à zéro.
+
+Ces corrections doivent être revérifiées après déploiement ; la revue précédente ne valide pas automatiquement ce nouveau rendu.
+
+Invitations non activées, édition de profil à terminer et textes juridiques provisoires. Aucun faux envoi ou accès partagé n’est ajouté par cette refonte.

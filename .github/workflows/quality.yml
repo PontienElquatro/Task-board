@@ -1,0 +1,34 @@
+name: Ma'at quality
+on:
+  pull_request:
+  push:
+    branches: [main, codex/cloud-admin]
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run check:security-lock
+      - run: npm run audit:runtime
+      - run: npm run audit:security
+      - run: npm run test:security-deps
+      - run: node --test tools/migrate-tests-to-vitest.test.mjs
+      - run: node --test tools/style-sources.test.mjs
+      - run: npm run install:test-browser
+      - run: npm run test:config
+      - run: npm run test:ci
+      - run: npm run test:admin
+      - run: npm run build -- --stats-json
+      - run: node tools/check-built-styles.mjs
+      - run: node tools/test-performance-browser.mjs

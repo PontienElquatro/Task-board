@@ -1,52 +1,29 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Task } from '../models';
-
-@Component({
-  selector: 'app-task-card',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './task-card.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
+import { Task, Status } from '../models';
+import { CardAppearanceService } from '../services/card-appearance.service';
+import { IconComponent } from '../shared/icon.component';
+import { AvatarComponent } from '../shared/avatar.component';
+import { FormsModule } from '@angular/forms';
+import { DismissMenuDirective } from '../shared/dismiss-menu.directive';
+import { isOverdue, dayKey } from '../models/task-utils';
+@Component({ selector: 'app-task-card', standalone: true, imports: [DismissMenuDirective, AvatarComponent, IconComponent, CommonModule, FormsModule], templateUrl: './task-card.component.html', changeDetection: ChangeDetectionStrategy.OnPush })
 export class TaskCardComponent {
+  readonly appearance = inject(CardAppearanceService);
   @Input() task!: Task;
-
+  @Input() allowOrganize = true;
+  @Input() canProgress = true;
+  @Input() busy = false;
+  @Input() responsible = '';
+  @Input() responsibleAvatar:string|null|undefined = '';
   @Output() selected = new EventEmitter<Task>();
   @Output() edit = new EventEmitter<Task>();
   @Output() delete = new EventEmitter<Task>();
-
-  onClick() {
-    this.selected.emit(this.task);
-  }
-
-  onEdit(event: MouseEvent) {
-    event.stopPropagation();
-    this.edit.emit(this.task);
-  }
-
-  onDelete(event: MouseEvent) {
-    event.stopPropagation();
-    this.delete.emit(this.task);
-  }
-
-  getCompletedSubTasksCount(): number {
-    return this.task.subTasks ? this.task.subTasks.filter(st => st.completed).length : 0;
-  }
-
-  isLate(): boolean {
-    if (!this.task.dueDate || this.task.status === 'done') return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return new Date(this.task.dueDate) < today;
-  }
-
-  isToday(): boolean {
-    if (!this.task.dueDate) return false;
-    const today = new Date();
-    const dueDate = new Date(this.task.dueDate);
-    return dueDate.getDate() === today.getDate() &&
-           dueDate.getMonth() === today.getMonth() &&
-           dueDate.getFullYear() === today.getFullYear();
-  }
+  @Output() archive = new EventEmitter<Task>();
+  @Output() duplicate = new EventEmitter<Task>();
+  @Output() statusChange = new EventEmitter<Status>();
+  readonly priorities = { low: 'Basse', medium: 'Moyenne', high: 'Haute' };
+  getCompletedSubTasksCount() { return this.task.subTasks.filter(st => st.completed).length; }
+  isLate() { return isOverdue(this.task); }
+  isToday() { return !!this.task.dueDate && dayKey(this.task.dueDate) === dayKey(new Date()); }
 }

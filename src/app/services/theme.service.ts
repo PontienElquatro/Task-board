@@ -1,39 +1,22 @@
 import { Injectable, signal, effect, inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-
-@Injectable({
-  providedIn: 'root'
-})
+import { isPlatformBrowser, DOCUMENT } from '@angular/common';
+@Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private platformId = inject(PLATFORM_ID);
-  darkMode = signal<boolean>(this.loadTheme());
-
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly document = inject(DOCUMENT);
+  readonly darkMode = signal(this.loadTheme());
   constructor() {
     effect(() => {
-      const isDark = this.darkMode();
-      if (isPlatformBrowser(this.platformId)) {
-        if (isDark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-        localStorage.setItem('mytaskboard_theme', isDark ? 'dark' : 'light');
-      }
+      const dark = this.darkMode();
+      if (!isPlatformBrowser(this.platformId)) return;
+      this.document.documentElement.classList.toggle('dark', dark);
+      try { localStorage.setItem('mytaskboard_theme', dark ? 'dark' : 'light'); } catch { /* Theme works without storage. */ }
     });
   }
-
-  private loadTheme(): boolean {
-    if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('mytaskboard_theme');
-      if (saved) {
-        return saved === 'dark';
-      }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
+  private loadTheme() {
+    if (!isPlatformBrowser(this.platformId)) return false;
+    try { const theme = localStorage.getItem('mytaskboard_theme'); if (theme) return theme === 'dark'; } catch { /* Use system preference. */ }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
-
-  toggleDarkMode() {
-    this.darkMode.update(dark => !dark);
-  }
+  toggleDarkMode() { this.darkMode.update(value => !value); }
 }

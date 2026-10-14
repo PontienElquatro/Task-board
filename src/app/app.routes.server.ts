@@ -1,8 +1,3 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
-
-export const serverRoutes: ServerRoute[] = [
-  {
-    path: '**',
-    renderMode: RenderMode.Prerender
-  }
-];
+// Local data is available only in the browser.
+export const serverRoutes: ServerRoute[] = [{ path: '**', renderMode: RenderMode.Client }];

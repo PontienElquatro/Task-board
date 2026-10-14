@@ -15,10 +15,14 @@ export interface Task {
   priority: Priority;
   subTasks: SubTask[];
   goalId?: string;
+  projectId?: string;
   createdAt: Date;
   startDate?: Date;
   dueDate?: Date;
   userId: string;
+  order?: number;
+  tags?: string[];
+  archived?: boolean;
 }
 
 export interface Goal {
@@ -28,6 +32,7 @@ export interface Goal {
   userId: string;
   color?: string;
 }
+export interface Project { id:string; title:string; archived?:boolean; }
 
 export interface User {
   id: string;

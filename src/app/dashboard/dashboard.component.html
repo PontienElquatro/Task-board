@@ -1,64 +1,27 @@
-<div class="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
-  <div class="max-w-7xl mx-auto">
-    <div class="flex items-center justify-between mb-8">
-      <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">📊 Dashboard</h1>
-      <a routerLink="/board" class="bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 font-bold flex items-center shadow-sm">
-        <span class="mr-2">⬅️</span> Retour au Tableau
-      </a>
-    </div>
+<main class="mx-auto max-w-6xl p-4 text-gray-900 dark:text-gray-100 sm:p-8" id="main-content">
+<header class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-900 p-6 text-white"><div><p class="text-xs font-medium uppercase tracking-wider text-blue-100">VOTRE ESPACE PERSONNEL</p><h1 class="mt-2 text-2xl font-semibold tracking-tight">Vue d’ensemble</h1><p class="mt-2 text-sm text-blue-100">Une vue claire pour choisir votre prochaine action.</p></div><a routerLink="/board" class="inline-flex min-h-11 items-center rounded-xl bg-white px-4 text-sm font-semibold text-indigo-950">Ouvrir mon tableau</a></header>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-        <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total des tâches</p>
-        <p class="text-3xl font-black text-gray-900 dark:text-white">{{ dashboardService.stats().total }}</p>
-      </div>
-      <div class="bg-green-50 dark:bg-green-900/20 p-6 rounded-2xl shadow-sm border border-green-100 dark:border-green-900/30 transition-colors">
-        <p class="text-sm font-medium text-green-600 dark:text-green-400 mb-1">Terminées</p>
-        <p class="text-3xl font-black text-green-900 dark:text-green-100">{{ dashboardService.stats().completed }}</p>
-      </div>
-      <div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-2xl shadow-sm border border-blue-100 dark:border-blue-900/30 transition-colors">
-        <p class="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">En cours</p>
-        <p class="text-3xl font-black text-blue-900 dark:text-blue-100">{{ dashboardService.stats().inProgress }}</p>
-      </div>
-      <div class="bg-red-50 dark:bg-red-900/20 p-6 rounded-2xl shadow-sm border border-red-100 dark:border-red-900/30 transition-colors">
-        <p class="text-sm font-medium text-red-600 dark:text-red-400 mb-1">En retard</p>
-        <p class="text-3xl font-black text-red-900 dark:text-red-100">{{ dashboardService.stats().late }}</p>
-      </div>
-    </div>
-
-    <!-- Global Progress -->
-    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 mb-10 transition-colors">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold text-gray-800 dark:text-white">Progression Globale</h2>
-        <span class="text-2xl font-black text-blue-600 dark:text-blue-400">{{ dashboardService.stats().progressPercentage }}%</span>
-      </div>
-      <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
-        <div class="bg-blue-600 h-full transition-all duration-500" [style.width.%]="dashboardService.stats().progressPercentage"></div>
-      </div>
-    </div>
-
-    <!-- Goals Progress -->
-    <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">Objectifs en cours</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="dashboardService.goalsProgress().length > 0; else noGoals">
-      <div *ngFor="let goal of dashboardService.goalsProgress()" class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ goal.title }}</h3>
-            <p class="text-sm text-gray-500 dark:text-gray-400">{{ goal.description }}</p>
-          </div>
-          <span class="text-sm font-bold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-600 dark:text-gray-300">{{ goal.completedTasks }}/{{ goal.totalTasks }}</span>
-        </div>
-        <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 mb-2">
-          <div class="bg-green-500 h-full rounded-full transition-all duration-500" [style.width.%]="goal.progress"></div>
-        </div>
-        <p class="text-right text-xs font-bold text-gray-400">{{ goal.progress }}% terminé</p>
-      </div>
-    </div>
-    <ng-template #noGoals>
-      <div class="bg-white dark:bg-gray-800 p-12 rounded-2xl shadow-sm border border-dashed border-gray-200 dark:border-gray-700 text-center transition-colors">
-        <p class="text-gray-400 dark:text-gray-500 font-medium">Aucun objectif défini. Associez des tâches à des objectifs pour voir leur progression ici.</p>
-      </div>
-    </ng-template>
-  </div>
+<section *ngIf="!dashboardService.stats().total" class="welcome"><div class="mb-4 flex justify-center"><app-brand [compact]="true" /></div><h2>Votre progression commence ici.</h2><p>Créez votre première tâche. Cette page affichera ensuite vos avancées et les échéances à surveiller.</p><a routerLink="/board" class="primary min-h-11">Ouvrir mon tableau</a></section>
+<ng-container *ngIf="dashboardService.stats().total">
+<section class="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4 [&>div]:rounded-2xl [&>div]:border [&>div]:border-blue-100 [&>div]:bg-white [&>div]:p-6 dark:[&>div]:border-gray-700 dark:[&>div]:bg-gray-800" aria-label="Indicateurs">
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">Total</span><strong class="my-2 block text-3xl font-semibold">{{ dashboardService.stats().total }}</strong><span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">tâches non archivées</span></div>
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">Terminées</span><strong class="my-2 block text-3xl font-semibold">{{ dashboardService.stats().completed }}</strong><span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">tâches clôturées</span></div>
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">En retard</span><strong class="my-2 block text-3xl font-semibold text-red-600 dark:text-red-300">{{ dashboardService.stats().late }}</strong><span class="mt-2 block text-xs text-gray-500 dark:text-gray-400">à replanifier</span></div>
+<div><span class="block text-xs font-medium text-gray-500 dark:text-gray-400">Progression</span><strong class="my-2 block text-3xl font-semibold">{{ dashboardService.stats().progressPercentage }}<small>%</small></strong><div class="progress-track"><span [style.width.%]="dashboardService.stats().progressPercentage"></span></div></div>
+</section>
+<div class="mb-6 grid items-start gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+<section class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900"><div class="flex items-center justify-between gap-4"><h2 class="font-semibold">Votre prochaine action</h2><a routerLink="/calendar" class="flex min-h-11 items-center text-sm font-medium text-blue-700 dark:text-blue-300">Planifier →</a></div><p class="mb-4 text-xs text-gray-500 dark:text-gray-400">D’abord les retards, puis les échéances et les priorités.</p>
+<button *ngFor="let task of nextActions()" class="mb-2 flex min-h-16 w-full items-center justify-between gap-4 rounded-xl border border-blue-100 p-3 text-left transition-colors hover:bg-blue-50 dark:border-indigo-900 dark:hover:bg-indigo-950" (click)="open(task)"><span class="min-w-0"><span class="block truncate text-sm font-semibold">{{task.title}}</span><span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">{{task.status==='in-progress'?'En cours':'À faire'}} · {{task.priority==='high'?'Priorité haute':task.priority==='medium'?'Priorité moyenne':'Priorité basse'}}</span></span><span class="shrink-0 rounded-lg bg-blue-50 px-2 py-1 text-xs text-blue-700 dark:bg-indigo-950 dark:text-blue-200" [class.text-red-700]="overdue(task)">{{task.dueDate ? (task.dueDate | date:'dd/MM') : 'Sans date'}}</span></button>
+<div *ngIf="!nextActions().length" class="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Tout est clôturé. Consultez vos projets pour préparer la suite.</div></section>
+<section class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900"><h2 class="mb-4 font-semibold">Vos projets</h2><a *ngFor="let project of projectProgress()" routerLink="/board" [queryParams]="{project:project.id}" class="mb-4 block rounded-xl p-2 hover:bg-blue-50 dark:hover:bg-indigo-950"><div class="flex justify-between gap-2 text-sm"><span class="truncate font-medium">{{project.title}}</span><span class="text-xs text-blue-700 dark:text-blue-300">{{project.percent}} %</span></div><div class="mt-2 h-2 overflow-hidden rounded-full bg-blue-50 dark:bg-indigo-950"><div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" [style.width.%]="project.percent"></div></div><p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{{project.done}} / {{project.total}} terminées</p></a><p *ngIf="!projectProgress().length" class="text-sm text-gray-500 dark:text-gray-400">Regroupez vos tâches dans un premier projet.</p><a routerLink="/projects" class="mt-2 flex min-h-11 items-center text-sm font-semibold text-blue-700 dark:text-blue-300">Gérer mes projets →</a></section>
 </div>
+<div class="grid gap-4 lg:grid-cols-2"><section class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 [&>h2]:mb-4 [&>h2]:text-base [&>h2]:font-semibold"><h2>Où en sont vos tâches ?</h2>
+<div class="chart-row" *ngFor="let item of dashboardService.distribution()"><div><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div><div class="progress-track" role="meter" [attr.aria-label]="item.label" aria-valuemin="0" [attr.aria-valuemax]="dashboardService.stats().total || 1" [attr.aria-valuenow]="item.count"><span [style.width.%]="item.percent" [style.background]="item.color"></span></div></div>
+<p class="text-sm text-gray-500 dark:text-gray-400" *ngIf="!dashboardService.stats().total">Créez une tâche pour suivre votre progression.</p>
+</section><section class="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 [&>h2]:mb-4 [&>h2]:text-base [&>h2]:font-semibold"><h2>Vos priorités</h2><p class="text-sm text-gray-500 dark:text-gray-400">Tâches encore à faire ou en cours.</p>
+<div class="chart-row" *ngFor="let item of dashboardService.priorities()"><div><span>{{ item.label }}</span><strong>{{ item.count }}</strong></div><div class="progress-track" role="meter" [attr.aria-label]="item.label" aria-valuemin="0" [attr.aria-valuemax]="item.total || 1" [attr.aria-valuenow]="item.count"><span [style.width.%]="item.percent" [style.background]="item.color"></span></div></div>
+</section></div>
+</ng-container>
+<section class="mt-4 rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800" *ngIf="dashboardService.goalsProgress().length"><h2>Progression des objectifs</h2><div class="chart-row" *ngFor="let goal of dashboardService.goalsProgress()"><div><span>{{ goal.title }}</span><strong>{{ goal.completedTasks }}/{{ goal.totalTasks }}</strong></div><div class="progress-track"><span [style.width.%]="goal.progress"></span></div></div></section>
+<app-task-modal *ngIf="selected" [task]="selected" mode="edit" [error]="error" (close)="selected=null" (save)="save($event)" />
+</main>

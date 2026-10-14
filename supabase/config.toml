@@ -1,0 +1,7 @@
+[functions.taskboard-admin]
+# The function validates the session with Auth.getUser and checks the server-only allowlist.
+verify_jwt = false
+
+[functions.account-deletion-worker]
+# This endpoint requires the dedicated x-worker-secret header.
+verify_jwt = false

@@ -1,126 +1,131 @@
-import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { Injectable, signal, computed, inject, effect, untracked } from '@angular/core';
+import { ToastService } from './toast.service';
 import { STORAGE_PROVIDER } from '../providers/storage.provider';
 import { Task, Status, Priority } from '../models';
+import { normalizeTasks, moveTask, isOverdue, dayKey } from '../models/task-utils';
+import { statusAfterChecklist } from '../core/subtask-workflow';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class TaskService {
-  private readonly STORAGE_KEY = 'mytaskboard_tasks';
-  private storage = inject(STORAGE_PROVIDER);
-
-  private tasksSignal = signal<Task[]>(this.loadTasks());
-  readonly tasks = this.tasksSignal.asReadonly();
-
-  // Search and Filters
-  searchTerm = signal<string>('');
-  filterStatus = signal<Status | 'all'>('all');
-  filterPriority = signal<Priority | 'all'>('all');
-
-  filteredTasks = computed(() => {
-    let tasks = this.tasksSignal();
-    const search = this.searchTerm().toLowerCase();
-    const status = this.filterStatus();
-    const priority = this.filterPriority();
-
-    if (search) {
-      tasks = tasks.filter(t =>
-        t.title.toLowerCase().includes(search) ||
-        t.description.toLowerCase().includes(search)
-      );
-    }
-
-    if (status !== 'all') {
-      tasks = tasks.filter(t => t.status === status);
-    }
-
-    if (priority !== 'all') {
-      tasks = tasks.filter(t => t.priority === priority);
-    }
-
-    return tasks;
-  });
-
+  private readonly toast = inject(ToastService);
+  private readonly storage = inject(STORAGE_PROVIDER);
+  private readonly key = 'mytaskboard_tasks';
+  readonly notice = signal('');
+  readonly loadFailed = signal(false);
+  private readonly state = signal<Task[]>(this.load());
+  readonly tasks = this.state.asReadonly();
+  readonly activeTasks = computed(() => this.tasks().filter(t => !t.archived));
+  readonly archivedTasks = computed(() => this.tasks().filter(t => t.archived));
+  readonly tags = computed(() => [...new Set(this.activeTasks().flatMap(t => t.tags ?? []))].sort());
+  readonly searchTerm = signal('');
+  readonly filterStatus = signal<Status | 'all'>('all');
+  readonly filterPriority = signal<Priority | 'all'>('all');
+  readonly filterTag = signal('');
+  readonly filterProject = signal('');
+  readonly filterDue = signal<'all' | 'late' | 'none'>('all');
+  readonly sort = signal<'manual' | 'priority' | 'due' | 'newest'>('manual');
+  private readonly history = signal<Task[][]>([]);
+  readonly canUndo = computed(() => this.history().length > 0);
   constructor() {
-    effect(() => {
-      this.storage.setItem(this.STORAGE_KEY, this.tasksSignal());
+    if (this.storage.contextVersion) effect(() => {
+      this.storage.contextVersion!();
+      untracked(() => { this.loadFailed.set(false); this.state.set(this.load()); this.history.set([]); this.filterProject.set(''); });
     });
   }
-
-  private loadTasks(): Task[] {
-    const saved = this.storage.getItem<Task[]>(this.STORAGE_KEY);
-    if (saved) {
-      return saved.map(t => ({
-        ...t,
-        createdAt: new Date(t.createdAt),
-        startDate: t.startDate ? new Date(t.startDate) : undefined,
-        dueDate: t.dueDate ? new Date(t.dueDate) : undefined,
-      }));
+  readonly filteredTasks = computed(() => {
+    const query = this.searchTerm().trim().toLocaleLowerCase('fr');
+    const ranks = { high: 0, medium: 1, low: 2 };
+    return this.activeTasks().filter(t =>
+      (!query || [t.title, t.description, ...(t.tags ?? []), ...t.subTasks.map(s => s.title)].join(' ').toLocaleLowerCase('fr').includes(query)) &&
+      (this.filterStatus() === 'all' || t.status === this.filterStatus()) &&
+      (this.filterPriority() === 'all' || t.priority === this.filterPriority()) &&
+      (!this.filterTag() || t.tags?.includes(this.filterTag())) &&
+      (!this.filterProject() || t.projectId === this.filterProject()) &&
+      (this.filterDue() === 'all' || (this.filterDue() === 'late' ? isOverdue(t) : !t.dueDate))
+    ).sort((a, b) => {
+      switch (this.sort()) {
+        case 'priority': return ranks[a.priority] - ranks[b.priority];
+        case 'due': return (a.dueDate?.getTime() ?? Infinity) - (b.dueDate?.getTime() ?? Infinity);
+        case 'newest': return b.createdAt.getTime() - a.createdAt.getTime();
+        default: return (a.order ?? 0) - (b.order ?? 0);
+      }
+    });
+  });
+  private load(): Task[] {
+    try {
+      const data = this.storage.getItem<unknown>(this.key);
+      return data === null ? [] : normalizeTasks(data);
+    } catch {
+      this.loadFailed.set(true);
+      this.notice.set('Données illisibles. Exportez la sauvegarde de secours ; les modifications sont bloquées pour protéger vos données.');
+      return [];
     }
-
-    return [
-      {
-        id: '1',
-        title: 'Créer la tâche',
-        description: 'À débuter',
-        status: 'todo',
-        priority: 'medium',
-        subTasks: [],
-        createdAt: new Date(),
-        userId: 'default'
-      },
-      {
-        id: '2',
-        title: 'Continuer à y travailler',
-        description: 'Cette tâche est encore en cours',
-        status: 'in-progress',
-        priority: 'high',
-        subTasks: [],
-        createdAt: new Date(),
-        userId: 'default'
-      },
-      {
-        id: '3',
-        title: 'Tâche terminée',
-        description: 'Cette tâche est terminée',
-        status: 'done',
-        priority: 'low',
-        subTasks: [],
-        createdAt: new Date(),
-        userId: 'default'
-      },
-    ];
   }
-
+  private commit(tasks: Task[], message: string) {
+    if (this.loadFailed()) throw new Error('Données illisibles : exportez la sauvegarde de secours.');
+    if (tasks.length > 10000) throw new Error('Votre tableau ne peut pas dépasser 10 000 tâches.');
+    try {
+      this.storage.setItem(this.key, tasks);
+      this.history.update(h => [...h.slice(-19), this.state()]);
+      this.state.set(tasks);
+      this.notice.set(''); this.toast.success(message);
+    } catch {
+      this.notice.set('Enregistrement impossible : stockage indisponible ou plein. Aucune modification appliquée.');
+      throw new Error('Enregistrement impossible.');
+    }
+  }
   addTask(task: Omit<Task, 'id' | 'createdAt' | 'userId'>) {
-    const newTask: Task = {
-      ...task,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-      userId: 'default', // To be updated with real user
-      priority: task.priority || 'medium',
-      subTasks: task.subTasks || []
-    };
-    this.tasksSignal.update(tasks => [...tasks, newTask]);
+    if(task.startDate && task.dueDate && dayKey(task.startDate)>dayKey(task.dueDate))throw new Error('La fin prévue doit être égale ou postérieure au début.');
+    const added = normalizeTasks([{ ...task, id: crypto.randomUUID(), createdAt: new Date(), userId: 'default',
+      archived: false, order: Math.max(-1, ...this.activeTasks().filter(t => t.status === task.status).map(t => t.order ?? 0)) + 1 }])[0];
+    this.commit([...this.tasks(), added], 'Tâche créée.');
+  }
+  updateTask(task: Task) {
+    if(task.startDate && task.dueDate && dayKey(task.startDate)>dayKey(task.dueDate))throw new Error('La fin prévue doit être égale ou postérieure au début.');
+    const previous = this.tasks().find(t => t.id === task.id);
+    if (!previous) throw new Error('Cette tâche n’existe plus.');
+    const updated = normalizeTasks([task])[0];
+    updated.status = statusAfterChecklist(previous.subTasks, updated.subTasks, updated.status);
+    if (previous.status !== updated.status) updated.order = Math.max(-1, ...this.activeTasks().filter(t => t.status === updated.status).map(t => t.order ?? 0)) + 1;
+    this.commit(this.tasks().map(t => t.id === task.id ? updated : t), 'Tâche enregistrée.');
+  }
+  toggleSubTask(taskId: string, subTaskId: string) {
+    const task = this.tasks().find(t => t.id === taskId);
+    if (!task || !task.subTasks.some(s => s.id === subTaskId)) throw new Error('Sous-tâche introuvable.');
+    this.updateTask({ ...task, subTasks: task.subTasks.map(s => s.id === subTaskId ? { ...s, completed: !s.completed } : s) });
+  }
+  deleteTask(id: string) { this.commit(this.tasks().filter(t => t.id !== id), 'Tâche supprimée. Vous pouvez annuler.'); }
+  archiveTask(id: string) { this.commit(this.tasks().map(t => t.id === id ? { ...t, archived: true } : t), 'Tâche archivée.'); }
+  restoreTask(id: string) { this.commit(this.tasks().map(t => t.id === id ? { ...t, archived: false } : t), 'Tâche restaurée.'); }
+  duplicateTask(task: Task) {
+    this.addTask({ ...task, title: (task.title + ' — copie').slice(0, 200), subTasks: task.subTasks.map(s => ({ ...s, id: crypto.randomUUID() })) });
+  }
+  getTasksByStatus(status: Status) { return computed(() => this.filteredTasks().filter(t => t.status === status)); }
+  reorderTask(id: string, status: Status, index: number) { this.commit(moveTask(this.tasks(), id, status, index), 'Position enregistrée.'); }
+  updateTaskStatus(id: string, status: Status) { this.reorderTask(id, status, this.activeTasks().filter(t => t.status === status).length); }
+  undo() {
+    const previous = this.history().at(-1);
+    if (!previous) return;
+    try {
+      this.storage.setItem(this.key, previous);
+      this.state.set(previous); this.history.update(h => h.slice(0, -1)); this.notice.set(''); this.toast.success('Action annulée.');
+    } catch { this.notice.set('Impossible d’annuler : stockage indisponible.'); }
+  }
+  importTasks(data: unknown) {
+    const tasks = normalizeTasks(data);
+    const existing = new Set(this.tasks().map(t => t.id));
+    const additions = tasks.filter(t => !existing.has(t.id));
+    this.commit([...this.tasks(), ...additions], additions.length + ' tâche(s) importée(s). Les tâches existantes ont été conservées.');
   }
 
-  updateTask(updatedTask: Task) {
-    this.tasksSignal.update(tasks =>
-      tasks.map(t => t.id === updatedTask.id ? updatedTask : t)
-    );
-  }
-
-  deleteTask(id: string) {
-    this.tasksSignal.update(tasks => tasks.filter(t => t.id !== id));
-  }
-
-  getTasksByStatus(status: Status) {
-    return computed(() => this.filteredTasks().filter(t => t.status === status));
-  }
-
-  updateTaskStatus(taskId: string, status: Status) {
-    this.tasksSignal.update(tasks =>
-      tasks.map(t => t.id === taskId ? { ...t, status } : t)
-    );
+  addExample() {
+    const examples: Task[] = [
+      { title: 'Imaginer la prochaine étape', description: 'Rassembler les idées et choisir celles qui comptent vraiment.', status: 'todo', priority: 'medium', tags: ['Idées'], subTasks: [] },
+      { title: 'Préparer la semaine', description: 'Un peu de recul pour une semaine plus sereine.', status: 'todo', priority: 'low', tags: ['Personnel'], subTasks: [] },
+      { title: 'Donner vie à la première version', description: 'Transformer les idées en quelque chose de concret.', status: 'in-progress', priority: 'high', tags: ['Projet', 'Design'], subTasks: [{ id: crypto.randomUUID(), title: 'Définir les priorités', completed: true }, { id: crypto.randomUUID(), title: 'Tester le parcours', completed: false }] },
+      { title: 'Recueillir les premiers retours', description: 'Partager, écouter et ajuster.', status: 'in-progress', priority: 'medium', tags: ['Projet'], subTasks: [] },
+      { title: 'Poser les bases du projet', description: 'Une direction claire, une première étape franchie.', status: 'done', priority: 'low', tags: ['Projet'], subTasks: [] }
+    ].map((t, order) => ({ ...t, id: crypto.randomUUID(), createdAt: new Date(), userId: 'default', order } as Task));
+    this.commit([...this.tasks(), ...examples], 'Exemples ajoutés. Vous pouvez les modifier ou annuler.');
   }
 }

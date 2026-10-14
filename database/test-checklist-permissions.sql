@@ -1,0 +1,32 @@
+begin;
+do $$ declare tid uuid;owner uuid;worker uuid;pid uuid;parent uuid;s uuid;other uuid;
+begin
+ select t.id,t.owner_id,m.user_id into tid,owner,worker from public.taskboard_teams t join public.taskboard_team_members m on m.team_id=t.id and m.role='viewer' limit 1;
+ if tid is null then raise exception 'Requires reader fixture';end if;
+ perform set_config('request.jwt.claim.sub',owner::text,true);
+ insert into public.taskboard_shared_projects(team_id,title) values(tid,'__permissions_rollback__') returning id into pid;
+ insert into public.taskboard_shared_tasks(project_id,team_id,title,assignee_id) values(pid,tid,'Permission test',owner) returning id into parent;
+ insert into public.taskboard_shared_subtasks(task_id,team_id,title,assignee_id) values(parent,tid,'Assigned reader work',worker) returning id into s;
+ insert into public.taskboard_shared_subtasks(task_id,team_id,title,assignee_id) values(parent,tid,'Owner work',owner) returning id into other;
+ perform set_config('maat.test_parent',parent::text,true);
+ perform set_config('maat.test_step',s::text,true);
+ perform set_config('maat.test_other',other::text,true);
+ perform set_config('request.jwt.claim.sub',worker::text,true);
+end $$;
+set local role authenticated;
+do $$ declare parent uuid:=current_setting('maat.test_parent')::uuid;s uuid:=current_setting('maat.test_step')::uuid;other uuid:=current_setting('maat.test_other')::uuid;denied boolean;rows integer;
+begin
+ perform public.progress_taskboard_work(s,true,'done');
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'in-progress' then raise exception 'Assigned reader failed to start parent';end if;
+ denied:=false;begin perform public.progress_taskboard_work(other,true,'done');exception when others then denied:=true;end;
+ if not denied then raise exception 'Reader modified owner work';end if;
+ denied:=false;begin perform public.progress_taskboard_work(parent,false,'done');exception when others then denied:=true;end;
+ if not denied then raise exception 'Reader closed unassigned parent';end if;
+ update public.taskboard_shared_subtasks set completed=true where id=other;
+ get diagnostics rows=row_count;
+ if rows<>0 then raise exception 'Direct RLS update bypass';end if;
+ perform public.progress_taskboard_work(s,true,'todo');
+ if (select status from public.taskboard_shared_tasks where id=parent)<>'in-progress' then raise exception 'Reader reopen reset parent';end if;
+end $$;
+rollback;
+select 'authenticated-role permissions and assigned reader progress passed; fixtures rolled back' as result;
