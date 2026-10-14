@@ -2,8 +2,14 @@ import { Component, DestroyRef, PLATFORM_ID, effect, inject, signal, untracked }
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 
-interface Preferences { assignments: boolean; completions: boolean; }
-const defaults = (): Preferences => ({ assignments: true, completions: true });
+interface Preferences { assignments: boolean; completions: boolean; email_assignments: boolean; }
+const defaults = (): Preferences => ({ assignments: true, completions: true, email_assignments: false });
+const columns = 'assignments,completions,email_assignments';
+function confirmedPreferences(data: unknown): Preferences {
+  const value = data as Partial<Preferences> | null;
+  if (!value || typeof value.assignments !== 'boolean' || typeof value.completions !== 'boolean' || typeof value.email_assignments !== 'boolean') throw new Error('Invalid preferences');
+  return { assignments: value.assignments, completions: value.completions, email_assignments: value.email_assignments };
+}
 
 @Component({ standalone: true, selector: 'app-notification-preferences', imports: [CommonModule], template: `
 <article class="rounded-2xl border border-blue-100 bg-white p-6 dark:border-indigo-900 dark:bg-gray-900" [attr.aria-busy]="loading() || saving()">
@@ -23,6 +29,14 @@ const defaults = (): Preferences => ({ assignments: true, completions: true });
     <label class="flex min-h-16 cursor-pointer items-center justify-between gap-4 rounded-xl border border-blue-100 p-4 dark:border-indigo-900">
       <span><span class="block font-semibold">Travail terminé</span><span class="mt-1 block text-sm text-gray-600 dark:text-gray-300">Quand un membre termine un travail que vous lui avez confié, ou dont vous êtes le destinataire.</span></span>
       <input type="checkbox" class="h-5 w-5 shrink-0 accent-blue-600" [checked]="draft().completions" (change)="change('completions', $event)" />
+    </label>
+  </fieldset>
+  <fieldset class="mt-6 grid gap-3" [disabled]="!loaded() || loading() || saving() || !auth.user()">
+    <legend class="font-semibold">Notifications par email — en préparation</legend>
+    <p class="text-sm leading-6 text-gray-600 dark:text-gray-300">Les envois ne sont pas encore activés. Vous pouvez enregistrer votre choix dès maintenant ; aucun email d’attribution ne sera envoyé pour le moment. Ce choix est indépendant de la cloche.</p>
+    <label class="flex min-h-16 cursor-pointer items-center justify-between gap-4 rounded-xl border border-blue-100 p-4 dark:border-indigo-900">
+      <span><span class="block font-semibold">Attributions par email</span><span class="mt-1 block text-sm text-gray-600 dark:text-gray-300">À l’activation du service, recevoir un email pour les prochaines tâches et sous-tâches attribuées par un autre membre. Désactivé par défaut, modifiable à tout moment.</span></span>
+      <input type="checkbox" class="h-5 w-5 shrink-0 accent-blue-600" [checked]="draft().email_assignments" (change)="change('email_assignments', $event)" />
     </label>
   </fieldset>
   <div class="mt-5 flex flex-wrap gap-3">
@@ -54,7 +68,7 @@ export class NotificationPreferencesComponent {
       });
     });
   }
-  dirty() { return this.draft().assignments !== this.saved.assignments || this.draft().completions !== this.saved.completions; }
+  dirty() { return this.draft().assignments !== this.saved.assignments || this.draft().completions !== this.saved.completions || this.draft().email_assignments !== this.saved.email_assignments; }
   change(key: keyof Preferences, event: Event) {
     this.draft.update(value => ({ ...value, [key]: (event.target as HTMLInputElement).checked }));
     this.success.set('');
@@ -66,10 +80,10 @@ export class NotificationPreferencesComponent {
     const epoch = ++this.epoch;
     this.loading.set(true); this.loaded.set(false); this.error.set('');
     try {
-      const { data, error } = await this.auth.client.from('taskboard_notification_preferences').select('assignments,completions').eq('user_id', id).maybeSingle();
+      const { data, error } = await this.auth.client.from('taskboard_notification_preferences').select(columns).eq('user_id', id).maybeSingle();
       if (error) throw error;
       if (epoch !== this.epoch || id !== this.auth.user()?.id) return;
-      this.saved = data ? { assignments: data.assignments, completions: data.completions } : defaults();
+      this.saved = data ? confirmedPreferences(data) : defaults();
       this.draft.set({ ...this.saved }); this.loaded.set(true);
     } catch {
       if (epoch === this.epoch && id === this.auth.user()?.id) this.error.set('Préférences indisponibles. Réessayez avant de modifier vos choix.');
@@ -81,10 +95,10 @@ export class NotificationPreferencesComponent {
     const epoch = this.epoch, snapshot = { ...this.draft() };
     this.saving.set(true); this.error.set(''); this.success.set('');
     try {
-      const { data, error } = await this.auth.client.from('taskboard_notification_preferences').upsert({ user_id: id, ...snapshot }, { onConflict: 'user_id' }).select('assignments,completions').single();
+      const { data, error } = await this.auth.client.from('taskboard_notification_preferences').upsert({ user_id: id, ...snapshot }, { onConflict: 'user_id' }).select(columns).single();
       if (error || !data) throw error ?? new Error('Missing saved row');
       if (epoch !== this.epoch || id !== this.auth.user()?.id) return;
-      this.saved = { assignments: data.assignments, completions: data.completions };
+      this.saved = confirmedPreferences(data);
       this.draft.set({ ...this.saved }); this.success.set('Préférences enregistrées pour votre compte.');
     } catch {
       if (epoch === this.epoch && id === this.auth.user()?.id) this.error.set('Enregistrement impossible. Vos changements ne sont pas confirmés ; vous pouvez réessayer.');

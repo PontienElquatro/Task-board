@@ -11,7 +11,11 @@ const client={
  from:table=>({select:()=>({eq(){return this;},single:async()=>({data:table==='taskboard_teams'?{name:'Real <team>',owner_id:'owner'}:{id,email:'recipient@example.invalid',role:'member',token_hash:token,team_id:'team',accepted_at:accepted?'2026-01-01':null,expires_at:expired?'2000-01-01':'2099-01-01'},error:null})})})
 };
 const source=await readFile(new URL('../supabase/functions/send-team-invitation/index.ts',import.meta.url),'utf8');
+const templates=await readFile(new URL('../supabase/functions/_shared/notification-email.ts',import.meta.url),'utf8');
+const rendererContext={URL,Date};
+vm.runInNewContext(stripTypeScriptTypes(templates.replace(/^export /gm,'')),rendererContext);
 vm.runInNewContext(stripTypeScriptTypes(source.replace(/^import .*;\s*$/gm,'')),{
+ invitationEmail:rendererContext.invitationEmail,
  createClient:()=>client,Deno:{serve:fn=>handler=fn,env:{get:name=>({SUPABASE_URL:'https://test.invalid',SUPABASE_ANON_KEY:'test-only',RESEND_API_KEY:'test-only'})[name]}},
  Request,Response,URL,TextEncoder,Date,JSON,console,
  fetch:async(url,options)=>{sent.push({url,options});return new Response('provider-private-details',{status:mailOk?200:500});}
@@ -26,6 +30,7 @@ assert.equal((await (await handler(req())).json()).sent,true);
 assert.equal(sent.length,1);
 const email=JSON.parse(sent[0].options.body);
 assert.equal(email.subject,'Invitation à rejoindre Real <team>');assert.match(email.html,/Real &lt;team&gt;/);
+assert.match(email.text,/Real <team>/);assert.match(email.html,/Ma’at by El_Quatro Technology/);
 assert.equal(sent[0].options.headers['Idempotency-Key'],`team-invitation/${id}`);
 allowed=false;assert.equal((await (await handler(req())).json()).sent,false);allowed=true;
 accepted=true;assert.equal((await (await handler(req())).json()).sent,false);accepted=false;

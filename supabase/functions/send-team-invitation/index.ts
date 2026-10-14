@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invitationEmail } from "../_shared/notification-email.ts";
 
 const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type"};
 
@@ -30,13 +31,12 @@ Deno.serve(async (request) => {
     if(teamError||!team||permissionError||canManage!==true||(invitation.role==='admin'&&team.owner_id!==user.id)) throw new Error('Accès à cette invitation refusé.');
     const teamName=team.name;
     const acceptUrl=`${appUrl}/team?invitation=${encodeURIComponent(invitation.id)}&token=${encodeURIComponent(body.token)}`;
-    const html=`<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px;color:#172033"><div style="color:#2563eb;font-size:20px;font-weight:700">Ma’at</div><h1 style="font-size:24px">Vous êtes invité dans ${escapeHtml(teamName)}</h1><p>Vous avez été invité avec le rôle <strong>${escapeHtml(invitation.role)}</strong>.</p><p><a href="${escapeHtml(acceptUrl)}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none">Accepter l’invitation</a></p><p style="font-size:12px;color:#64748b">Ce lien expire le ${escapeHtml(new Date(invitation.expires_at).toISOString().slice(0,10))}.</p></div>`;
-    const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json','Idempotency-Key':`team-invitation/${invitation.id}`},body:JSON.stringify({from:'Ma’at <onboarding@resend.dev>',to:[invitation.email],subject:`Invitation à rejoindre ${teamName}`,html})});
+    const email=invitationEmail({teamName,role:invitation.role,acceptUrl,expiresAt:invitation.expires_at});
+    const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${resendKey}`,'Content-Type':'application/json','Idempotency-Key':`team-invitation/${invitation.id}`},body:JSON.stringify({from:'Ma’at <onboarding@resend.dev>',to:[invitation.email],...email})});
     if(!response.ok) { console.error('Resend error',response.status); throw new Error('Le service email est indisponible. Réessayez plus tard.'); }
     return new Response(JSON.stringify({sent:true}),{headers:{...cors,'Content-Type':'application/json'}});
   } catch(error) { return new Response(JSON.stringify({sent:false,error:error instanceof Error?error.message:'Envoi impossible.'}),{status:200,headers:{...cors,'Content-Type':'application/json'}}); }
 });
-function escapeHtml(value:string){return value.replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]??char));}
 function invitationOrigin(value:unknown){
  const canonical='https://task-board-gold-xi.vercel.app';
  const url=new URL(typeof value==='string'?value:canonical);

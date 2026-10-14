@@ -25,6 +25,8 @@ jobs:
       - run: npm run test:security-deps
       - run: node --test tools/migrate-tests-to-vitest.test.mjs
       - run: node --test tools/style-sources.test.mjs
+      - run: node --test tools/notification-email.test.mjs
+      - run: node tools/test-team-invitation-edge.mjs
       - run: npm run install:test-browser
       - run: npm run test:config
       - run: npm run test:ci
