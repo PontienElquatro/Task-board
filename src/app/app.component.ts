@@ -1,5 +1,5 @@
 import { Component, signal, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { SwUpdate } from '@angular/service-worker';
 import { AccountBarComponent } from './account-bar/account-bar.component';
 import { Router, RouterOutlet, NavigationStart, NavigationEnd, NavigationCancel, NavigationError, NavigationSkipped } from '@angular/router';
@@ -22,6 +22,15 @@ import { PublicHeaderComponent, PublicFooterComponent } from './shared/public-na
 export class AppComponent implements OnDestroy {
   readonly loading = signal(true);
   private readonly router = inject(Router);
+  private readonly document = inject(DOCUMENT);
+  skipToContent(event: Event) {
+    const main=this.document.getElementById('main-content');
+    if(!main || this.loading())return;
+    event.preventDefault();
+    main.setAttribute('tabindex','-1');
+    main.focus();
+    main.scrollIntoView({block:'start',behavior:'instant'});
+  }
   readonly workspaceLayout = signal(true);
   readonly authLayout = signal(false);
   readonly publicLayout = signal(false);

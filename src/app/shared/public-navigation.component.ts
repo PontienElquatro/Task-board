@@ -1,4 +1,4 @@
-import { Component, inject, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, signal, HostListener, ElementRef, ViewChild, afterNextRender, Injector } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BrandComponent } from './brand/brand.component';
@@ -29,7 +29,7 @@ import { IconComponent } from './icon.component';
           <a routerLink="/login" class="visitor-login" (click)="closeMenu()">Se connecter <app-icon name="arrow-right" /></a>
           <button #menuToggle type="button" class="visitor-menu-toggle" aria-controls="visitor-navigation"
             [attr.aria-expanded]="mobileOpen()" [attr.aria-label]="mobileOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
-            (click)="mobileOpen.set(!mobileOpen())"><app-icon [name]="mobileOpen() ? 'close' : 'menu'" /></button>
+            (click)="toggleMenu()"><app-icon [name]="mobileOpen() ? 'close' : 'menu'" /></button>
         </div>
       </div>
     </header>`
@@ -38,8 +38,17 @@ export class PublicHeaderComponent {
   readonly theme = inject(ThemeService);
   readonly mobileOpen = signal(false);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
   @ViewChild('menuToggle') private toggle?: ElementRef<HTMLButtonElement>;
   constructor(){inject(Router).events.pipe(takeUntilDestroyed()).subscribe(event=>{if(event instanceof NavigationEnd)this.closeMenu();});}
+  toggleMenu() {
+    if(this.mobileOpen()){this.closeMenu(true);return;}
+    this.mobileOpen.set(true);
+    afterNextRender(()=>{
+      const first=this.element.nativeElement.querySelector<HTMLAnchorElement>('nav a');
+      if(this.mobileOpen() && first?.getClientRects().length)first.focus();
+    },{injector:this.injector});
+  }
   closeMenu(returnFocus=false) {
     const wasOpen=this.mobileOpen();this.mobileOpen.set(false);
     if(wasOpen && returnFocus)this.toggle?.nativeElement.focus();

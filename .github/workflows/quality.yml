@@ -34,3 +34,4 @@ jobs:
       - run: npm run build -- --stats-json
       - run: node tools/check-built-styles.mjs
       - run: node tools/test-performance-browser.mjs
+      - run: node tools/test-keyboard-browser.mjs

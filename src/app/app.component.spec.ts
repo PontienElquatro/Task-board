@@ -34,6 +34,27 @@ describe('AppComponent', () => {
         const compiled = fixture.nativeElement as HTMLElement;
         expect(compiled.querySelector('router-outlet')).toBeTruthy();
     });
+    it('moves keyboard focus to the skip-link destination without adding it to Tab order', () => {
+        const fixture=TestBed.createComponent(AppComponent);
+        fixture.componentInstance.loading.set(false);
+        const main=document.createElement('main');main.id='main-content';document.body.append(main);
+        const scroll=vi.spyOn(main,'scrollIntoView').mockImplementation(()=>undefined);
+        try {
+            const event=new MouseEvent('click',{cancelable:true});
+            fixture.componentInstance.skipToContent(event);
+            expect(event.defaultPrevented).toBe(true);
+            expect(document.activeElement).toBe(main);
+            expect(main.tabIndex).toBe(-1);
+            expect(scroll).toHaveBeenCalledOnce();
+        } finally {main.remove();}
+    });
+    it('does not intercept the skip link when no route content is ready', () => {
+        const fixture=TestBed.createComponent(AppComponent);
+        fixture.componentInstance.loading.set(true);
+        const event=new MouseEvent('click',{cancelable:true});
+        fixture.componentInstance.skipToContent(event);
+        expect(event.defaultPrevented).toBe(false);
+    });
     for (const path of ['/home', '/presentation', '/about', '/contact', '/privacy', '/terms']) {
         it(`sépare la page visiteur ${path} du compte et du menu de travail`, () => {
             vi.spyOn(TestBed.inject(Router), 'url', 'get').mockReturnValue(path + '?source=test');

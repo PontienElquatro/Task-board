@@ -90,6 +90,7 @@ try {
       assert.equal(await hamburger.getAttribute('aria-expanded'),'false');
       assert.equal(await page.getByRole('navigation',{name:'Navigation visiteurs'}).isVisible(),false);
       await hamburger.focus();await page.keyboard.press('Enter');
+      await page.waitForFunction(()=>document.activeElement===document.querySelector('#visitor-navigation a'));
       assert.equal(await page.getByRole('button',{name:'Fermer le menu',exact:true}).getAttribute('aria-expanded'),'true');
       await page.screenshot({path:resolve(screenshots,`menu-${width}-${theme}.png`),fullPage:true});
       await page.keyboard.press('Escape');

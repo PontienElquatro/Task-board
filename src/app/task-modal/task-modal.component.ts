@@ -1,5 +1,5 @@
 import { UiFieldDirective } from '../shared/ui-field.directive';
-import { Component, Input, Output, EventEmitter, OnChanges, inject, ChangeDetectionStrategy, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, inject, ChangeDetectionStrategy, HostListener, ViewChild, ElementRef, afterNextRender, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { A11yModule } from '@angular/cdk/a11y';
@@ -32,6 +32,8 @@ export class TaskModalComponent implements OnChanges {
   get invalidSchedule() { return !!this.startText && !!this.dueText && this.startText > this.dueText; }
   discardPrompt = false;
   private original = '';
+  private readonly injector=inject(Injector);
+  @ViewChild('personalPanel') private panel?:ElementRef<HTMLElement>;
   ngOnChanges(changes: import('@angular/core').SimpleChanges) {
     if (!changes['task'] && !changes['mode']) return;
     this.tempTask = this.task ? { ...this.task, tags: [...(this.task.tags ?? [])], subTasks: this.task.subTasks.map(st => ({ ...st })) } : null;
@@ -43,11 +45,24 @@ export class TaskModalComponent implements OnChanges {
   }
   private snapshot() { return JSON.stringify([this.tempTask, this.tagsText, this.startText, this.dueText, this.newSubTaskTitle]); }
   requestClose() {
-    if (this.mode === 'edit' && this.snapshot() !== this.original) this.discardPrompt = true;
+    if (this.mode === 'edit' && this.snapshot() !== this.original) {
+      this.discardPrompt = true;
+      afterNextRender(()=>{
+        if(this.discardPrompt)this.panel?.nativeElement.querySelector<HTMLButtonElement>('[data-continue-editing]')?.focus();
+      },{injector:this.injector});
+    }
     else this.close.emit();
   }
+  continueEditing() {
+    this.discardPrompt=false;
+    this.panel?.nativeElement.querySelector<HTMLInputElement>('#task-title')?.focus();
+  }
   @HostListener('document:keydown.escape', ['$event'])
-  escape(event: Event) { event.preventDefault(); this.requestClose(); }
+  escape(event: Event) {
+    if(event.defaultPrevented)return;
+    event.preventDefault();
+    if(this.discardPrompt)this.continueEditing();else this.requestClose();
+  }
   onSave() {
     if (!this.tempTask?.title.trim() || this.invalidSchedule) return;
     this.addSubTask();
