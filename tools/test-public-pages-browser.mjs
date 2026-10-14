@@ -59,7 +59,9 @@ try {
         }));
         const initial=await brandChrome();
         assert.match(initial.header,/linear-gradient/);assert.match(initial.footer,/linear-gradient/);
-        assert.equal(initial.cta,'rgb(252, 211, 77)');assert.equal(initial.ink,'rgb(23, 37, 84)');
+        assert.equal(initial.cta,'rgb(255, 255, 255)');assert.equal(initial.ink,'rgb(49, 46, 129)');
+        assert.equal(await page.locator('.visitor-theme svg').count(),1);
+        assert.equal((await page.locator('.visitor-theme').textContent()).trim(),'');
         const initiallyDark=theme==='dark';
         const toggle=page.getByRole('button',{name:initiallyDark?'Activer le thème clair':'Activer le thème sombre',exact:true});
         await toggle.focus();await page.keyboard.press('Enter');
@@ -91,8 +93,16 @@ try {
     await page.getByRole('heading', { name: 'Mon tableau', exact: true }).waitFor();
     assert.equal(await page.locator('app-account-bar').count(), 1);
     assert.equal(await page.locator('app-public-header').count(), 0);
+    assert.match(await page.locator('app-workspace-nav').evaluate(el=>getComputedStyle(el).backgroundImage),/linear-gradient/);
+    await page.screenshot({path:resolve(screenshots,`workspace-${width}-${theme}.png`),fullPage:true});
+    if(width<1024){
+      await page.locator('app-workspace-nav summary').click();
+      assert.ok(await page.locator('app-workspace-nav details').evaluate(el=>el.open));
+      await page.keyboard.press('Escape');
+      assert.equal(await page.locator('app-workspace-nav details').evaluate(el=>el.open),false);
+    }
     assert.deepEqual(errors, []);
-    console.log(`PASS ${width}px ${theme}: six visitor routes + reload, fixed blue/indigo chrome, amber CTA, keyboard theme toggle + persistence, safe mailto and board CTA`);
+    console.log(`PASS ${width}px ${theme}: six visitor routes + reload, blue/indigo chrome and workspace navigation, white CTA, icon theme toggle + persistence, safe mailto and board CTA`);
     await context.close();
   }
 } finally {

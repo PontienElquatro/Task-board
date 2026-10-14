@@ -100,3 +100,28 @@ Accueil ordinateur clair et mobile sombre ont été inspectées : logo sur fond
 blanc, navigation lisible, CTA ambre et footer bleu/indigo dans les deux modes.
 Bundle initial : 737,40 kB, transfert estimé 177,80 kB ; budget inchangé et
 toujours dépassé. Ajustement prêt à committer/pousser, pas encore publié.
+
+## Révision UI demandée après l'aperçu
+
+Le CTA ambre est retiré : bouton blanc et texte indigo, hover bleu pâle et focus
+bleu clair. Header sur grille, navigation regroupée avec état actif en surface
+translucide. Le thème est un bouton icône SVG lune/soleil de 44 px, avec nom
+accessible, infobulle et état pressé ; aucun emoji ni libellé encombrant.
+Les cartes, contrastes des textes et bloc CTA des pages visiteurs sont affinés.
+
+La navigation de travail reçoit un dégradé bleu/indigo dans les deux thèmes,
+texte clair et repère actif bleu pâle. Les destinations, droits et mécanismes
+du menu mobile ne sont pas changés. Le smoke inclut son fond et la fermeture
+mobile par Échap ; les anciennes assertions ambre sont remplacées par le CTA
+blanc/indigo et la présence d'une vraie icône. La compilation TypeScript et
+des templates passe. Nouveau build, tests navigateur et inspection des captures
+restent requis avant de revendiquer la validation visuelle ou de pousser ce lot.
+
+Validation de la révision : 177 tests sur 35 fichiers, build `public-ui-check`,
+contrôle CSS et trois smokes navigateur réussis (1440 px clair, 390 px clair,
+390 px sombre). Header fixe bleu/indigo, CTA blanc, bouton icône et préférence
+mémorisée vérifiés ; navigation de travail en dégradé et Échap mobile vérifiés.
+Captures Accueil clair/sombre et panneau de travail inspectées. Aucun changement
+d'authentification, de permissions ou de données. Bundle initial 740,38 kB,
+transfert estimé 178,22 kB ; le budget de 500 kB reste dépassé. Lot validé
+localement, à committer/pousser puis contrôler sur son aperçu dédié.

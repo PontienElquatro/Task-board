@@ -47,6 +47,9 @@ describe('Pages visiteurs Ma’at', () => {
     const button=el.querySelector('button')!;
     expect(button.getAttribute('aria-label')).toBe('Activer le thème sombre');
     expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.textContent?.trim()).toBe('');
+    expect(button.querySelector('svg')).toBeTruthy();
+    expect(button.getAttribute('title')).toBe('Activer le thème sombre');
     button.click();fixture.detectChanges();
     expect(darkMode()).toBe(true);
     expect(button.getAttribute('aria-label')).toBe('Activer le thème clair');

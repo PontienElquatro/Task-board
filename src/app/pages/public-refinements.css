@@ -1,0 +1,19 @@
+:host{background:radial-gradient(ellipse at 85% 0%,#3b82f60b,transparent 50%)}
+.public-hero{gap:48px;padding-top:40px}
+.public-page h1{font-size:clamp(2.25rem,4.6vw,4.25rem);line-height:1.12;letter-spacing:-.045em}
+.public-intro{font-size:17px;line-height:1.85;color:color-mix(in srgb,var(--ink) 76%,var(--surface))}
+.public-note,.public-feature p,.public-columns article p:not(.public-tag){color:color-mix(in srgb,var(--ink) 74%,var(--surface))}
+.public-board{border-radius:22px;box-shadow:0 20px 56px #1725540c}
+.public-feature{position:relative;overflow:hidden;padding:28px;border-radius:18px;box-shadow:0 4px 16px #17255404}
+.public-feature:before{content:'';position:absolute;left:0;top:0;width:4px;height:100%;background:linear-gradient(#3b82f6,#6366f1)}
+.public-feature>span{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:32px;border-radius:10px;background:var(--accent-soft)}
+.public-cta{background:linear-gradient(115deg,#1d4ed8,#312e81);color:#fff;border-color:#ffffff20;padding:40px}
+.public-cta .public-eyebrow{color:#dbeafe}
+.public-cta .primary{background:#fff;color:#312e81;border-color:#fff;box-shadow:none}
+.public-cta .primary:hover{background:#dbeafe}
+.public-cta .secondary{background:#ffffff10;border-color:#ffffff59;color:#fff}
+.public-cta .secondary:hover{background:#ffffff20}
+.public-cta a:focus-visible{outline-color:#bfdbfe}
+.public-contact .public-feature{padding:32px}
+.public-contact-email{font-size:16px;color:var(--accent)!important}
+@media(max-width:560px){.public-hero{padding-top:16px;gap:28px}.public-feature,.public-contact .public-feature{padding:24px}.public-cta{padding:26px}.public-intro{font-size:16px}.public-section{padding:28px 0}}

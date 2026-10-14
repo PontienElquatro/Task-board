@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { DismissMenuDirective } from './dismiss-menu.directive';
 
-@Component({selector:'app-workspace-nav',standalone:true,imports:[DismissMenuDirective,IconComponent,CommonModule,RouterLink,RouterLinkActive],template:`
+@Component({selector:'app-workspace-nav',standalone:true,styleUrl:'./workspace-nav.component.css',imports:[DismissMenuDirective,IconComponent,CommonModule,RouterLink,RouterLinkActive],template:`
 <nav aria-label="Navigation principale" class="workspace-navigation">
  <p class="workspace-navigation-label">ESPACE DE TRAVAIL</p>
  <a class="hidden lg:flex" *ngFor="let item of items" [routerLink]="item.path" routerLinkActive="workspace-link-active" ariaCurrentWhenActive="page"><app-icon [name]="item.symbol" /><span>{{item.label}}</span></a>

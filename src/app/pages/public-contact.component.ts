@@ -8,7 +8,7 @@ export function contactMailto(value: string): string | null {
   return /^[a-zA-Z0-9._+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)
     ? 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent('Contact Ma’at') : null;
 }
-@Component({standalone:true, imports:[RouterLink], styleUrl:'./public-pages.component.css', template:`
+@Component({standalone:true, imports:[RouterLink], styleUrls:['./public-pages.component.css','./public-refinements.css'], template:`
   <main id="main-content" class="public-page public-contact"><section class="public-section">
     <p class="public-eyebrow">PARLONS DE VOTRE EXPÉRIENCE</p><h1>Contactez-nous.</h1>
     <p class="public-intro">Une question, une suggestion ou un problème avec Ma’at ? Écrivez à El_Quatro Technology.</p>

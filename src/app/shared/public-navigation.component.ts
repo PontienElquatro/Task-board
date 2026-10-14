@@ -2,14 +2,15 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { BrandComponent } from './brand/brand.component';
 import { ThemeService } from '../services/theme.service';
+import { IconComponent } from './icon.component';
 
 @Component({
   selector: 'app-public-header', standalone: true,
-  imports: [RouterLink, RouterLinkActive, BrandComponent],
+  imports: [RouterLink, RouterLinkActive, BrandComponent, IconComponent],
   styleUrl: './public-navigation.component.css',
   template: `
     <header class="visitor-header">
-      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 p-4 sm:px-8">
+      <div class="visitor-shell">
         <a routerLink="/home" class="visitor-brand" aria-label="Ma’at — Accueil"><span class="visitor-mark"><app-brand [compact]="true" /></span><span>Ma’at</span></a>
         <nav aria-label="Navigation visiteurs" class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm [&>a]:inline-flex [&>a]:min-h-11 [&>a]:items-center">
           <a routerLink="/home" routerLinkActive="visitor-active" ariaCurrentWhenActive="page">Accueil</a>
@@ -20,11 +21,11 @@ import { ThemeService } from '../services/theme.service';
         <div class="visitor-actions">
           <button type="button" class="visitor-theme" [attr.aria-pressed]="theme.darkMode()"
             [attr.aria-label]="theme.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'"
+            [attr.title]="theme.darkMode() ? 'Activer le thème clair' : 'Activer le thème sombre'"
             (click)="theme.toggleDarkMode()">
-            <span aria-hidden="true">{{theme.darkMode() ? '☀' : '☾'}}</span>
-            <span>{{theme.darkMode() ? 'Mode clair' : 'Mode sombre'}}</span>
+            <app-icon [name]="theme.darkMode() ? 'sun' : 'moon'" />
           </button>
-          <a routerLink="/login" class="visitor-login">Se connecter <span aria-hidden="true">→</span></a>
+          <a routerLink="/login" class="visitor-login">Se connecter <app-icon name="arrow-right" /></a>
         </div>
       </div>
     </header>`

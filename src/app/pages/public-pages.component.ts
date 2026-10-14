@@ -3,7 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
   standalone: true, imports: [RouterLink],
-  templateUrl: './public-pages.component.html', styleUrl: './public-pages.component.css'
+  templateUrl: './public-pages.component.html', styleUrls: ['./public-pages.component.css','./public-refinements.css']
 })
 export class PublicPagesComponent {
   readonly page = inject(ActivatedRoute).snapshot.data['publicPage'] as 'home' | 'features' | 'about';
