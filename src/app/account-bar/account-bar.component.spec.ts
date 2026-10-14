@@ -36,6 +36,18 @@ describe('AccountBarComponent account controls', () => {
         const { fixture } = await setup();
         expect(fixture.nativeElement.textContent).toContain('Vérification de la sauvegarde');
     });
+    it('places the mobile hamburger after the identity in DOM and preserves its disclosure state', async () => {
+        const {fixture}=await setup();
+        const toggle=fixture.nativeElement.querySelector('[aria-controls="header-mobile-actions"]') as HTMLButtonElement;
+        expect(toggle.parentElement?.lastElementChild).toBe(toggle);
+        expect(toggle.previousElementSibling?.tagName).toBe('DETAILS');
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+        toggle.click();fixture.detectChanges();
+        expect(toggle.getAttribute('aria-expanded')).toBe('true');
+        const actions=fixture.nativeElement.querySelector('#header-mobile-actions');
+        actions.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));fixture.detectChanges();
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    });
     it('shows identity and logout for a connected account', async () => {
         const { cloud, fixture } = await setup();
         cloud.auth.initializing.set(false);

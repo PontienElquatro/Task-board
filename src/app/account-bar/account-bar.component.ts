@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, afterNextRender, Injector, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router, NavigationEnd } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -28,19 +28,6 @@ import { PlatformSettingsService } from '../services/platform-settings.service';
     <a [routerLink]="adminContext() ? '/admin' : '/board'" class="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-lg font-semibold" aria-label="Ma’at — Tableau"><app-brand [compact]="true" /><span class="hidden sm:inline">Ma’at</span></a>
     <div class="flex min-w-0 items-center gap-1 sm:gap-2">
 
-      <button #mobileMenuButton type="button"
-    class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-blue-950 dark:text-blue-200 sm:hidden"
-    aria-label="Ouvrir ou fermer les actions du compte"
-    aria-controls="header-mobile-actions"
-    [attr.aria-expanded]="mobileMenuOpen()"
-    (keydown.escape)="mobileMenuOpen.set(false)"
-    (click)="mobileMenuOpen.set(!mobileMenuOpen())">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2" stroke-linecap="round"
-      aria-hidden="true">
-      <path d="M4 6h16M4 12h16M4 18h16" />
-    </svg>
-  </button>
   <div id="header-mobile-actions"
     [class.hidden]="!mobileMenuOpen()"
     class="absolute inset-x-4 top-full z-50 mt-2 flex flex-wrap items-center gap-3 rounded-2xl border border-blue-100 bg-white p-3 shadow-xl dark:border-indigo-900 dark:bg-gray-900 sm:static sm:mt-0 sm:flex sm:flex-nowrap sm:gap-2 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none dark:sm:bg-transparent"
@@ -81,7 +68,13 @@ import { PlatformSettingsService } from '../services/platform-settings.service';
           </div></details>
         </div>
       </details>
-
+      <button #mobileMenuButton type="button"
+        class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:bg-blue-950 dark:text-blue-200 sm:hidden"
+        aria-label="Ouvrir ou fermer les actions du compte" aria-controls="header-mobile-actions"
+        [attr.aria-expanded]="mobileMenuOpen()" (keydown.escape)="mobileMenuOpen.set(false)"
+        (click)="toggleMobileMenu()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+      </button>
     </div>
   </div>
   <p *ngIf="cloud.auth.sessionError() || logoutError()" role="alert" class="mx-auto mt-2 max-w-screen-2xl rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">{{cloud.auth.sessionError() || logoutError()}}</p>
@@ -100,6 +93,16 @@ import { PlatformSettingsService } from '../services/platform-settings.service';
 }`})
 export class AccountBarComponent {
   readonly router = inject(Router);
+  private readonly injector = inject(Injector);
+  @ViewChild('mobileMenuButton') private mobileButton?:ElementRef<HTMLButtonElement>;
+  toggleMobileMenu() {
+    if(this.mobileMenuOpen()){this.mobileMenuOpen.set(false);this.mobileButton?.nativeElement.focus();return;}
+    this.mobileMenuOpen.set(true);
+    afterNextRender(()=>{
+      const first=this.mobileButton?.nativeElement.parentElement?.querySelector<HTMLButtonElement>('#header-mobile-actions button');
+      if(this.mobileMenuOpen() && first?.getClientRects().length)first.focus();
+    },{injector:this.injector});
+  }
   readonly mobileMenuOpen = signal(false);
   readonly adminContext = signal(
     this.router.url.split(/[?#]/)[0].startsWith('/admin')

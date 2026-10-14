@@ -48,6 +48,18 @@ try {
     }
     await page.goto(origin+'/board');
     const trigger=page.getByRole('button',{name:/^Nouvelle tâche(?:\s+N)?$/});await trigger.waitFor();
+    if(width<640){
+      const hamburger=page.getByRole('button',{name:'Ouvrir ou fermer les actions du compte',exact:true});
+      assert.ok(await hamburger.evaluate(el=>{
+        const account=el.previousElementSibling;
+        return el.parentElement.lastElementChild===el && account?.tagName==='DETAILS' && el.getBoundingClientRect().left>=account.getBoundingClientRect().right-1;
+      }),'Account hamburger is rightmost after identity, in DOM and on screen');
+      await hamburger.press('Enter');
+      await page.waitForFunction(()=>!!document.activeElement?.closest('#header-mobile-actions'));
+      await page.keyboard.press('Escape');
+      assert.equal(await hamburger.getAttribute('aria-expanded'),'false');
+      assert.ok(await hamburger.evaluate(el=>document.activeElement===el),'Actions restore hamburger focus');
+    }
     await trigger.focus();await page.keyboard.press('Enter');
     const dialog=page.getByRole('dialog',{name:'Nouvelle tâche',exact:true});await dialog.waitFor();
     const title=page.getByLabel('Titre (obligatoire)',{exact:true});
