@@ -94,3 +94,40 @@ L'attribution des droits du compte réel reste une opération séparée.
 
 Les fichiers locaux de préparation restent à committer/pousser avant application.
 Aucune migration ni Edge Function distante n'a été modifiée par ces précontrôles.
+
+## Backend installé — 16 octobre 2026 (Paris)
+
+- CI réussie pour `945a1e1c5b486cc36e3dd78cbe9f7bd9e7bc0f87` :
+  https://github.com/PontienElquatro/Task-board/actions/runs/38818124925.
+- Fonction taskboard-admin v3 ACTIVE, code relu et identique au commit ;
+  validation Auth.getUser puis session vivante/permissions côté SQL.
+- Premier appel de migration : erreur de suivi MCP `Invalid or expired requestState`.
+  Vérifications avant toute reprise : quatre migrations seulement, aucun schéma
+  privé, rôle writer, équipes ou RPC admin. Après cette absence de changement
+  constatée, nouvel appel réussi ; pas de relance aveugle.
+- Migration distante enregistrée par Supabase : `20261015224615_maat_free_release`.
+  Le fichier local est renommé de `20261015222551_maat_free_release.sql` vers
+  `20261015224615_maat_free_release.sql` pour correspondre à l'historique réel.
+  Aucun SQL métier modifié : empreinte c221758f…46aa6 inchangée. Ne pas conserver
+  les deux versions ni exécuter une réparation artificielle de l'historique.
+- Comparaison du catalogue installé avec la répétition `izgCAQ` : 0 manquant,
+  0 supplémentaire, 0 modifié sur les dix catégories inventoriées.
+- 18 tables public/privé, 45 fonctions ; zéro table publique sans RLS ;
+  trois tables déclarées dans supabase_realtime (pas une preuve WebSocket).
+- Zéro utilisateur, équipe, workspace, administrateur ou principal créé.
+  Demandes de suppression et exécution de purge false ; aucun worker email/purge.
+- HTTP réel : POST admin sans session 401 ; lecture anonyme des équipes 401.
+- Advisors sécurité : quatre notices INFO RLS sans politique pour les tables
+  privées account_deletion_config, admin_members, admin_control, admin_access_events.
+  Ces tables sont volontairement fermées aux clients ; pas de politique permissive
+  ajoutée pour masquer les notices. Référence :
+  https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy.
+
+Le backend est installé, pas la nouvelle version publique du frontend. L'aperçu
+Vercel `task-board-v1-glchvm7ad-pontien-misengas-projects.vercel.app` est READY
+pour 945a1e1 mais utilise le backend de test ; il ne doit pas être présenté comme
+une validation de production. Le dernier frontend production est encore le commit
+main `3d1b46330f65916179bcc144f37dcb04dab73b15`. Il reste à préparer un build
+production, tester les redirections/Auth et les parcours connectés, initialiser
+séparément le principal confirmé, puis publier/promouvoir le frontend et vérifier
+les parcours métier. Le domaine souhaité n'est pas encore attribué.

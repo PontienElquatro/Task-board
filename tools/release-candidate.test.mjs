@@ -1,10 +1,17 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {fileURLToPath} from 'node:url';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {buildReleaseCandidate,stripStageTransaction} from './release-candidate.mjs';
 const root=fileURLToPath(new URL('..',import.meta.url));
+test('versioned release is unique and identical to the frozen SQL',()=>{
+ const dir=new URL('../supabase/migrations/',import.meta.url);
+ const names=readdirSync(dir).filter(name=>name.endsWith('_maat_free_release.sql'));
+ assert.equal(names.length,1);
+ assert.equal(readFileSync(new URL(names[0],dir),'utf8'),
+  readFileSync(new URL('../database/candidates/release-frozen.sql',import.meta.url),'utf8'));
+});
 test('frozen release is the exact successfully rehearsed artifact',()=>{
  const frozen=readFileSync(new URL('../database/candidates/release-frozen.sql',import.meta.url));
  assert.equal(createHash('sha256').update(frozen).digest('hex'),
