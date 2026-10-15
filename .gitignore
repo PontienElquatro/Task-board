@@ -47,3 +47,4 @@ Thumbs.db
 !.env.example
 .vercel/
 /Task-board-main/
+/supabase/.temp/

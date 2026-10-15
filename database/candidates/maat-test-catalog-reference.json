@@ -1,0 +1,4282 @@
+{
+  "sourceProject": "fuvbwupoilkkawqhhdns",
+  "capturedOn": "2026-10-15",
+  "scope": "catalog metadata only; no user records, secrets or function bodies",
+  "inventory": {
+    "tables": [
+      {
+        "rls": false,
+        "name": "maat_private.account_deletion_config",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "maat_private.account_deletion_events",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "maat_private.admin_access_events",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "maat_private.admin_control",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "maat_private.admin_members",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "maat_private.notification_email_config",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "maat_private.notification_email_outbox",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_account_deletions",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_account_status",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_admin_allowlist",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_admin_audit",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_notification_preferences",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_notifications",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_platform_settings",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_shared_projects",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_shared_subtasks",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_shared_tasks",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_team_invitations",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_team_members",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_teams",
+        "owner": "postgres"
+      },
+      {
+        "rls": true,
+        "name": "public.taskboard_workspaces",
+        "owner": "postgres"
+      }
+    ],
+    "columns": [
+      {
+        "name": "maat_private.account_deletion_config.singleton",
+        "type": "bool",
+        "default": "true",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.account_deletion_config.enabled",
+        "type": "bool",
+        "default": "false",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.account_deletion_config.execution_enabled",
+        "type": "bool",
+        "default": "false",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.account_deletion_events.id",
+        "type": "int8",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.account_deletion_events.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.account_deletion_events.happened_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.account_deletion_events.outcome",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_access_events.id",
+        "type": "int8",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_access_events.actor_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_access_events.target_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "maat_private.admin_access_events.action",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_access_events.reason",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_access_events.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_control.singleton",
+        "type": "bool",
+        "default": "true",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_control.principal_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_control.successor_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "maat_private.admin_control.transfer_expires_at",
+        "type": "timestamptz",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "maat_private.admin_control.version",
+        "type": "int4",
+        "default": "1",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_members.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_members.permissions",
+        "type": "_text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_members.version",
+        "type": "int4",
+        "default": "1",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.admin_members.changed_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_config.singleton",
+        "type": "bool",
+        "default": "true",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_config.enabled",
+        "type": "bool",
+        "default": "false",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.id",
+        "type": "uuid",
+        "default": "gen_random_uuid()",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.event_version",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.team_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.task_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.subtask_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.kind",
+        "type": "text",
+        "default": "'assignment'::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.status",
+        "type": "text",
+        "default": "'pending'::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_deletions.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_deletions.requested_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_deletions.delete_after",
+        "type": "timestamptz",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_deletions.status",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_deletions.cancelled_at",
+        "type": "timestamptz",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_account_deletions.retry_after",
+        "type": "timestamptz",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_account_deletions.attempts",
+        "type": "int4",
+        "default": "0",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_deletions.claim_token",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_account_status.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_status.suspended",
+        "type": "bool",
+        "default": "false",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_account_status.changed_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_admin_allowlist.email",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_admin_allowlist.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_admin_audit.id",
+        "type": "int8",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_admin_audit.actor_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_admin_audit.action",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_admin_audit.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_admin_audit.target_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_admin_audit.reason",
+        "type": "text",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_admin_audit.auth_sync",
+        "type": "text",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.assignments",
+        "type": "bool",
+        "default": "true",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.completions",
+        "type": "bool",
+        "default": "true",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.email_assignments",
+        "type": "bool",
+        "default": "false",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.id",
+        "type": "uuid",
+        "default": "gen_random_uuid()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.team_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.project_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.task_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.title",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.read_at",
+        "type": "timestamptz",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_notifications.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_notifications.actor_name",
+        "type": "text",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_notifications.actor_avatar_url",
+        "type": "text",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_notifications.project_name",
+        "type": "text",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_notifications.dismissed_at",
+        "type": "timestamptz",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_notifications.subtask_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_platform_settings.singleton",
+        "type": "bool",
+        "default": "true",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_platform_settings.support_email",
+        "type": "text",
+        "default": "''::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_platform_settings.announcement",
+        "type": "text",
+        "default": "''::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_platform_settings.version",
+        "type": "int4",
+        "default": "1",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_platform_settings.updated_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_projects.id",
+        "type": "uuid",
+        "default": "gen_random_uuid()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_projects.team_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_projects.title",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_projects.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.id",
+        "type": "uuid",
+        "default": "gen_random_uuid()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.task_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.team_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.title",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.completed",
+        "type": "bool",
+        "default": "false",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.assignee_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.assigned_by",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.email_assignment_version",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.id",
+        "type": "uuid",
+        "default": "gen_random_uuid()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.project_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.team_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.title",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.description",
+        "type": "text",
+        "default": "''::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.status",
+        "type": "text",
+        "default": "'todo'::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.assignee_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.assigned_by",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.start_date",
+        "type": "date",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.end_date",
+        "type": "date",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.email_assignment_version",
+        "type": "uuid",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_team_invitations.id",
+        "type": "uuid",
+        "default": "gen_random_uuid()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_invitations.team_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_invitations.email",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_invitations.role",
+        "type": "text",
+        "default": "'member'::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_invitations.invited_by",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_invitations.token_hash",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_invitations.expires_at",
+        "type": "timestamptz",
+        "default": "(now() + '7 days'::interval)",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_invitations.accepted_at",
+        "type": "timestamptz",
+        "default": null,
+        "nullable": "YES"
+      },
+      {
+        "name": "public.taskboard_team_invitations.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_members.team_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_members.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_members.role",
+        "type": "text",
+        "default": "'member'::text",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_team_members.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_teams.id",
+        "type": "uuid",
+        "default": "gen_random_uuid()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_teams.owner_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_teams.name",
+        "type": "text",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_teams.created_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_workspaces.user_id",
+        "type": "uuid",
+        "default": null,
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_workspaces.revision",
+        "type": "int8",
+        "default": "1",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_workspaces.data",
+        "type": "jsonb",
+        "default": "'{}'::jsonb",
+        "nullable": "NO"
+      },
+      {
+        "name": "public.taskboard_workspaces.updated_at",
+        "type": "timestamptz",
+        "default": "now()",
+        "nullable": "NO"
+      }
+    ],
+    "indexes": [
+      {
+        "name": "maat_private.account_deletion_config.account_deletion_config_pkey",
+        "definition": "CREATE UNIQUE INDEX account_deletion_config_pkey ON maat_private.account_deletion_config USING btree (singleton)"
+      },
+      {
+        "name": "maat_private.account_deletion_events.account_deletion_events_pkey",
+        "definition": "CREATE UNIQUE INDEX account_deletion_events_pkey ON maat_private.account_deletion_events USING btree (id)"
+      },
+      {
+        "name": "maat_private.admin_access_events.admin_access_events_pkey",
+        "definition": "CREATE UNIQUE INDEX admin_access_events_pkey ON maat_private.admin_access_events USING btree (id)"
+      },
+      {
+        "name": "maat_private.admin_control.admin_control_pkey",
+        "definition": "CREATE UNIQUE INDEX admin_control_pkey ON maat_private.admin_control USING btree (singleton)"
+      },
+      {
+        "name": "maat_private.admin_members.admin_members_pkey",
+        "definition": "CREATE UNIQUE INDEX admin_members_pkey ON maat_private.admin_members USING btree (user_id)"
+      },
+      {
+        "name": "maat_private.notification_email_config.notification_email_config_pkey",
+        "definition": "CREATE UNIQUE INDEX notification_email_config_pkey ON maat_private.notification_email_config USING btree (singleton)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.email_outbox_pending",
+        "definition": "CREATE INDEX email_outbox_pending ON maat_private.notification_email_outbox USING btree (created_at, id) WHERE (status = 'pending'::text)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.email_outbox_subtask",
+        "definition": "CREATE INDEX email_outbox_subtask ON maat_private.notification_email_outbox USING btree (subtask_id) WHERE (subtask_id IS NOT NULL)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.email_outbox_task",
+        "definition": "CREATE INDEX email_outbox_task ON maat_private.notification_email_outbox USING btree (task_id) WHERE (task_id IS NOT NULL)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.email_outbox_team",
+        "definition": "CREATE INDEX email_outbox_team ON maat_private.notification_email_outbox USING btree (team_id)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.email_outbox_user",
+        "definition": "CREATE INDEX email_outbox_user ON maat_private.notification_email_outbox USING btree (user_id)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_event_version_user_id_key",
+        "definition": "CREATE UNIQUE INDEX notification_email_outbox_event_version_user_id_key ON maat_private.notification_email_outbox USING btree (event_version, user_id)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_pkey",
+        "definition": "CREATE UNIQUE INDEX notification_email_outbox_pkey ON maat_private.notification_email_outbox USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_account_deletions.deletion_due_idx",
+        "definition": "CREATE INDEX deletion_due_idx ON public.taskboard_account_deletions USING btree (delete_after) WHERE (status = 'pending'::text)"
+      },
+      {
+        "name": "public.taskboard_account_deletions.taskboard_account_deletions_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_account_deletions_pkey ON public.taskboard_account_deletions USING btree (user_id)"
+      },
+      {
+        "name": "public.taskboard_account_status.taskboard_account_status_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_account_status_pkey ON public.taskboard_account_status USING btree (user_id)"
+      },
+      {
+        "name": "public.taskboard_admin_allowlist.taskboard_admin_allowlist_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_admin_allowlist_pkey ON public.taskboard_admin_allowlist USING btree (email)"
+      },
+      {
+        "name": "public.taskboard_admin_audit.admin_audit_actor_created",
+        "definition": "CREATE INDEX admin_audit_actor_created ON public.taskboard_admin_audit USING btree (actor_id, created_at DESC)"
+      },
+      {
+        "name": "public.taskboard_admin_audit.admin_audit_created",
+        "definition": "CREATE INDEX admin_audit_created ON public.taskboard_admin_audit USING btree (created_at DESC)"
+      },
+      {
+        "name": "public.taskboard_admin_audit.taskboard_admin_audit_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_admin_audit_pkey ON public.taskboard_admin_audit USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.taskboard_notification_preferences_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_notification_preferences_pkey ON public.taskboard_notification_preferences USING btree (user_id)"
+      },
+      {
+        "name": "public.taskboard_notifications.notifications_subtask_idx",
+        "definition": "CREATE INDEX notifications_subtask_idx ON public.taskboard_notifications USING btree (subtask_id) WHERE (subtask_id IS NOT NULL)"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_notifications_pkey ON public.taskboard_notifications USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_user_id_created_at_idx",
+        "definition": "CREATE INDEX taskboard_notifications_user_id_created_at_idx ON public.taskboard_notifications USING btree (user_id, created_at DESC)"
+      },
+      {
+        "name": "public.taskboard_platform_settings.taskboard_platform_settings_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_platform_settings_pkey ON public.taskboard_platform_settings USING btree (singleton)"
+      },
+      {
+        "name": "public.taskboard_shared_projects.taskboard_shared_projects_id_team_id_key",
+        "definition": "CREATE UNIQUE INDEX taskboard_shared_projects_id_team_id_key ON public.taskboard_shared_projects USING btree (id, team_id)"
+      },
+      {
+        "name": "public.taskboard_shared_projects.taskboard_shared_projects_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_shared_projects_pkey ON public.taskboard_shared_projects USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_shared_projects.taskboard_shared_projects_team_id_idx",
+        "definition": "CREATE INDEX taskboard_shared_projects_team_id_idx ON public.taskboard_shared_projects USING btree (team_id)"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_shared_subtasks_pkey ON public.taskboard_shared_subtasks USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_task_id_idx",
+        "definition": "CREATE INDEX taskboard_shared_subtasks_task_id_idx ON public.taskboard_shared_subtasks USING btree (task_id)"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_team_id_assignee_id_idx",
+        "definition": "CREATE INDEX taskboard_shared_subtasks_team_id_assignee_id_idx ON public.taskboard_shared_subtasks USING btree (team_id, assignee_id)"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.shared_task_id_team",
+        "definition": "CREATE UNIQUE INDEX shared_task_id_team ON public.taskboard_shared_tasks USING btree (id, team_id)"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_shared_tasks_pkey ON public.taskboard_shared_tasks USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_project_id_idx",
+        "definition": "CREATE INDEX taskboard_shared_tasks_project_id_idx ON public.taskboard_shared_tasks USING btree (project_id)"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_team_id_assignee_id_idx",
+        "definition": "CREATE INDEX taskboard_shared_tasks_team_id_assignee_id_idx ON public.taskboard_shared_tasks USING btree (team_id, assignee_id)"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_email_idx",
+        "definition": "CREATE INDEX taskboard_team_invitations_email_idx ON public.taskboard_team_invitations USING btree (lower(email))"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_team_invitations_pkey ON public.taskboard_team_invitations USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_token_hash_key",
+        "definition": "CREATE UNIQUE INDEX taskboard_team_invitations_token_hash_key ON public.taskboard_team_invitations USING btree (token_hash)"
+      },
+      {
+        "name": "public.taskboard_team_members.taskboard_team_members_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_team_members_pkey ON public.taskboard_team_members USING btree (team_id, user_id)"
+      },
+      {
+        "name": "public.taskboard_team_members.taskboard_team_members_user_idx",
+        "definition": "CREATE INDEX taskboard_team_members_user_idx ON public.taskboard_team_members USING btree (user_id)"
+      },
+      {
+        "name": "public.taskboard_teams.taskboard_teams_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_teams_pkey ON public.taskboard_teams USING btree (id)"
+      },
+      {
+        "name": "public.taskboard_workspaces.taskboard_workspaces_pkey",
+        "definition": "CREATE UNIQUE INDEX taskboard_workspaces_pkey ON public.taskboard_workspaces USING btree (user_id)"
+      }
+    ],
+    "policies": [
+      {
+        "name": "maat_private.account_deletion_events.deletion_events_service",
+        "check": null,
+        "roles": [
+          "service_role"
+        ],
+        "using": "true",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_account_deletions.deletion_read_self",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = ( SELECT auth.uid() AS uid))",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_account_status.account_status_self",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = ( SELECT auth.uid() AS uid))",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_admin_allowlist.admin_allowlist_deny_client",
+        "check": "false",
+        "roles": [
+          "anon",
+          "authenticated"
+        ],
+        "using": "false",
+        "command": "ALL",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_admin_audit.admin_audit_deny_client",
+        "check": "false",
+        "roles": [
+          "anon",
+          "authenticated"
+        ],
+        "using": "false",
+        "command": "ALL",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.preferences_self_insert",
+        "check": "((user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT taskboard_account_active() AS taskboard_account_active))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.preferences_self_read",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT taskboard_account_active() AS taskboard_account_active))",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.preferences_self_update",
+        "check": "((user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT taskboard_account_active() AS taskboard_account_active))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT taskboard_account_active() AS taskboard_account_active))",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_notifications.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_notifications.notifications_read",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((user_id = auth.uid()) AND is_taskboard_team_member(team_id))",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_notifications.notifications_update",
+        "check": "(user_id = auth.uid())",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(user_id = auth.uid())",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_platform_settings.public_platform_information",
+        "check": null,
+        "roles": [
+          "anon",
+          "authenticated"
+        ],
+        "using": "true",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_projects.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_shared_projects.shared_projects_delete",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "taskboard_manage_team(team_id)",
+        "command": "DELETE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_projects.shared_projects_insert",
+        "check": "taskboard_manage_team(team_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_projects.shared_projects_read",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "is_taskboard_team_member(team_id)",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_projects.shared_projects_update",
+        "check": "taskboard_manage_team(team_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "taskboard_manage_team(team_id)",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.subtasks_delete",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "taskboard_edit_team(team_id)",
+        "command": "DELETE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.subtasks_insert",
+        "check": "taskboard_edit_team(team_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.subtasks_read",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "is_taskboard_team_member(team_id)",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.subtasks_update",
+        "check": "taskboard_edit_team(team_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "taskboard_edit_team(team_id)",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.shared_tasks_delete",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "taskboard_edit_team(team_id)",
+        "command": "DELETE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.shared_tasks_insert",
+        "check": "taskboard_edit_team(team_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.shared_tasks_read",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "is_taskboard_team_member(team_id)",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.shared_tasks_update",
+        "check": "taskboard_edit_team(team_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "taskboard_edit_team(team_id)",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_team_invitations.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_team_invitations.invitations_create_admin",
+        "check": "((invited_by = auth.uid()) AND taskboard_manage_team(team_id) AND ((role <> 'admin'::text) OR (EXISTS ( SELECT 1\n   FROM taskboard_teams t\n  WHERE ((t.id = taskboard_team_invitations.team_id) AND (t.owner_id = auth.uid()))))) AND (accepted_at IS NULL) AND (expires_at > now()) AND (expires_at <= (now() + '7 days'::interval)) AND (char_length(token_hash) >= 64))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_team_invitations.invitations_read_admin",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "taskboard_manage_team(team_id)",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_team_invitations.invitations_update_admin",
+        "check": "(invited_by = ( SELECT auth.uid() AS uid))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(invited_by = ( SELECT auth.uid() AS uid))",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_team_members.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_team_members.members_manage_admin",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(EXISTS ( SELECT 1\n   FROM taskboard_teams t\n  WHERE ((t.id = taskboard_team_members.team_id) AND (t.owner_id = ( SELECT auth.uid() AS uid)))))",
+        "command": "ALL",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_team_members.members_read_self",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((user_id = ( SELECT auth.uid() AS uid)) OR is_taskboard_team_member(team_id))",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_teams.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_teams.teams_create_owner",
+        "check": "(owner_id = ( SELECT auth.uid() AS uid))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_teams.teams_delete_owner",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(owner_id = ( SELECT auth.uid() AS uid))",
+        "command": "DELETE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_teams.teams_read_owner",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "((owner_id = ( SELECT auth.uid() AS uid)) OR is_taskboard_team_member(id))",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_teams.teams_update_owner",
+        "check": "(owner_id = ( SELECT auth.uid() AS uid))",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(owner_id = ( SELECT auth.uid() AS uid))",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_workspaces.account_active_required",
+        "check": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "( SELECT taskboard_account_active() AS taskboard_account_active)",
+        "command": "ALL",
+        "permissive": "RESTRICTIVE"
+      },
+      {
+        "name": "public.taskboard_workspaces.workspace_insert",
+        "check": "(( SELECT auth.uid() AS uid) = user_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_workspaces.workspace_read",
+        "check": null,
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(( SELECT auth.uid() AS uid) = user_id)",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_workspaces.workspace_update",
+        "check": "(( SELECT auth.uid() AS uid) = user_id)",
+        "roles": [
+          "authenticated"
+        ],
+        "using": "(( SELECT auth.uid() AS uid) = user_id)",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_workspaces.workspace_writer_insert",
+        "check": "(( SELECT auth.uid() AS uid) = user_id)",
+        "roles": [
+          "maat_workspace_writer"
+        ],
+        "using": null,
+        "command": "INSERT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_workspaces.workspace_writer_read",
+        "check": null,
+        "roles": [
+          "maat_workspace_writer"
+        ],
+        "using": "(( SELECT auth.uid() AS uid) = user_id)",
+        "command": "SELECT",
+        "permissive": "PERMISSIVE"
+      },
+      {
+        "name": "public.taskboard_workspaces.workspace_writer_update",
+        "check": "(( SELECT auth.uid() AS uid) = user_id)",
+        "roles": [
+          "maat_workspace_writer"
+        ],
+        "using": "(( SELECT auth.uid() AS uid) = user_id)",
+        "command": "UPDATE",
+        "permissive": "PERMISSIVE"
+      }
+    ],
+    "triggers": [
+      {
+        "name": "public.taskboard_admin_allowlist.maat_guard_processing_admin",
+        "definition": "CREATE TRIGGER maat_guard_processing_admin BEFORE INSERT OR UPDATE OF email ON public.taskboard_admin_allowlist FOR EACH ROW EXECUTE FUNCTION maat_private.guard_processing_admin()"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.cancel_assignment_emails",
+        "definition": "CREATE TRIGGER cancel_assignment_emails AFTER INSERT OR UPDATE OF email_assignments ON public.taskboard_notification_preferences FOR EACH ROW EXECUTE FUNCTION maat_private.cancel_assignment_emails()"
+      },
+      {
+        "name": "public.taskboard_notifications.enrich_notification",
+        "definition": "CREATE TRIGGER enrich_notification BEFORE INSERT ON public.taskboard_notifications FOR EACH ROW EXECUTE FUNCTION maat_private.enrich_notification()"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.checklist_lock_parent",
+        "definition": "CREATE TRIGGER checklist_lock_parent BEFORE INSERT OR DELETE OR UPDATE OF completed ON public.taskboard_shared_subtasks FOR EACH ROW EXECUTE FUNCTION maat_private.lock_checklist_parent()"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.checklist_sync_parent",
+        "definition": "CREATE TRIGGER checklist_sync_parent AFTER INSERT OR DELETE OR UPDATE OF completed ON public.taskboard_shared_subtasks FOR EACH ROW EXECUTE FUNCTION maat_private.sync_checklist_parent()"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.queue_assignment_email",
+        "definition": "CREATE TRIGGER queue_assignment_email AFTER INSERT OR UPDATE OF assignee_id ON public.taskboard_shared_subtasks FOR EACH ROW EXECUTE FUNCTION maat_private.queue_assignment_email()"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.subtask_assignment",
+        "definition": "CREATE TRIGGER subtask_assignment AFTER INSERT OR UPDATE OF assignee_id ON public.taskboard_shared_subtasks FOR EACH ROW EXECUTE FUNCTION notify_taskboard_assignment()"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.subtask_completed",
+        "definition": "CREATE TRIGGER subtask_completed AFTER UPDATE OF completed ON public.taskboard_shared_subtasks FOR EACH ROW EXECUTE FUNCTION maat_private.notify_work_completion()"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.track_email_assignment_version",
+        "definition": "CREATE TRIGGER track_email_assignment_version BEFORE INSERT OR UPDATE ON public.taskboard_shared_subtasks FOR EACH ROW EXECUTE FUNCTION maat_private.track_email_assignment_version()"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.track_subtask_assignment",
+        "definition": "CREATE TRIGGER track_subtask_assignment BEFORE INSERT OR UPDATE ON public.taskboard_shared_subtasks FOR EACH ROW EXECUTE FUNCTION maat_private.track_work_assignment()"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.queue_assignment_email",
+        "definition": "CREATE TRIGGER queue_assignment_email AFTER INSERT OR UPDATE OF assignee_id ON public.taskboard_shared_tasks FOR EACH ROW EXECUTE FUNCTION maat_private.queue_assignment_email()"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.task_assignment",
+        "definition": "CREATE TRIGGER task_assignment AFTER INSERT OR UPDATE OF assignee_id ON public.taskboard_shared_tasks FOR EACH ROW EXECUTE FUNCTION notify_taskboard_assignment()"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.task_completed",
+        "definition": "CREATE TRIGGER task_completed AFTER UPDATE OF status ON public.taskboard_shared_tasks FOR EACH ROW EXECUTE FUNCTION maat_private.notify_work_completion()"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.track_email_assignment_version",
+        "definition": "CREATE TRIGGER track_email_assignment_version BEFORE INSERT OR UPDATE ON public.taskboard_shared_tasks FOR EACH ROW EXECUTE FUNCTION maat_private.track_email_assignment_version()"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.track_task_assignment",
+        "definition": "CREATE TRIGGER track_task_assignment BEFORE INSERT OR UPDATE ON public.taskboard_shared_tasks FOR EACH ROW EXECUTE FUNCTION maat_private.track_work_assignment()"
+      },
+      {
+        "name": "public.taskboard_teams.maat_guard_processing_owner",
+        "definition": "CREATE TRIGGER maat_guard_processing_owner BEFORE INSERT OR UPDATE OF owner_id ON public.taskboard_teams FOR EACH ROW EXECUTE FUNCTION maat_private.guard_processing_owner()"
+      },
+      {
+        "name": "public.taskboard_teams.taskboard_register_owner",
+        "definition": "CREATE TRIGGER taskboard_register_owner AFTER INSERT ON public.taskboard_teams FOR EACH ROW EXECUTE FUNCTION maat_private.register_team_owner()"
+      }
+    ],
+    "functions": [
+      {
+        "name": "maat_private.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "3df6c0e20fe72eb8a8d054504b7cfbaa"
+      },
+      {
+        "name": "maat_private.account_can_operate()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "470f4d144fa9332cee977fa52cc6ef0a"
+      },
+      {
+        "name": "maat_private.admin_access(actor uuid, session uuid, operation text, target uuid, requested_permissions text[], expected_version integer, action_reason text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "db9248f477a86b2528481f0d4c1421ba"
+      },
+      {
+        "name": "maat_private.admin_email_protection()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "12c39c1dc34ade26ba7deb6f0ee65acd"
+      },
+      {
+        "name": "maat_private.admin_team_directory(search_query text, requested_page integer)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "3b24f4db0bf91eeedb6014d78b6a5db8"
+      },
+      {
+        "name": "maat_private.cancel_assignment_emails()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "9970df3683503e10e84ae1c24d9682a9"
+      },
+      {
+        "name": "maat_private.cancel_taskboard_invitation(invitation_id uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "7ae3180ee49e281be101f6ceff703ed7"
+      },
+      {
+        "name": "maat_private.claim_account_deletions(batch_size integer)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "aa9914c68958d409a291a39c3da5ab33"
+      },
+      {
+        "name": "maat_private.deletion_step(account uuid, token uuid, operation text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "40350a41c590f1c7c2efbce5a9eef99e"
+      },
+      {
+        "name": "maat_private.enrich_notification()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "5090aa95ae377f27ad809200373c4b52"
+      },
+      {
+        "name": "maat_private.guard_deletion()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "dec6377723ccd7aed085f031048a4e37"
+      },
+      {
+        "name": "maat_private.guard_processing_admin()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "b31e37935407bb5695565df41dd73cdc"
+      },
+      {
+        "name": "maat_private.guard_processing_owner()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "3430ee51500258f9aabba8f9e19dcbc8"
+      },
+      {
+        "name": "maat_private.invoke_deletion_worker()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "b7f7606c5ebfab288a643d156f133116"
+      },
+      {
+        "name": "maat_private.is_taskboard_team_member(team_uuid uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "a322577425f8cb3643e24c1c41561737"
+      },
+      {
+        "name": "maat_private.lock_checklist_parent()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "94944ec23e88a308ff58f2bb514e6d4a"
+      },
+      {
+        "name": "maat_private.manage_account_deletion(operation text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "f34bd19387b39741c7563031a5cb106a"
+      },
+      {
+        "name": "maat_private.manage_taskboard_member(tid uuid, member_id uuid, new_role text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "ae36bcdc116077d4ac1e1c48ec96cb98"
+      },
+      {
+        "name": "maat_private.notify_work_completion()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "59bc84858ad8a79a2fddc851935cf6a8"
+      },
+      {
+        "name": "maat_private.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "40719c7aa956ea6f58bd0cd751ce8079"
+      },
+      {
+        "name": "maat_private.queue_assignment_email()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "3a0d72bbfdac086bcc06c585913c6c45"
+      },
+      {
+        "name": "maat_private.register_team_owner()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "5d51b6fbfe33cca13d4e3df93df5d075"
+      },
+      {
+        "name": "maat_private.require_admin_scope(actor uuid, scope text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "39c9a337617f1755391900255b71ae36"
+      },
+      {
+        "name": "maat_private.save_workspace(workspace_user uuid, expected_revision bigint, workspace_data jsonb)",
+        "owner": "maat_workspace_writer",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "779df2ac7e387ef666ff359c3d30e22e"
+      },
+      {
+        "name": "maat_private.sync_checklist_parent()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "99436287115164a35a97cf59ebd1ba66"
+      },
+      {
+        "name": "maat_private.taskboard_edit_team(tid uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "15015f29e06a5839890bf09431ada6e2"
+      },
+      {
+        "name": "maat_private.taskboard_manage_team(tid uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "daf8fac64e090db0da63693931f1a30c"
+      },
+      {
+        "name": "maat_private.taskboard_team_roster()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "ebd0a57931ce418b12336f09b2acdc26"
+      },
+      {
+        "name": "maat_private.team_profiles()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "5d2b347cd1e9c75dfc298a34b29dd1d6"
+      },
+      {
+        "name": "maat_private.track_email_assignment_version()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "41134b05cfddf38808009d6415a2e8ec"
+      },
+      {
+        "name": "maat_private.track_work_assignment()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "d2fb5618783ca75bdd9fa4ed8f6579e2"
+      },
+      {
+        "name": "maat_private.update_platform_settings(actor uuid, session uuid, contact_email text, notice text, expected_version integer, action_reason text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "e0f630501dd594ab661b564732abc43d"
+      },
+      {
+        "name": "maat_private.verify_deletion_worker(token text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "43d42ec0af446e48d5d9dbf35808e4c2"
+      },
+      {
+        "name": "public.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "42870fbec09f7602abf2fa4cebbaa2b6"
+      },
+      {
+        "name": "public.cancel_taskboard_invitation(invitation_id uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "736871b454a637a947580a602c9a09bd"
+      },
+      {
+        "name": "public.is_taskboard_team_member(team_uuid uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "4c8602e1ab83c7198869ef06d6e2ecc3"
+      },
+      {
+        "name": "public.manage_taskboard_member(tid uuid, member_id uuid, new_role text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "05f49d0385524ada0ae028e9f96e472a"
+      },
+      {
+        "name": "public.notify_taskboard_assignment()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "39e3b62f03652202cdf078ed38418e45"
+      },
+      {
+        "name": "public.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "b7441486475380362184617f4cccd7a3"
+      },
+      {
+        "name": "public.save_taskboard_workspace(expected_revision bigint, workspace_data jsonb)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "1f94c17f02af0722a813bf830db4a813"
+      },
+      {
+        "name": "public.save_taskboard_workspace_for_user(workspace_user uuid, expected_revision bigint, workspace_data jsonb)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "1abd79ec47289b0e988fc86b05035cdf"
+      },
+      {
+        "name": "public.start_taskboard_parent_task()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": true,
+        "definitionHash": "44374f6f99a8319a5317032633e11a74"
+      },
+      {
+        "name": "public.taskboard_account_active()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "629278fbb40eb780e51f9689b4b2399f"
+      },
+      {
+        "name": "public.taskboard_admin_access(actor uuid, session uuid, operation text, target uuid, requested_permissions text[], expected_version integer, action_reason text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "c212aa9e755ffb1cef5631cbf07ba55b"
+      },
+      {
+        "name": "public.taskboard_admin_metrics()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "ecc695ba00ae5c61f65541370e67d486"
+      },
+      {
+        "name": "public.taskboard_admin_team_directory(search_query text, requested_page integer)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "32b4af9d89dfff96cac958a62fa6d6f4"
+      },
+      {
+        "name": "public.taskboard_claim_account_deletions(batch_size integer)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "6ad3cf1eab1652cc94ce183493ffbc67"
+      },
+      {
+        "name": "public.taskboard_claim_account_deletions_v2(batch_size integer)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "cd248585eaded712288565778de3e4d0"
+      },
+      {
+        "name": "public.taskboard_deletion_step(account uuid, token uuid, operation text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "390b39c1ab5d5d40c191922843f1a031"
+      },
+      {
+        "name": "public.taskboard_edit_team(tid uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "7c8cf71f8d6b60397cb92ab536629258"
+      },
+      {
+        "name": "public.taskboard_manage_account_deletion(operation text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "54f011232584627fc4016ae592aa292f"
+      },
+      {
+        "name": "public.taskboard_manage_team(tid uuid)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "e8d10dcd7fddc8b7d30aa37a03f699d7"
+      },
+      {
+        "name": "public.taskboard_set_account_status(actor uuid, actor_email text, target uuid, target_email text, new_suspended boolean, expected_suspended boolean, action_reason text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "29ccae3b042bed07209cd0ad1c267691"
+      },
+      {
+        "name": "public.taskboard_team_profiles()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "3318ffa04e2a736b1014f361e12ef58b"
+      },
+      {
+        "name": "public.taskboard_team_roster()",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "0ff4becb04fd4758b66cbdca4559b053"
+      },
+      {
+        "name": "public.taskboard_update_platform_settings(actor uuid, session uuid, contact_email text, notice text, expected_version integer, action_reason text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "9df6b8369d407665d3eeabab7d224269"
+      },
+      {
+        "name": "public.taskboard_verify_deletion_worker(token text)",
+        "owner": "postgres",
+        "config": [
+          "search_path=\"\""
+        ],
+        "definer": false,
+        "definitionHash": "75143c336208f3df0575ba2f4269551b"
+      }
+    ],
+    "constraints": [
+      {
+        "name": "maat_private.account_deletion_config.account_deletion_config_pkey",
+        "definition": "PRIMARY KEY (singleton)"
+      },
+      {
+        "name": "maat_private.account_deletion_config.account_deletion_config_singleton_check",
+        "definition": "CHECK (singleton)"
+      },
+      {
+        "name": "maat_private.account_deletion_events.account_deletion_events_outcome_check",
+        "definition": "CHECK ((outcome = ANY (ARRAY['retry'::text, 'deleted'::text])))"
+      },
+      {
+        "name": "maat_private.account_deletion_events.account_deletion_events_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "maat_private.admin_access_events.admin_access_events_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "maat_private.admin_control.admin_control_check",
+        "definition": "CHECK (((successor_id IS NULL) = (transfer_expires_at IS NULL)))"
+      },
+      {
+        "name": "maat_private.admin_control.admin_control_check1",
+        "definition": "CHECK (((successor_id IS NULL) OR (successor_id <> principal_id)))"
+      },
+      {
+        "name": "maat_private.admin_control.admin_control_pkey",
+        "definition": "PRIMARY KEY (singleton)"
+      },
+      {
+        "name": "maat_private.admin_control.admin_control_principal_id_fkey",
+        "definition": "FOREIGN KEY (principal_id) REFERENCES maat_private.admin_members(user_id) ON DELETE RESTRICT"
+      },
+      {
+        "name": "maat_private.admin_control.admin_control_singleton_check",
+        "definition": "CHECK (singleton)"
+      },
+      {
+        "name": "maat_private.admin_control.admin_control_successor_id_fkey",
+        "definition": "FOREIGN KEY (successor_id) REFERENCES maat_private.admin_members(user_id) ON DELETE RESTRICT"
+      },
+      {
+        "name": "maat_private.admin_members.admin_members_permissions_check",
+        "definition": "CHECK (((cardinality(permissions) > 0) AND (permissions <@ ARRAY['overview'::text, 'users_read'::text, 'users_manage'::text, 'teams_read'::text, 'audit_read'::text, 'settings_read'::text, 'settings_manage'::text])))"
+      },
+      {
+        "name": "maat_private.admin_members.admin_members_pkey",
+        "definition": "PRIMARY KEY (user_id)"
+      },
+      {
+        "name": "maat_private.admin_members.admin_members_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE RESTRICT"
+      },
+      {
+        "name": "maat_private.admin_members.admin_members_version_check",
+        "definition": "CHECK ((version > 0))"
+      },
+      {
+        "name": "maat_private.notification_email_config.notification_email_config_pkey",
+        "definition": "PRIMARY KEY (singleton)"
+      },
+      {
+        "name": "maat_private.notification_email_config.notification_email_config_singleton_check",
+        "definition": "CHECK (singleton)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_check",
+        "definition": "CHECK (((task_id IS NULL) <> (subtask_id IS NULL)))"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_event_version_user_id_key",
+        "definition": "UNIQUE (event_version, user_id)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_kind_check",
+        "definition": "CHECK ((kind = 'assignment'::text))"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_status_check",
+        "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'suppressed'::text, 'sent'::text, 'failed'::text, 'uncertain'::text])))"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_subtask_id_fkey",
+        "definition": "FOREIGN KEY (subtask_id) REFERENCES taskboard_shared_subtasks(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_task_id_fkey",
+        "definition": "FOREIGN KEY (task_id) REFERENCES taskboard_shared_tasks(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_team_id_fkey",
+        "definition": "FOREIGN KEY (team_id) REFERENCES taskboard_teams(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "maat_private.notification_email_outbox.notification_email_outbox_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_account_deletions.taskboard_account_deletions_check",
+        "definition": "CHECK ((delete_after = (requested_at + '720:00:00'::interval)))"
+      },
+      {
+        "name": "public.taskboard_account_deletions.taskboard_account_deletions_pkey",
+        "definition": "PRIMARY KEY (user_id)"
+      },
+      {
+        "name": "public.taskboard_account_deletions.taskboard_account_deletions_status_check",
+        "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'cancelled'::text, 'processing'::text])))"
+      },
+      {
+        "name": "public.taskboard_account_deletions.taskboard_account_deletions_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_account_status.taskboard_account_status_pkey",
+        "definition": "PRIMARY KEY (user_id)"
+      },
+      {
+        "name": "public.taskboard_account_status.taskboard_account_status_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_admin_allowlist.taskboard_admin_allowlist_email_check",
+        "definition": "CHECK ((email = lower(email)))"
+      },
+      {
+        "name": "public.taskboard_admin_allowlist.taskboard_admin_allowlist_pkey",
+        "definition": "PRIMARY KEY (email)"
+      },
+      {
+        "name": "public.taskboard_admin_audit.taskboard_admin_audit_action_check",
+        "definition": "CHECK ((action = ANY (ARRAY['dashboard_view'::text, 'account_suspend'::text, 'account_reactivate'::text])))"
+      },
+      {
+        "name": "public.taskboard_admin_audit.taskboard_admin_audit_actor_id_fkey",
+        "definition": "FOREIGN KEY (actor_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_admin_audit.taskboard_admin_audit_auth_sync_check",
+        "definition": "CHECK ((auth_sync = ANY (ARRAY['pending'::text, 'success'::text, 'failed'::text])))"
+      },
+      {
+        "name": "public.taskboard_admin_audit.taskboard_admin_audit_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.taskboard_notification_preferences_pkey",
+        "definition": "PRIMARY KEY (user_id)"
+      },
+      {
+        "name": "public.taskboard_notification_preferences.taskboard_notification_preferences_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_project_id_fkey",
+        "definition": "FOREIGN KEY (project_id) REFERENCES taskboard_shared_projects(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_subtask_id_fkey",
+        "definition": "FOREIGN KEY (subtask_id) REFERENCES taskboard_shared_subtasks(id) ON DELETE SET NULL"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_task_id_fkey",
+        "definition": "FOREIGN KEY (task_id) REFERENCES taskboard_shared_tasks(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_team_id_fkey",
+        "definition": "FOREIGN KEY (team_id) REFERENCES taskboard_teams(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_notifications.taskboard_notifications_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_platform_settings.taskboard_platform_settings_announcement_check",
+        "definition": "CHECK ((length(announcement) <= 500))"
+      },
+      {
+        "name": "public.taskboard_platform_settings.taskboard_platform_settings_pkey",
+        "definition": "PRIMARY KEY (singleton)"
+      },
+      {
+        "name": "public.taskboard_platform_settings.taskboard_platform_settings_singleton_check",
+        "definition": "CHECK (singleton)"
+      },
+      {
+        "name": "public.taskboard_platform_settings.taskboard_platform_settings_support_email_check",
+        "definition": "CHECK ((length(support_email) <= 254))"
+      },
+      {
+        "name": "public.taskboard_shared_projects.taskboard_shared_projects_id_team_id_key",
+        "definition": "UNIQUE (id, team_id)"
+      },
+      {
+        "name": "public.taskboard_shared_projects.taskboard_shared_projects_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "public.taskboard_shared_projects.taskboard_shared_projects_team_id_fkey",
+        "definition": "FOREIGN KEY (team_id) REFERENCES taskboard_teams(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_shared_projects.taskboard_shared_projects_title_check",
+        "definition": "CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 100)))"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_assigned_by_fkey",
+        "definition": "FOREIGN KEY (assigned_by) REFERENCES auth.users(id) ON DELETE SET NULL"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_task_id_team_id_fkey",
+        "definition": "FOREIGN KEY (task_id, team_id) REFERENCES taskboard_shared_tasks(id, team_id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_team_id_assignee_id_fkey",
+        "definition": "FOREIGN KEY (team_id, assignee_id) REFERENCES taskboard_team_members(team_id, user_id) ON DELETE SET NULL (assignee_id)"
+      },
+      {
+        "name": "public.taskboard_shared_subtasks.taskboard_shared_subtasks_title_check",
+        "definition": "CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200)))"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.shared_task_id_team",
+        "definition": "UNIQUE (id, team_id)"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.shared_tasks_schedule_order",
+        "definition": "CHECK (((start_date IS NULL) OR (end_date IS NULL) OR (end_date >= start_date)))"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_assigned_by_fkey",
+        "definition": "FOREIGN KEY (assigned_by) REFERENCES auth.users(id) ON DELETE SET NULL"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_description_check",
+        "definition": "CHECK ((char_length(description) <= 10000))"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_project_id_team_id_fkey",
+        "definition": "FOREIGN KEY (project_id, team_id) REFERENCES taskboard_shared_projects(id, team_id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_status_check",
+        "definition": "CHECK ((status = ANY (ARRAY['todo'::text, 'in-progress'::text, 'done'::text])))"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_team_id_assignee_id_fkey",
+        "definition": "FOREIGN KEY (team_id, assignee_id) REFERENCES taskboard_team_members(team_id, user_id) ON DELETE SET NULL (assignee_id)"
+      },
+      {
+        "name": "public.taskboard_shared_tasks.taskboard_shared_tasks_title_check",
+        "definition": "CHECK (((char_length(TRIM(BOTH FROM title)) >= 1) AND (char_length(TRIM(BOTH FROM title)) <= 200)))"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_email_check",
+        "definition": "CHECK (((char_length(TRIM(BOTH FROM email)) >= 3) AND (char_length(TRIM(BOTH FROM email)) <= 254)))"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_invited_by_fkey",
+        "definition": "FOREIGN KEY (invited_by) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_role_check",
+        "definition": "CHECK ((role = ANY (ARRAY['admin'::text, 'member'::text, 'viewer'::text])))"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_team_id_fkey",
+        "definition": "FOREIGN KEY (team_id) REFERENCES taskboard_teams(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_team_invitations.taskboard_team_invitations_token_hash_key",
+        "definition": "UNIQUE (token_hash)"
+      },
+      {
+        "name": "public.taskboard_team_members.taskboard_team_members_pkey",
+        "definition": "PRIMARY KEY (team_id, user_id)"
+      },
+      {
+        "name": "public.taskboard_team_members.taskboard_team_members_role_check",
+        "definition": "CHECK ((role = ANY (ARRAY['owner'::text, 'admin'::text, 'member'::text, 'viewer'::text])))"
+      },
+      {
+        "name": "public.taskboard_team_members.taskboard_team_members_team_id_fkey",
+        "definition": "FOREIGN KEY (team_id) REFERENCES taskboard_teams(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_team_members.taskboard_team_members_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_teams.taskboard_teams_name_check",
+        "definition": "CHECK (((char_length(TRIM(BOTH FROM name)) >= 1) AND (char_length(TRIM(BOTH FROM name)) <= 100)))"
+      },
+      {
+        "name": "public.taskboard_teams.taskboard_teams_owner_id_fkey",
+        "definition": "FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      },
+      {
+        "name": "public.taskboard_teams.taskboard_teams_pkey",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "name": "public.taskboard_workspaces.taskboard_workspaces_data_check",
+        "definition": "CHECK (((jsonb_typeof(data) = 'object'::text) AND (octet_length((data)::text) <= 5242880)))"
+      },
+      {
+        "name": "public.taskboard_workspaces.taskboard_workspaces_pkey",
+        "definition": "PRIMARY KEY (user_id)"
+      },
+      {
+        "name": "public.taskboard_workspaces.taskboard_workspaces_revision_check",
+        "definition": "CHECK ((revision > 0))"
+      },
+      {
+        "name": "public.taskboard_workspaces.taskboard_workspaces_user_id_fkey",
+        "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+      }
+    ],
+    "tableGrants": [
+      {
+        "name": "maat_private.account_deletion_config|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_config|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_deletion_events|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access_events|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_control|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_members|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_config|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notification_email_outbox|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_deletions|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_status|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_allowlist|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_audit|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|authenticated|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|authenticated|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notification_preferences|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|authenticated|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|authenticated|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|authenticated|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|authenticated|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|authenticated|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|authenticated|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|anon|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_platform_settings|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|authenticated|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_projects|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|authenticated|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_subtasks|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|authenticated|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_shared_tasks|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|authenticated|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|authenticated|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|authenticated|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|authenticated|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|authenticated|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_invitations|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|authenticated|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|authenticated|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|authenticated|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|authenticated|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_members|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|authenticated|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_teams|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|postgres|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|authenticated|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|DELETE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|MAINTAIN",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|REFERENCES",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|TRIGGER",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|TRUNCATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|maat_workspace_writer|INSERT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|maat_workspace_writer|SELECT",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_workspaces|maat_workspace_writer|UPDATE",
+        "grantable": false
+      }
+    ],
+    "columnGrants": [
+      {
+        "name": "public.taskboard_admin_audit.auth_sync|service_role|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications.dismissed_at|authenticated|UPDATE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_notifications.read_at|authenticated|UPDATE",
+        "grantable": false
+      }
+    ],
+    "functionGrants": [
+      {
+        "name": "maat_private.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_can_operate()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_can_operate()|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.account_can_operate()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access(actor uuid, session uuid, operation text, target uuid, requested_permissions text[], expected_version integer, action_reason text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_access(actor uuid, session uuid, operation text, target uuid, requested_permissions text[], expected_version integer, action_reason text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_email_protection()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_team_directory(search_query text, requested_page integer)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.admin_team_directory(search_query text, requested_page integer)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.cancel_assignment_emails()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.cancel_taskboard_invitation(invitation_id uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.cancel_taskboard_invitation(invitation_id uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.cancel_taskboard_invitation(invitation_id uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.claim_account_deletions(batch_size integer)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.claim_account_deletions(batch_size integer)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.deletion_step(account uuid, token uuid, operation text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.deletion_step(account uuid, token uuid, operation text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.enrich_notification()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.guard_deletion()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.guard_processing_admin()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.guard_processing_owner()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.invoke_deletion_worker()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.is_taskboard_team_member(team_uuid uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.is_taskboard_team_member(team_uuid uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.is_taskboard_team_member(team_uuid uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.lock_checklist_parent()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.manage_account_deletion(operation text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.manage_account_deletion(operation text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.manage_taskboard_member(tid uuid, member_id uuid, new_role text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.manage_taskboard_member(tid uuid, member_id uuid, new_role text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.manage_taskboard_member(tid uuid, member_id uuid, new_role text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.notify_work_completion()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.queue_assignment_email()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.register_team_owner()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.require_admin_scope(actor uuid, scope text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.require_admin_scope(actor uuid, scope text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.save_workspace(workspace_user uuid, expected_revision bigint, workspace_data jsonb)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.save_workspace(workspace_user uuid, expected_revision bigint, workspace_data jsonb)|maat_workspace_writer|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.sync_checklist_parent()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_edit_team(tid uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_edit_team(tid uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_edit_team(tid uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_manage_team(tid uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_manage_team(tid uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_manage_team(tid uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_team_roster()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_team_roster()|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.taskboard_team_roster()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.team_profiles()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.team_profiles()|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.track_email_assignment_version()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.track_work_assignment()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.update_platform_settings(actor uuid, session uuid, contact_email text, notice text, expected_version integer, action_reason text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.update_platform_settings(actor uuid, session uuid, contact_email text, notice text, expected_version integer, action_reason text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.verify_deletion_worker(token text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "maat_private.verify_deletion_worker(token text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.accept_taskboard_team_invitation(invitation_id uuid, invitation_token text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.cancel_taskboard_invitation(invitation_id uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.cancel_taskboard_invitation(invitation_id uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.cancel_taskboard_invitation(invitation_id uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.is_taskboard_team_member(team_uuid uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.is_taskboard_team_member(team_uuid uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.is_taskboard_team_member(team_uuid uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.manage_taskboard_member(tid uuid, member_id uuid, new_role text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.manage_taskboard_member(tid uuid, member_id uuid, new_role text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.manage_taskboard_member(tid uuid, member_id uuid, new_role text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.notify_taskboard_assignment()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.notify_taskboard_assignment()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.progress_taskboard_work(work_id uuid, is_subtask boolean, new_status text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.save_taskboard_workspace(expected_revision bigint, workspace_data jsonb)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.save_taskboard_workspace(expected_revision bigint, workspace_data jsonb)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.save_taskboard_workspace_for_user(workspace_user uuid, expected_revision bigint, workspace_data jsonb)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.save_taskboard_workspace_for_user(workspace_user uuid, expected_revision bigint, workspace_data jsonb)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.save_taskboard_workspace_for_user(workspace_user uuid, expected_revision bigint, workspace_data jsonb)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.start_taskboard_parent_task()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.start_taskboard_parent_task()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_active()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_active()|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_account_active()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_access(actor uuid, session uuid, operation text, target uuid, requested_permissions text[], expected_version integer, action_reason text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_access(actor uuid, session uuid, operation text, target uuid, requested_permissions text[], expected_version integer, action_reason text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_metrics()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_metrics()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_team_directory(search_query text, requested_page integer)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_admin_team_directory(search_query text, requested_page integer)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_claim_account_deletions(batch_size integer)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_claim_account_deletions(batch_size integer)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_claim_account_deletions_v2(batch_size integer)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_claim_account_deletions_v2(batch_size integer)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_deletion_step(account uuid, token uuid, operation text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_deletion_step(account uuid, token uuid, operation text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_edit_team(tid uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_edit_team(tid uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_edit_team(tid uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_manage_account_deletion(operation text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_manage_account_deletion(operation text)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_manage_account_deletion(operation text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_manage_team(tid uuid)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_manage_team(tid uuid)|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_manage_team(tid uuid)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_set_account_status(actor uuid, actor_email text, target uuid, target_email text, new_suspended boolean, expected_suspended boolean, action_reason text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_set_account_status(actor uuid, actor_email text, target uuid, target_email text, new_suspended boolean, expected_suspended boolean, action_reason text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_profiles()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_profiles()|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_profiles()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_roster()|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_roster()|authenticated|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_team_roster()|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_update_platform_settings(actor uuid, session uuid, contact_email text, notice text, expected_version integer, action_reason text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_update_platform_settings(actor uuid, session uuid, contact_email text, notice text, expected_version integer, action_reason text)|service_role|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_verify_deletion_worker(token text)|postgres|EXECUTE",
+        "grantable": false
+      },
+      {
+        "name": "public.taskboard_verify_deletion_worker(token text)|service_role|EXECUTE",
+        "grantable": false
+      }
+    ]
+  }
+}
