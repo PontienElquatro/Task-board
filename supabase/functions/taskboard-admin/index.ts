@@ -39,13 +39,13 @@ Deno.serve(async (req:Request) => {
     if ((recent ?? 0)>=30) return reply(429,{error:'Too many requests'});
     const raw=await req.text();
     if (raw.length>3072) return reply(413,{error:'Payload too large'});
-    let body: {page?:number;action?:string;auditPage?:number;auditTarget?:string;auditAction?:string;targetId?:string;reason?:string;expectedSuspended?:boolean;teamId?:string;teamSearch?:string;permissions?:string[];expectedVersion?:number|null;supportEmail?:string;announcement?:string};
+    let body: {page?:number;action?:string;auditPage?:number;auditTarget?:string;auditAction?:string;targetId?:string;reason?:string;expectedSuspended?:boolean;teamId?:string;teamSearch?:string;permissions?:string[];expectedVersion?:number|null;supportEmail?:string;announcement?:string;requestId?:string;validityDays?:number};
     try { body=raw ? JSON.parse(raw) : {}; } catch { return reply(400,{error:'Invalid JSON'}); }
-    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage','auditTarget','auditAction','targetId','reason','expectedSuspended','teamId','teamSearch','permissions','expectedVersion','supportEmail','announcement'].includes(key))) return reply(400,{error:'Invalid request'});
+    if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some(key=>!['page','action','auditPage','auditTarget','auditAction','targetId','reason','expectedSuspended','teamId','teamSearch','permissions','expectedVersion','supportEmail','announcement','requestId','validityDays'].includes(key))) return reply(400,{error:'Invalid request'});
     if(body.teamSearch!==undefined && (body.action!=='collaboration'||typeof body.teamSearch!=='string'||body.teamSearch.trim().length>120)) return reply(400,{error:'Invalid team search'});
     if(body.auditTarget!==undefined && (typeof body.auditTarget!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.auditTarget))) return reply(400,{error:'Invalid audit target'});
     if(body.auditAction!==undefined && !['dashboard_view','account_suspend','account_reactivate'].includes(body.auditAction)) return reply(400,{error:'Invalid audit action'});
-    if(body.action!==undefined && !['check_access','suspend','reactivate','collaboration','team_detail','access_directory','access_grant','access_revoke','access_transfer_request','access_transfer_cancel','access_transfer_accept','platform_settings','platform_settings_update'].includes(body.action)) return reply(400,{error:'Invalid action'});
+    if(body.action!==undefined && !['check_access','suspend','reactivate','collaboration','team_detail','access_directory','access_grant','access_revoke','access_transfer_request','access_transfer_cancel','access_transfer_accept','platform_settings','platform_settings_update','premium_requests','premium_approve','premium_reject'].includes(body.action)) return reply(400,{error:'Invalid action'});
     if(body.action==='check_access') return reply(200,access);
     if(body.action==='platform_settings'||body.action==='platform_settings_update'){
       if(!can(body.action==='platform_settings'?'settings_read':'settings_manage'))return reply(403,{error:'Permission required'});
@@ -56,6 +56,23 @@ Deno.serve(async (req:Request) => {
       if(typeof body.supportEmail!=='string'||body.supportEmail.length>254||typeof body.announcement!=='string'||body.announcement.length>500||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.length>500||!Number.isSafeInteger(body.expectedVersion)||(body.expectedVersion??0)<1)return reply(400,{error:'Invalid settings'});
       const result=await backend.rpc('taskboard_update_platform_settings',{actor:user.id,session:sessionId,contact_email:body.supportEmail.trim(),notice:body.announcement.trim(),expected_version:body.expectedVersion,action_reason:body.reason.trim()});
       if(result.error)return reply(result.error.code==='PT409'?409:result.error.code==='PT401'?401:403,{error:'Settings change rejected'});
+      return reply(200,result.data);
+    }
+    if(body.action==='premium_requests'||body.action==='premium_approve'||body.action==='premium_reject'){
+      if(!can('users_manage'))return reply(403,{error:'Permission required'});
+      if(body.action==='premium_requests'){
+        if(body.requestId!==undefined||body.validityDays!==undefined||body.reason!==undefined)return reply(400,{error:'Invalid request'});
+        const result=await backend.rpc('taskboard_admin_premium_requests',{actor:user.id,session:sessionId});
+        if(result.error)throw result.error;
+        return reply(200,{requests:result.data});
+      }
+      if(typeof body.requestId!=='string'||! /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.requestId)
+        ||typeof body.reason!=='string'||body.reason.trim().length<10||body.reason.trim().length>500
+        ||body.action==='premium_approve'&&!([30,90,365].includes(body.validityDays??0))
+        ||body.action==='premium_reject'&&body.validityDays!==undefined)return reply(400,{error:'Invalid premium review'});
+      const result=await backend.rpc('taskboard_admin_review_premium',{actor:user.id,session:sessionId,request_uuid:body.requestId,
+        operation:body.action==='premium_approve'?'approve':'reject',validity:body.validityDays??null,action_note:body.reason.trim()});
+      if(result.error)return reply(result.error.code==='PT409'?409:result.error.code==='PT401'?401:result.error.code==='42501'?403:400,{error:'Premium review rejected'});
       return reply(200,result.data);
     }
     if(body.action?.startsWith('access_')){

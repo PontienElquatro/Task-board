@@ -4,6 +4,7 @@ import { createClient, User } from '@supabase/supabase-js';
 import { PUBLIC_BACKEND } from '../core/config/app-config';
 import { profileName, profileInitials, profileNames } from '../core/profile';
 import { tabSessionOptions } from '../core/auth/tab-session';
+import { authErrorMessage } from '../core/auth/auth-errors';
 
 @Injectable({providedIn:'root'})
 export class AuthService {
@@ -45,29 +46,31 @@ export class AuthService {
     // A late initial read must never overwrite a newer sign-in/sign-out event.
     void this.client.auth.getSession().then(({data, error}) => {
       if (authEventReceived) return;
-      if (error) { this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.'); return; }
+      if (error) { this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.'); this.initializing.set(false); return; }
       this.user.set(data.session?.user ?? null);
       if(data.session) void this.isAdmin();
       this.initializing.set(false);
     }).catch(() => {
-      if (!authEventReceived) this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.');
+      if (!authEventReceived) { this.sessionError.set('Session indisponible. Rechargez la page avant de modifier vos tâches.'); this.initializing.set(false); }
     });
   }
   async signIn(email: string, password: string) {
-    const {error} = await this.client.auth.signInWithPassword({email, password});
-    if (error) throw new Error('Connexion impossible. Vérifiez vos identifiants et la confirmation de votre adresse email.');
+    try {
+      const {error} = await this.client.auth.signInWithPassword({email:email.trim().toLowerCase(), password});
+      if (error) throw error;
+    } catch (error) { throw new Error(authErrorMessage(error, 'Connexion impossible pour le moment. Réessayez dans quelques instants.')); }
   }
   async signUp(email: string, password: string, firstName:string, lastName:string) {
     const {error} = await this.client.auth.signUp({email, password, options:{data:profileNames(firstName,lastName),emailRedirectTo:location.origin + '/login'}});
-    if (error) throw new Error('Inscription impossible : ' + error.message);
+    if (error) throw new Error(authErrorMessage(error, 'Inscription impossible pour le moment. Réessayez plus tard.'));
   }
   async resetPassword(email: string) {
-    const {error} = await this.client.auth.resetPasswordForEmail(email, {redirectTo:location.origin + '/login?mode=recovery'});
-    if (error) throw new Error('Envoi impossible. Réessayez plus tard.');
+    const {error} = await this.client.auth.resetPasswordForEmail(email.trim().toLowerCase(), {redirectTo:location.origin + '/login?mode=recovery'});
+    if (error) throw new Error(authErrorMessage(error, 'Envoi impossible pour le moment. Réessayez plus tard.'));
   }
   async changePassword(password: string) {
     const {error} = await this.client.auth.updateUser({password});
-    if (error) throw new Error('Modification du mot de passe impossible.');
+    if (error) throw new Error(authErrorMessage(error, 'Modification du mot de passe impossible. Demandez un nouveau lien si le problème persiste.'));
     this.recovering.set(false);
   }
 

@@ -31,7 +31,8 @@ begin
  if operation='objects' then
   select coalesce(jsonb_agg(jsonb_build_object('bucket',o.bucket_id,'name',o.name)),'[]'::jsonb) into objects
   from (select bucket_id,name from storage.objects
-   where owner_id=account::text or owner=account or (bucket_id='avatars' and split_part(name,'/',1)=account::text)
+   where bucket_id<>'team-task-documents'
+    and (owner_id=account::text or owner=account or (bucket_id='avatars' and split_part(name,'/',1)=account::text))
    order by bucket_id,name limit 100) o;
   return objects;
  elsif operation='check' then return '{}'::jsonb;
@@ -55,8 +56,8 @@ begin
   lock table public.taskboard_admin_allowlist in share mode;
   if item.claim_token is null or exists(select 1 from public.taskboard_teams where owner_id=old.id)
   or exists(select 1 from public.taskboard_admin_allowlist where email=lower(old.email))
-  or exists(select 1 from storage.objects where owner_id=old.id::text or owner=old.id
-   or (bucket_id='avatars' and split_part(name,'/',1)=old.id::text)) then
+  or exists(select 1 from storage.objects where bucket_id<>'team-task-documents'
+   and (owner_id=old.id::text or owner=old.id or (bucket_id='avatars' and split_part(name,'/',1)=old.id::text))) then
    raise exception 'Account cleanup incomplete or protected' using errcode='42501';
   end if;
   insert into maat_private.account_deletion_events(user_id,outcome) values(old.id,'deleted');

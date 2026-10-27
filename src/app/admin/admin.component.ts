@@ -15,6 +15,7 @@ interface AdminUser { id:string; email:string; createdAt:string; lastSignIn:stri
 interface AuditEvent { id:number; action:string; created_at:string; actor_id:string; target_id?:string|null;reason?:string|null;auth_sync?:string|null; }
 interface AdminTeam {id:string;name:string;owner_id:string;created_at:string;owner_email?:string;}
 interface TeamDetail {team:AdminTeam;members:number;projects:number;accepted:number;pending:number;expired:number;}
+interface PremiumRequest {id:string;userId:string;email:string;requestedTariff:string;paymentReference:string|null;note:string|null;status:string;createdAt:string;}
 interface AdminSnapshot { access?:AdminAccess; users:AdminUser[]; total:number; page:number; workspaces:number; events:AuditEvent[]; auditPage?:number;auditTotal?:number;generatedAt?:string; metrics?:{teams:number;sharedProjects:number;pendingInvitations:number;expiredInvitations:number;acceptedInvitations:number}; }
 
 @Component({selector:'app-admin',standalone:true,imports:[AdminPlatformSettingsComponent,AdminAccessComponent,UiFieldDirective,ModalScrollLockDirective,CommonModule,FormsModule,RouterLink,IconComponent,AvatarComponent,A11yModule],templateUrl:'./admin.component.html'})
@@ -29,6 +30,7 @@ export class AdminComponent {
   readonly teamDirectory=signal<{teams:AdminTeam[];total:number;page:number}|null>(null);
   readonly teamDetail=signal<TeamDetail|null>(null);
   readonly teamLoading=signal(false);readonly teamError=signal('');teamSearch='';
+  readonly premiumRequests=signal<PremiumRequest[]>([]);readonly premiumLoading=signal(false);readonly premiumError=signal('');readonly premiumBusy=signal(false);premiumValidity:Record<string,number>={};premiumReason:Record<string,string>={};
   private teamRequest=0;
   private teamOpener:HTMLElement|null=null;
   private readonly injector=inject(Injector);
@@ -41,10 +43,10 @@ export class AdminComponent {
   readonly actionError=signal('');
   section='overview';
   roleFilter='';confirmationFilter='';syncFilter='';auditSearch='';sort='recent';selectedUser:AdminUser|null=null;notice='';
-  readonly sections=[{id:'overview',label:'Vue d’ensemble',icon:'chart'},{id:'users',label:'Utilisateurs',icon:'user'},{id:'collaboration',label:'Collaboration',icon:'team'},{id:'audit',label:'Journal',icon:'shield'},{id:'settings',label:'Paramètres',icon:'settings'},{id:'access',label:'Rôles et accès',icon:'shield'}];
+  readonly sections=[{id:'overview',label:'Vue d’ensemble',icon:'chart'},{id:'users',label:'Utilisateurs',icon:'user'},{id:'collaboration',label:'Collaboration',icon:'team'},{id:'premium',label:'Accès Premium',icon:'shield'},{id:'audit',label:'Journal',icon:'shield'},{id:'settings',label:'Paramètres',icon:'settings'},{id:'access',label:'Rôles et accès',icon:'shield'}];
   private generation=0;
-  allowedSections(){const access=this.snapshot()?.access;if(!access)return this.sections.filter(s=>s.id!=='access');const scope:Record<string,string>={overview:'overview',users:'users_read',collaboration:'teams_read',audit:'audit_read',settings:'settings_read'};return this.sections.filter(s=>s.id==='access'?true:access.isPrincipal||access.permissions.includes(scope[s.id]));}
-  selectSection(id:string){if(!this.allowedSections().some(s=>s.id===id))return;this.section=id;this.selectedUser=null;if(id==='collaboration'&&!this.teamDirectory())void this.loadTeams(1);}
+  allowedSections(){const access=this.snapshot()?.access;if(!access)return this.sections.filter(s=>s.id!=='access'&&s.id!=='premium');const scope:Record<string,string>={overview:'overview',users:'users_read',collaboration:'teams_read',premium:'users_manage',audit:'audit_read',settings:'settings_read'};return this.sections.filter(s=>s.id==='access'?true:access.isPrincipal||access.permissions.includes(scope[s.id]));}
+  selectSection(id:string){if(!this.allowedSections().some(s=>s.id===id))return;this.section=id;this.selectedUser=null;if(id==='collaboration'&&!this.teamDirectory())void this.loadTeams(1);if(id==='premium')void this.loadPremiumRequests();}
   constructor() {
     inject(DestroyRef).onDestroy(()=>this.clearAuditExport());
     const accountId=computed(()=>this.auth.user()?.id??null);
@@ -53,7 +55,7 @@ export class AdminComponent {
       const initializing=this.auth.initializing();
       untracked(() => {
         this.generation++; this.snapshot.set(null); this.error.set(''); this.resetFilters();this.auditSearch='';this.auditAction='';this.auditTarget='';this.selectedUser=null;this.notice='';this.clearAuditExport(); this.loading.set(false);this.pendingAccount=null;this.actionReason='';this.actionError.set('');
-        this.teamRequest++;this.teamDirectory.set(null);this.teamDetail.set(null);this.teamLoading.set(false);this.teamError.set('');this.teamSearch='';
+        this.teamRequest++;this.teamDirectory.set(null);this.teamDetail.set(null);this.teamLoading.set(false);this.teamError.set('');this.teamSearch='';this.premiumRequests.set([]);this.premiumLoading.set(false);this.premiumError.set('');this.premiumBusy.set(false);this.premiumValidity={};this.premiumReason={};
         if (!initializing && user) void this.load(1);
       });
     });
@@ -75,6 +77,24 @@ export class AdminComponent {
       if(teamId)this.teamDetail.set(data);else this.teamDirectory.set(data);
     }catch(error){if(request===this.teamRequest)this.teamError.set(error instanceof Error?error.message:'Supervision indisponible.');}
     finally{if(request===this.teamRequest)this.teamLoading.set(false);}
+  }
+  async loadPremiumRequests(){
+    const actor=this.auth.user()?.id;if(!actor)return;this.premiumLoading.set(true);this.premiumError.set('');
+    try{const result=await this.auth.client.functions.invoke('taskboard-admin',{body:{action:'premium_requests'}});if(actor!==this.auth.user()?.id)return;if(result.error||result.data?.error||!Array.isArray(result.data?.requests))throw new Error('Demandes Premium indisponibles.');const requests=result.data.requests as PremiumRequest[];this.premiumRequests.set(requests);this.premiumValidity={...this.premiumValidity,...Object.fromEntries(requests.map(request=>[request.id,this.premiumValidity[request.id]||30]))};}
+    catch{if(actor===this.auth.user()?.id)this.premiumError.set('Impossible de charger les demandes Premium. Actualisez puis réessayez.');}
+    finally{if(actor===this.auth.user()?.id)this.premiumLoading.set(false);}
+  }
+  async reviewPremiumRequest(request:PremiumRequest,operation:'premium_approve'|'premium_reject'){
+    if(this.premiumBusy()||this.premiumReason[request.id]?.trim().length<10)return;
+    const approval=operation==='premium_approve';
+    const confirmation=approval
+      ?`Confirmer l’accès ${this.premiumValidity[request.id]||30} jours pour ${request.email} ? Vérifie d’abord que le paiement Mobile Money a réellement été reçu hors Ma’at.`
+      :`Refuser la demande Premium de ${request.email} ?`;
+    if(!window.confirm(confirmation))return;
+    this.premiumBusy.set(true);this.premiumError.set('');
+    try{const result=await this.auth.client.functions.invoke('taskboard-admin',{body:{action:operation,requestId:request.id,reason:this.premiumReason[request.id].trim(),...(approval?{validityDays:this.premiumValidity[request.id]||30}:{})}});if(result.error||result.data?.error)throw new Error();delete this.premiumReason[request.id];await this.loadPremiumRequests();}
+    catch{this.premiumError.set('La décision n’a pas été enregistrée. Vérifie les droits, la session récente et l’état de la demande.');}
+    finally{this.premiumBusy.set(false);}
   }
   filteredUsers(){return this.matchingUsers().slice((this.userPage-1)*50,this.userPage*50);}
   pageCount(){return Math.max(1,Math.ceil(this.matchingUsers().length/50));}

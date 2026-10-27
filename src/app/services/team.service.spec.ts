@@ -66,12 +66,35 @@ describe('TeamService reliability', () => {
         await expect(service.load().then(() => false, () => true)).resolves.toBe(true);
         expect(service.teams()).toEqual([]);
     });
-    it('keeps an invitation visible if email delivery is uncertain', async () => {
+    it('creates a private fragment link without sending email or exposing the token in history', async () => {
         const invitation = { id: 'invite', team_id: 'team', email: 'recipient@example.invalid', role: 'member', expires_at: '2099-01-01', created_at: '2026-10-12' };
-        client.from.mockReturnValue({ insert: () => ({ select: () => ({ single: async () => ({ data: invitation, error: null }) }) }) });
-        client.functions = { invoke: async () => ({ data: null, error: { message: 'offline' } }) };
-        await expect(service.invite('team', invitation.email, 'member').then(() => false, () => true)).resolves.toBe(true);
-        expect(service.invitations().map(i => i.id)).toEqual(['invite']);
-        expect(client.rpc).not.toHaveBeenCalledWith('cancel_taskboard_invitation', expect.anything());
+        const insert = vi.fn().mockReturnValue({ select: () => ({ single: async () => ({ data: invitation, error: null }) }) });
+        client.from.mockReturnValue({ insert });
+        client.functions = { invoke: vi.fn() };
+        const result = await service.invite('team', ' Recipient@example.invalid ', 'member');
+        const url = new URL(result!.url);
+        expect(url.search).toBe('');
+        expect(url.pathname).toBe('/team');
+        const params = new URLSearchParams(url.hash.slice(1));
+        expect(params.get('invitation')).toBe('invite');
+        expect(params.get('token')).toBe(insert.mock.calls[0][0].token_hash);
+        expect(params.get('token')!.length).toBeGreaterThanOrEqual(64);
+        expect(insert.mock.calls[0][0].email).toBe(invitation.email);
+        expect(client.functions.invoke).not.toHaveBeenCalled();
+        expect(service.invitations()).toEqual([invitation]);
+        expect(service.invitations()[0]).not.toHaveProperty('token_hash');
+    });
+    it('does not return a secret when the account changes during creation', async () => {
+        client.from.mockReturnValue({ insert: () => ({ select: () => ({ single: async () => {
+            user.set({id:'other'});
+            return {data:{id:'invite'},error:null};
+        } }) }) });
+        expect(await service.invite('team','recipient@example.invalid','member')).toBeUndefined();
+        expect(service.invitations()).toEqual([]);
+    });
+    it('does not create a link if insertion is rejected', async () => {
+        client.from.mockReturnValue({ insert: () => ({ select: () => ({ single: async () => ({data:null,error:{message:'denied'}}) }) }) });
+        await expect(service.invite('team','recipient@example.invalid','member')).rejects.toThrow('Invitation impossible');
+        expect(service.invitations()).toEqual([]);
     });
 });

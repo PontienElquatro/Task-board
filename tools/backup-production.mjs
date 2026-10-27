@@ -7,6 +7,11 @@ if(process.argv.slice(2).some(arg=>arg!=='--check'))throw new Error('Unknown opt
 const bin='C:/Users/DELL/Documents/pgsql/bin';
 const backupRoot='C:/Users/DELL/Documents/Ma-at-backups';
 const project='nzdfuhozeiexvtrryndk';
+// Use the exact production Session Pooler parameters copied from Supabase.
+// The direct endpoint currently fails through the workstation's OS resolver.
+const databaseHost='aws-1-eu-west-3.pooler.supabase.com';
+const databasePort='5432';
+const databaseUser='postgres.nzdfuhozeiexvtrryndk';
 const env=Object.fromEntries(Object.entries(process.env).filter(([key])=>!/^PG/i.test(key)));
 function run(name,args){
  const result=spawnSync(join(bin,name+'.exe'),args,{env,stdio:'inherit'});
@@ -28,7 +33,7 @@ const archive=join(dir,'MyTaskBoard.dump');
 console.log('Production read-only backup: '+project);
 console.log('Enter the production database password only at the PostgreSQL prompt.');
 run('pg_dump',[
- '--dbname=host=db.'+project+'.supabase.co port=5432 dbname=postgres user=postgres sslmode=require connect_timeout=20',
+ '--dbname=host='+databaseHost+' port='+databasePort+' dbname=postgres user='+databaseUser+' sslmode=require connect_timeout=20',
  '--password','--format=custom','--file='+archive,
 ]);
 if(statSync(archive).size===0)throw new Error('Empty archive; stop');

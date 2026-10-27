@@ -23,6 +23,11 @@
       <p *ngIf="message()" role="status" class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200">{{message()}}</p>
       <p *ngIf="error()" role="alert" class="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200">{{error()}}</p>
       <p *ngIf="auth.initializing()" role="status" class="py-8 text-sm text-gray-600 dark:text-gray-300">Vérification de la session…</p>
+      <p *ngIf="auth.sessionError()" role="alert" class="mb-4 rounded-lg border border-red-200 p-4 text-sm">{{auth.sessionError()}}</p>
+      <div *ngIf="mode === 'recovery' && !auth.initializing() && !auth.user()" role="status" class="mb-4 rounded-lg border border-blue-200 p-4 text-sm">
+        Le lien de récupération est absent, expiré ou déjà utilisé. Ouvrez le dernier email reçu ou demandez un nouveau lien.
+        <button type="button" class="secondary mt-3 min-h-11" [disabled]="busy()" (click)="setMode('reset')">Demander un nouveau lien</button>
+      </div>
       <ng-container *ngIf="!auth.initializing() && auth.user() && mode !== 'recovery'; else form">
         <div class="mb-6 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900"><p class="break-words text-sm font-semibold">{{auth.user()?.email}}</p><p class="mt-2 text-xs text-gray-600 dark:text-gray-300">{{cloud.status()}}</p></div>
         <div class="flex flex-wrap gap-2"><a routerLink="/board" class="primary min-h-11">Ouvrir mon tableau</a><button class="secondary min-h-11" [disabled]="busy()" (click)="signOut()">Se déconnecter</button></div>

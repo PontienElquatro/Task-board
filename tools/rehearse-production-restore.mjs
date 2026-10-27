@@ -1,6 +1,6 @@
 // Local-only restoration; optional workspace candidate. Never connects to Supabase.
-import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, unlinkSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, unlinkSync, openSync, closeSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { createHash, randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -13,8 +13,9 @@ import { buildReleaseCandidate } from './release-candidate.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const options = process.argv.slice(2);
-if (options.some(option => !['--workspace-foundation','--collaboration-core','--invitations','--notifications','--admin-lifecycle','--parity-audit','--calendar-guards','--atomic-candidate'].includes(option))) throw new Error('Unknown option');
-const atomicCandidate = options.includes('--atomic-candidate');
+if (options.some(option => !['--workspace-foundation','--collaboration-core','--invitations','--notifications','--admin-lifecycle','--parity-audit','--calendar-guards','--atomic-candidate','--team-settings'].includes(option))) throw new Error('Unknown option');
+const teamSettings=options.includes('--team-settings');
+const atomicCandidate = options.includes('--atomic-candidate') || teamSettings;
 if(atomicCandidate && options.length!==1)throw new Error('Use atomic candidate alone');
 const calendarGuards = options.includes('--calendar-guards');
 const parityAudit = options.includes('--parity-audit') || calendarGuards;
@@ -69,7 +70,23 @@ try {
   run('initdb', ['-D', data, '-U', 'postgres', '--auth=scram-sha-256',
     '--pwfile=' + pwfile, '--encoding=UTF8', '--locale=C']);
   unlinkSync(pwfile);
-  run('pg_ctl', ['-D', data, '-l', join(work, 'server.log'), '-w', '-t', '30',
+  if(teamSettings){
+    // pg_ctl cannot create its optional restricted token in some Windows
+    // sandboxes. Start the same local server under the current token instead.
+    const log=openSync(join(work,'server.log'),'a');
+    const server=spawn(join(bin,'postgres.exe'),['-D',data,'-h','127.0.0.1','-p',String(port),'-c','wal_level=logical'],{env,windowsHide:true,stdio:['ignore',log,log]});
+    closeSync(log);
+    if(!server.pid)throw new Error('Local postgres process unavailable');
+    server.on('error',()=>{});server.unref();
+    const deadline=Date.now()+30000;let ready=false;
+    while(Date.now()<deadline){
+      const check=spawnSync(join(bin,'pg_isready.exe'),['-h','127.0.0.1','-p',String(port),'-t','1'],{env,windowsHide:true,stdio:'ignore'});
+      if(check.status===0){ready=true;break;}
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,200);
+    }
+    if(!ready){server.kill();throw new Error('Local PostgreSQL did not start; diagnostics: '+work);}
+    console.log('Local PostgreSQL ready under current process permissions');
+  }else run('pg_ctl', ['-D', data, '-l', join(work, 'server.log'), '-w', '-t', '30',
     '-o', `-h 127.0.0.1 -p ${port} -c wal_level=logical`, 'start']);
   started = true;
   const sql = `
@@ -236,6 +253,12 @@ insert into auth.users(id) values('00000000-0000-4000-8000-000000000061'),('0000
        and not exists(select 1 from maat_private.account_deletion_config where enabled or execution_enabled);`]).trim();
     if(clean!=='t')throw new Error('Atomic rehearsal left fixtures or enabled deletion');
     console.log('PASS atomic candidate: one transaction; final-state tests passed; fixtures rolled back; no deployment approval');
+  }
+  if(teamSettings){
+    run('psql',['-X','-v','ON_ERROR_STOP=1','-f',join(root,'database/candidates/team-project-settings.sql')]);
+    const result=run('psql',['-X','-v','ON_ERROR_STOP=1','-f',join(root,'database/candidates/test-team-project-settings.sql')]);
+    writeFileSync(join(work,'team-project-settings.log'),result);
+    console.log('PASS team/project settings local rehearsal; no production change');
   }
   if(parityAudit || atomicCandidate){
     console.log('Audit local de parité : catalogues seulement, aucun service distant');

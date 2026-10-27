@@ -1,4 +1,4 @@
-# Performance — bloc en cours
+# Performance — lot non intrusif validé et poussé
 
 Référence validée : efeb52a, 160 tests, build utilisateur et CI verte.
 Le bundle initial est de 774 313 octets, dont 131 977 octets de CSS global.
@@ -97,3 +97,9 @@ Ce lot de réduction non intrusive est prêt à enregistrer : les identifiants,
 permissions, opérations de sauvegarde et services de production sont inchangés.
 Le projet ne respecte pas encore le budget initial de 500 kB. Une réduction
 supplémentaire des runtimes demande un lot distinct avec validation dédiée.
+
+Le lot a été enregistré et poussé dans `3fd69e3`. Le 14 octobre 2026,
+GitHub Actions « Ma’at quality » #164 a terminé avec succès sur ce commit.
+L'aperçu Vercel correspondant est READY. Les contrôles de l'aperçu connecté
+et leurs limites sont consignés dans `final-validation.md` ; aucune fusion
+vers la branche par défaut ni publication de production n'a été effectuée.

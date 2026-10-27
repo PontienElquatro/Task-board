@@ -12,24 +12,27 @@ export class CalendarTeamService {
  readonly auth=inject(AuthService);
  readonly teams=inject(TeamService);
  readonly tasks=signal<CalendarTask[]>([]);
- readonly projects=signal<{id:string;title:string;team_id:string}[]>([]);
+ readonly projects=signal<{id:string;title:string;team_id:string;archived_at?:string|null;access_mode?:string}[]>([]);
+ readonly projectParticipants=signal<{project_id:string;user_id:string;role:string}[]>([]);
  readonly loading=signal(false);
  readonly error=signal('');
  private revision=0;
- reset(){this.revision++;this.tasks.set([]);this.projects.set([]);this.error.set('');this.loading.set(false);}
+ reset(){this.revision++;this.tasks.set([]);this.projects.set([]);this.projectParticipants.set([]);this.error.set('');this.loading.set(false);}
  async load(){
   const account=this.auth.user()?.id,revision=++this.revision;
   this.loading.set(true);this.error.set('');
   if(!account){this.reset();return;}
   try {
    await this.teams.load();
-   const [projects,tasks]=await Promise.all([
-    this.auth.client.from('taskboard_shared_projects').select('id,title,team_id'),
-    this.auth.client.from('taskboard_shared_tasks').select('id,title,description,status,assignee_id,project_id,team_id,start_date,end_date')
+   const [projects,tasks,participants]=await Promise.all([
+    this.auth.client.from('taskboard_shared_projects').select('*'),
+    this.auth.client.from('taskboard_shared_tasks').select('id,title,description,status,assignee_id,project_id,team_id,start_date,end_date'),
+    this.auth.client.from('taskboard_project_members').select('project_id,user_id,role')
    ]);
-   if(projects.error||tasks.error)throw new Error('Les tâches d’équipe sont indisponibles. Réessayez.');
+   if(projects.error||tasks.error||participants.error)throw new Error('Les tâches d’équipe sont indisponibles. Réessayez.');
    if(revision!==this.revision||account!==this.auth.user()?.id)return;
    this.projects.set(projects.data??[]);
+   this.projectParticipants.set(participants.data??[]);
    this.tasks.set((tasks.data??[]).map((t:SharedCardTask & {team_id:string;project_id:string})=>({
     ...sharedCard(t,[]),teamId:t.team_id,sharedProjectId:t.project_id,projectId:'team:'+t.project_id,assigneeId:t.assignee_id??''
    })));
@@ -38,7 +41,10 @@ export class CalendarTeamService {
  }
  canEdit(task:CalendarTask){
   const team=this.teams.teams().find(t=>t.id===task.teamId);
-  return !!team&&['owner','admin','member'].includes(this.teams.role(team)??'');
+  const project=this.projects().find(p=>p.id===task.sharedProjectId);
+  if(!team||team.archived_at||project?.archived_at)return false;
+  const role=this.teams.role(team);
+  return role==='owner'||role==='admin'||(role==='member'&&(project?.access_mode!=='restricted'||this.projectParticipants().some(m=>m.project_id===project.id&&m.user_id===this.auth.user()?.id&&m.role==='member')));
  }
  async saveDates(task:CalendarTask,start:string,end:string){
   if(!this.canEdit(task))throw new Error('Votre rôle ne permet pas de modifier les dates.');

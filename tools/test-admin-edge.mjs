@@ -18,6 +18,7 @@ let banFailure=false;
 let mutationFailure=false;
 let mutationCalls=0;
 let bannedTarget='';
+const premiumRpcCalls=[];
 const directoryPages=[];
 const auditRanges=[];
 const selections=[];
@@ -57,6 +58,8 @@ client.rpc=async()=>({data:{teams:1,sharedProjects:1,pendingInvitations:0,expire
 const metricsRpc=client.rpc;
 client.rpc=async(name,args)=>{
  if(name==='taskboard_admin_access')return {data:allow&&liveSession?{isAdmin:true,isPrincipal:principal,permissions:scopes}:null,error:permissionFailure?{code:'XX000'}:null};
+ if(name==='taskboard_admin_premium_requests'){premiumRpcCalls.push([name,args]);return {data:[{id:'request-id',email:'person@example.invalid',status:'pending'}],error:null};}
+ if(name==='taskboard_admin_review_premium'){premiumRpcCalls.push([name,args]);return {data:{success:true},error:null};}
  if(name==='taskboard_admin_team_directory'){
    teamQueries.push(args);
    return {data:{teams:[{id:'team',name:'Team',owner_id:'owner',created_at:'2026-01-01'}],total:1,page:args.requested_page},error:null};
@@ -117,6 +120,16 @@ assert.equal((await handler(request({action:'collaboration',page:0}))).status,40
 allow=false;assert.equal((await handler(request({action:'collaboration'}))).status,403);allow=true;
 const detail=await handler(request({action:'team_detail',teamId:'00000000-0000-4000-8000-000000000061'}));assert.equal(detail.status,200);
 assert.equal((await detail.json()).members,1);
+principal=false;scopes=['teams_read'];const deniedPremium=await handler(request({action:'premium_requests'}));assert.equal(deniedPremium.status,403);
+principal=true;scopes=['users_manage'];
+assert.equal((await handler(request({action:'premium_approve',requestId:'invalid',reason:'motif assez long',validityDays:30}))).status,400);
+assert.equal((await handler(request({action:'premium_approve',requestId:'00000000-0000-4000-8000-000000000001',reason:'court',validityDays:30}))).status,400);
+const premiumQueue=await handler(request({action:'premium_requests'}));assert.equal(premiumQueue.status,200);
+assert.equal((await premiumQueue.json()).requests[0].status,'pending');
+assert.equal((await handler(request({action:'premium_approve',requestId:'00000000-0000-4000-8000-000000000001',reason:'Paiement vérifié hors plateforme',validityDays:90}))).status,200);
+assert.equal((await handler(request({action:'premium_reject',requestId:'00000000-0000-4000-8000-000000000001',reason:'Refus pour test seulement',validityDays:30}))).status,400);
+assert.deepEqual(JSON.parse(JSON.stringify(premiumRpcCalls.at(-1))),['taskboard_admin_review_premium',{actor:'admin-id',session:'00000000-0000-4000-8000-000000000001',request_uuid:'00000000-0000-4000-8000-000000000001',operation:'approve',validity:90,action_note:'Paiement vérifié hors plateforme'}]);
+principal=true;scopes=['overview','users_read','users_manage','teams_read','audit_read','settings_read','settings_manage'];
 assert.ok(!selections.some(([table,fields])=>table==='taskboard_team_invitations'&&(fields.includes('email')||fields.includes('token'))));
 assert.deepEqual(Object.keys(snapshot.users[0]).sort(),['admin','confirmed','createdAt','email','id','lastSignIn','updatedAt','suspended'].sort());
 assert.equal(snapshot.users[0].admin,true);

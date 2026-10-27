@@ -12,7 +12,7 @@ describe('LoginComponent', () => {
         await TestBed.configureTestingModule({
             imports: [LoginComponent],
             providers: [provideRouter([]),
-                { provide: AuthService, useValue: { initializing: signal(false), user: signal(null) } },
+                { provide: AuthService, useValue: { initializing: signal(false), user: signal(null), sessionError:signal('') } },
                 { provide: CloudStorageProvider, useValue: { status: signal('Mode local'), ready: signal(true), conflict: signal(false) } }]
         })
             .compileComponents();
@@ -65,5 +65,18 @@ describe('LoginComponent', () => {
         fixture.detectChanges();
         expect(fixture.nativeElement.querySelector('#account-email')).toBeNull();
         expect(fixture.nativeElement.querySelector('#account-confirm')).toBeTruthy();
+    });
+    it('propose un nouveau lien quand la session de récupération est absente', () => {
+        component.setMode('recovery');
+        fixture.detectChanges();
+        expect(fixture.nativeElement.textContent).toContain('Demander un nouveau lien');
+        expect(fixture.nativeElement.querySelector('button[type="submit"]').disabled).toBe(true);
+    });
+    it('ne tente pas de changer le mot de passe sans session', async () => {
+        component.setMode('recovery');
+        component.password=component.confirmation='a-new-password-123';
+        await component.submit();
+        expect(component.error()).toContain('Demandez un nouveau lien');
+        expect(component.busy()).toBe(false);
     });
 });

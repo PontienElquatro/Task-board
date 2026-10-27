@@ -131,3 +131,63 @@ main `3d1b46330f65916179bcc144f37dcb04dab73b15`. Il reste à préparer un build
 production, tester les redirections/Auth et les parcours connectés, initialiser
 séparément le principal confirmé, puis publier/promouvoir le frontend et vérifier
 les parcours métier. Le domaine souhaité n'est pas encore attribué.
+
+## Initialisation du principal réel — 16 octobre 2026
+
+Le propriétaire a remplacé son choix initial par `pontienmisenga93@gmail.com`,
+puis confirmé sa connexion. Adresse de la session vérifiée dans l'interface ;
+compte Auth confirmé, session vivante, aucun statut suspendu/suppression et aucun
+administrateur/principal préexistant vérifiés côté serveur.
+
+Initialisation transactionnelle par UUID Auth après verrouillage des tables de
+contrôle : admin_members (les sept permissions), admin_control et événement
+admin_access_events action bootstrap avec motif explicite. Aucune copie de rôle
+depuis Maat-test, aucune attribution fondée sur les métadonnées de profil.
+Résultat vérifié : un principal et un administrateur seulement ;
+`quatrosus@gmail.com` absent de admin_members. Les anciennes entrées de l'allowlist
+de compatibilité n'ont pas été modifiées, hormis le maintien de celle du principal.
+
+Vérification navigateur réelle : /admin ouvre la console, affiche les deux comptes
+confirmés et les sections Vue d'ensemble, Utilisateurs, Collaboration, Journal,
+Paramètres et Rôles et accès. Aucun compte suspendu, aucun transfert ni délégation
+effectué. L'interface des accès exige une confirmation de connexion avant de charger
+et modifier les rôles ; aucun mot de passe n'a été saisi par l'agent.
+Le domaine principal et le domaine Ma'at demandé restent à finaliser séparément.
+
+## Publication du frontend et test réel — 16 octobre 2026
+
+Déploiement production READY `dpl_5xDtvQHx7v4HNGoxBJ9AxJS7Qqay`, commit
+`388705e3113fd588c10a687f6bcb56ac9c70f540`, Angular, source CLI issue de
+l'export propre du commit. URL technique :
+`https://task-board-v1-ilfru7vgl-pontien-misengas-projects.vercel.app`.
+Logs : backend production nzdfuhozeiexvtrryndk, build complet ; avertissement
+budget initial 743,73 kB pour 500 kB, non bloquant. Environ 54 s selon la CLI.
+
+L'option CLI --skip-domain a tout de même attribué l'alias secondaire
+task-board-v1-pontien-misengas-projects.vercel.app. Cette différence a été
+signalée, pas présentée comme une absence totale d'attribution de domaine.
+
+Après accord explicite du propriétaire : création unique de « Vérification
+production Ma’at » dans l'espace personnel du principal ; attente du statut
+Sauvegarde cloud confirmée ; rechargement et présence de la tâche confirmés ;
+archivage, nouvelle attente cloud, rechargement puis ouverture Archives (1) :
+tâche présente. Aucune autre tâche modifiée, aucune suppression définitive.
+La tâche de contrôle reste volontairement dans les archives et peut être restaurée.
+Les paramètres plateforme se chargent sans modification de formulaire.
+
+Promotion du déploiement testé effectuée ; vérification par API que
+`task-board-v1.vercel.app` pointe vers ce même déploiement, puis requête HTTP
+anonyme /home : 200 avec `main-YGPKK4RM.js`, sans écran Vercel Authentication.
+Adresse publiée : `https://task-board-v1.vercel.app`.
+
+Tentative demandée d'attribution de `maat.vercel.app` refusée par Vercel avec
+`alias_in_use` : nom déjà utilisé. Aucun forçage ni achat ; attendre le choix
+d'une autre adresse avant toute attribution supplémentaire. Auth Site URL et
+redirections ont été réglés par l'utilisateur sur l'adresse principale actuelle
+et l'URL technique ; ils devront être revus lors du prochain changement de domaine.
+
+Ces contrôles ne prétendent pas valider une livraison Realtime entre deux
+comptes/équipes, un envoi email, un paiement ou une purge. Ces derniers services
+restent hors périmètre/désactivés. Aucun scan complet de logs d'erreurs runtime
+ni service externe de monitoring/drain n'a été configuré pendant cette publication.
+Les corrections des helpers CLI et ce compte rendu local restent à versionner.
