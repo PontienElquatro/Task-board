@@ -55,7 +55,7 @@ export class SharedProjectsComponent {
    },{injector:this.injector});
   });
  });
- readonly subtasks=signal<Subtask[]>([]);readonly documents=signal<TaskDocument[]>([]);readonly documentsMessage=signal('');readonly centralPreview=signal<{document:TaskDocument;url:SafeResourceUrl}|null>(null);draggingTaskId='';editingDocumentId='';documentDraft='';documentOriginal='';subTitles:Record<string,string>={};subAssignees:Record<string,string>={};
+ readonly subtasks=signal<Subtask[]>([]);readonly documents=signal<TaskDocument[]>([]);readonly documentsMessage=signal('');readonly centralPreview=signal<{document:TaskDocument;url:SafeResourceUrl;openUrl:string}|null>(null);draggingTaskId='';editingDocumentId='';documentDraft='';documentOriginal='';subTitles:Record<string,string>={};subAssignees:Record<string,string>={};
  readonly projects=signal<Project[]>([]);readonly tasks=signal<SharedTask[]>([]);readonly message=signal('');readonly busy=signal(false);
  selectedId='';creating=false;projectForm=false;confirmDiscard=false;
  teamId='';projectId='';projectTitle='';assigneeFilter='';search='';title='';description='';status='todo';assignee='';
@@ -189,7 +189,7 @@ export class SharedProjectsComponent {
   try{
    const result=await this.auth.client.storage.from(this.documentBucket).createSignedUrl(file.object_path,300);
    if(result.error||!result.data||this.selectedId!==taskId||!this.taskDocuments(taskId).some(item=>item.id===file.id&&item.is_central))return;
-   this.centralPreview.set({document:file,url:this.sanitizer.bypassSecurityTrustResourceUrl(result.data.signedUrl)});
+   this.centralPreview.set({document:file,url:this.sanitizer.bypassSecurityTrustResourceUrl(result.data.signedUrl),openUrl:result.data.signedUrl});
   }catch{this.documentsMessage.set('Aperçu du document central indisponible. Vous pouvez le télécharger ci-dessous.');}
  }
  readonly documentBucket='team-task-documents';readonly documentMaxBytes=20*1024*1024;
